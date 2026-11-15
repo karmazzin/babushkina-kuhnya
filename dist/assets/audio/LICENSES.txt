@@ -4,7 +4,7 @@ Licensed under Creative Commons Attribution 4.0 International.
 https://creativecommons.org/licenses/by/4.0/
 Source: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100715
 Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Porch%20Swing%20Days%20-%20slower.mp3
-Modification: transcoded from MP3 to AAC 96 kbps for a smaller offline download. Full composition retained; volume reduced during playback; looped.
+Modification: transcoded from MP3 to AAC 96 kbps for a smaller offline download. Full composition retained; loudness normalized to -20 LUFS; volume reduced during playback. Played in a shuffled playlist.
 
 SOUND EFFECTS
 Interface Sounds — Kenney (Kenney Vleugels)
@@ -21,3 +21,20 @@ win.mp3 uses confirmation_001.ogg from the same CC0 archive above.
 Edits: low-pass filter (1600/2000 Hz), short fades, duration cap and peak limiting;
 transcoded to MP3 96 kbps. No synthesized sounds. Selection, invalid-move and
 landing recordings are no longer played; music is unchanged.
+
+PLAYLIST ADDITIONS (2026-11-15)
+Easy Lemon — Kevin MacLeod (incompetech.com), ISRC USUAN1200076
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200076
+Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Easy%20Lemon.mp3
+Summer Day — Kevin MacLeod (incompetech.com), ISRC USUAN1200083
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200083
+Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Summer%20Day.mp3
+Carefree — Kevin MacLeod (incompetech.com), ISRC USUAN1400037
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400037
+Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3
+All three licensed under Creative Commons Attribution 4.0 International:
+https://creativecommons.org/licenses/by/4.0/
+Verified on the author's track page template and pieces.json on 2026-11-15.
+Modifications: full recordings transcoded to AAC 96 kbps, 44.1 kHz;
+loudness normalized to -20 LUFS, peak ceiling -2 dBTP; low playback volume.
+No generated music. Files are bundled locally for offline use.

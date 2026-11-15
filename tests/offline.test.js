@@ -28,8 +28,8 @@ test('readiness requires all cached files and activation preserves other apps ca
  await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,true);
  [...h.stores.values()][0].delete(h.scope+'assets/foods.png');await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,false);
 });
-test('cached audio supports byte ranges required by mobile media players',async()=>{
- const h=await harness();await h.fire('install');const url=h.scope+'assets/audio/porch-swing.m4a';
+for(const track of ['porch-swing','easy-lemon','summer-day','carefree'])test(`cached ${track} supports byte ranges required by mobile media players`,async()=>{
+ const h=await harness();await h.fire('install');const url=h.scope+`assets/audio/${track}.m4a`;
  const response=await h.fire('fetch',{request:{url,method:'GET',mode:'cors',headers:{get:()=> 'bytes=2-8'}}});
  assert.equal(response.status,206);assert.equal(await response.text(),url.slice(2,9));assert.equal(response.headers.get('Content-Range'),`bytes 2-8/${url.length}`);assert.equal(h.network(),0);
  const invalid=await h.fire('fetch',{request:{url,method:'GET',mode:'cors',headers:{get:()=> 'bytes=99999-'}}});assert.equal(invalid.status,416);
