@@ -52,5 +52,19 @@
       "card": 12,
       "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A heartfelt still life of small bouquet of garden roses and daisies beside a blue teacup, honey cookies on delicate porcelain, soft golden evening light. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Спасибо, что вы есть». Small elegant bottom line EXACTLY «Дарю вам немного тепла». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
     }
+  ],
+  "edits": [
+    {
+      "card": 1,
+      "prompt": "Edit this Russian greeting postcard. Change ONLY the lower greeting inscription to exactly «Хорошего вам дня!». Preserve the entire watercolor illustration, composition, colors, flowers, dishes, top greeting and paper texture. Match the elegant existing green calligraphy. Remove all traces of the old lower phrase, replace it with the new phrase centered with generous margins. Do not add any other text, logos or links. Keep portrait dimensions and quality.",
+      "tool": "Built-in image_gen edit",
+      "date": "2026-11-15"
+    },
+    {
+      "card": 8,
+      "prompt": "Edit this Russian greeting postcard. Change ONLY the lower greeting inscription to exactly «Крепко обнимаю!». Preserve the entire watercolor illustration, composition, colors, flowers, dishes, top greeting and paper texture. Match the elegant existing green calligraphy. Remove all traces of the old lower phrase, replace it with the new phrase centered with generous margins. Do not add any other text, logos or links. Keep portrait dimensions and quality.",
+      "tool": "Built-in image_gen edit",
+      "date": "2026-11-15"
+    }
   ]
 }
