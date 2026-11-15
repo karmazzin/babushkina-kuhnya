@@ -98,3 +98,6 @@
 @media(min-width:600px){body{background-position:center top}}
 
 .settings-tools .installed-version{grid-column:1/-1;margin:5px 0 0;color:#715a3c;font:12px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+.settings-tools .installed-version{font-size:14px;font-weight:600;color:#50391f}
+.installed-version small{display:block;margin-top:2px;font-size:10px;font-weight:400;color:#806c50;line-height:1.2}
