@@ -1,0 +1,22 @@
+{
+  "tool": "Built-in image_gen",
+  "date": "2026-11-15",
+  "assets": [
+    {
+      "path": "dist/assets/ui/recipe-tray.png",
+      "prompt": "Production game asset for a cozy illustrated Russian country kitchen match-three mobile game. A wide shallow rectangular honey oak serving tray with softly rounded corners, viewed directly from above, width to height ratio 2.6:1. Inside is a clean warm ivory linen napkin stretched flat, large completely blank center for game goal counters. Thin hand-carved wooden rim, subtle small natural wood grain, delicate soft shadow. No handles protruding. Object occupies nearly whole wide canvas, fully visible. Refined tactile painted 3D storybook style matching realistic appetizing food sprites. Warm natural colors, clean readable silhouette at small mobile size, NOT flat vector, NOT SVG, NOT emoji, NOT web UI mockup. No lettering, numbers, symbols, logos, watermark or background scene. Truly transparent background, no checkerboard. High quality."
+    },
+    {
+      "path": "dist/assets/ui/moves-plate.png",
+      "prompt": "Production game asset for a cozy illustrated Russian country kitchen match-three mobile game. One beautiful small round ivory ceramic saucer viewed directly from above. Thin sage green double rim with tiny hand painted leaf accents only around extreme edge, warm glazed ceramic dimensional bevel, generous totally blank cream center for a large move count. Soft tiny contact shadow. Entire isolated circular saucer visible. Refined tactile painted 3D storybook style matching realistic appetizing food sprites. Warm natural colors, clean readable silhouette at small mobile size, NOT flat vector, NOT SVG, NOT emoji, NOT web UI mockup. No lettering, numbers, symbols, logos, watermark or background scene. Truly transparent background, no checkerboard. High quality."
+    },
+    {
+      "path": "dist/assets/ui/rolling-pin.png",
+      "prompt": "Production game asset for a cozy illustrated Russian country kitchen match-three mobile game. One lovely honey oak wooden rolling pin with two handles, horizontal, viewed from slightly above, soft semi-realistic painted game illustration. Rich warm wood grain, rounded polished body, natural carved handles. Entire isolated rolling pin, wide composition, minimal transparent margins, gentle small shadow. No additional objects. Refined tactile painted 3D storybook style matching realistic appetizing food sprites. Warm natural colors, clean readable silhouette at small mobile size, NOT flat vector, NOT SVG, NOT emoji, NOT web UI mockup. No lettering, numbers, symbols, logos, watermark or background scene. Truly transparent background, no checkerboard. High quality."
+    },
+    {
+      "path": "dist/assets/ui/tea-kettle.png",
+      "prompt": "Production game asset for a cozy illustrated Russian country kitchen match-three mobile game. One charming squat ceramic teapot, ivory glazed body with sage green handle and lid and tiny hand-painted leaf sprig, spout pointing left, handle on right, viewed from three quarter slightly above. Soft semi-realistic painted game illustration, warm natural highlights and shadows. Entire isolated teapot, minimal transparent margins. No steam, no additional objects. Refined tactile painted 3D storybook style matching realistic appetizing food sprites. Warm natural colors, clean readable silhouette at small mobile size, NOT flat vector, NOT SVG, NOT emoji, NOT web UI mockup. No lettering, numbers, symbols, logos, watermark or background scene. Truly transparent background, no checkerboard. High quality."
+    }
+  ]
+}

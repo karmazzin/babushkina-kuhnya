@@ -118,7 +118,7 @@ function applyHelper(i){
 async function helperVisual(kind,index){
  const motionEpoch=epoch,host=$('helper-effect'),board=$('board').getBoundingClientRect(),cell=tiles[index].getBoundingClientRect(),frame=$('helper-effect').parentElement.getBoundingClientRect();
  host.className=kind;host.style.top=`${cell.y-frame.y}px`;host.style.left=`${board.x-frame.x}px`;host.style.width=`${board.width}px`;host.style.height=`${cell.height}px`;
- host.innerHTML=kind==='rolling'?'<img src="./assets/rolling.svg" alt="">':'<span class="steam">☁</span><img src="./assets/kettle.svg" alt="">';
+ host.innerHTML=kind==='rolling'?'<img src="./assets/ui/rolling-pin.png" alt="">':'<span class="steam">☁</span><img src="./assets/ui/tea-kettle.png" alt="">';
  if(kind==='kettle'){host.style.left=`${cell.x-frame.x-cell.width}px`;host.style.top=`${cell.y-frame.y-cell.height}px`;host.style.width=`${cell.width*3}px`;host.style.height=`${cell.height*3}px`;}
  const cleanup=await animate([host],kind==='rolling'?[{opacity:0,transform:'translateX(-12%)'},{opacity:1,offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateX(12%)'}]:[{opacity:0,transform:'scale(.65)'},{opacity:.85,offset:.4},{opacity:0,transform:'scale(1.15) translateY(-10px)'}],{duration:900,easing:'ease-in-out'},a=>pacing.track(a));cleanup();if(motionEpoch===epoch)host.replaceChildren();
 }

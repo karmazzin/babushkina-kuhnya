@@ -30,13 +30,13 @@
 <meta name="twitter:description" content="Уютная игра с рецептами и кухонными помощниками. Без таймера, с сохранением прогресса и работой офлайн.">
 <meta name="twitter:image" content="https://karmazzin.github.io/babushkina-kuhnya/assets/social-preview.png">
 <meta name="twitter:image:alt" content="Бабушкина кухня — уютная игра три в ряд">
-<link rel="stylesheet" href="./style.css"><title>Бабушкина кухня · Три в ряд</title>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./gameplay.css"><title>Бабушкина кухня · Три в ряд</title>
 </head>
 <body>
 <main id="app">
 <section id="menu" class="screen menu-screen" aria-labelledby="menu-title">
 
-<header class="brand"><div class="berry" aria-hidden="true">✦ ❧ ✦</div><h1 id="menu-title">Бабушкина<br>кухня</h1><p>Три в ряд с любовью</p></header>
+<header class="brand"><h1 id="menu-title">Бабушкина<br>кухня</h1><p>Три в ряд с любовью</p></header>
 <div class="hero-food" aria-hidden="true"><span class="food f0"></span><span class="food f1"></span><span class="food f2"></span></div>
 <div class="menu-card">
 <p class="welcome">Заходите на огонёк</p>
@@ -48,21 +48,21 @@
 <nav class="menu-links" aria-label="Дополнительно"><button id="how">Как играть</button><button id="settings">Настройки</button><button id="install">Установить</button></nav>
 <p id="offline" class="offline" role="status">Готовим игру для работы без интернета…</p>
 </section>
-<section id="book" class="screen book-screen" hidden aria-labelledby="book-title"><header class="book-top"><button id="book-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="book-title">Бабушкина книга</h1><span aria-hidden="true">❧</span></header><div id="book-content"></div></section>
-<section id="collection" class="screen collection-screen" hidden aria-labelledby="collection-title"><header class="book-top"><button id="collection-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="collection-title">Мои открытки</h1><span aria-hidden="true">❧</span></header><div id="collection-content"></div></section>
+<section id="book" class="screen book-screen" hidden aria-labelledby="book-title"><header class="book-top"><button id="book-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="book-title">Бабушкина книга</h1></header><div id="book-content"></div></section>
+<section id="collection" class="screen collection-screen" hidden aria-labelledby="collection-title"><header class="book-top"><button id="collection-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="collection-title">Мои открытки</h1></header><div id="collection-content"></div></section>
 <section id="game" class="screen game-screen" hidden aria-labelledby="game-title">
-<header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><div><span class="logo-ornament" aria-hidden="true">✦ ❧ ✦</span><h1 id="game-title"><span>Бабушкина</span><span>кухня</span></h1><span class="level-label"><span id="game-mode">Уровень</span> <b id="level">1</b></span></div><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
+<header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><h1 id="game-title" class="level-label"><span id="game-mode">Уровень</span> <b id="level">1</b></h1><button id="sound" class="round-button sound-control" aria-label="Музыка и звуки">♫</button><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
 
 <div class="scorecard"><div class="score-block"><div id="score-metric"><span class="stat-label">Очки</span><div><strong id="score">0</strong><span class="target"> / <span id="target">1 000</span></span></div><progress id="progress" value="0" max="1000" aria-label="Прогресс к цели"></progress></div><div id="recipe-goals"></div></div><div class="moves-block"><span class="stat-label">Ходы</span><strong id="moves">24</strong></div></div>
 <div class="board-stage"><div class="board-frame"><div id="board" role="group" aria-label="Игровое поле: 7 столбцов, 8 строк"></div><div id="helper-effect" aria-hidden="true"></div><div id="score-pop" aria-hidden="true"></div></div></div>
-<div class="helper-bar" id="helper-bar"><button id="rolling" class="helper-button"><img src="./assets/rolling.svg" alt="">Скалка <b id="rolling-count">1</b></button><button id="kettle" class="helper-button"><img src="./assets/kettle.svg" alt="">Чайник <b id="kettle-count">1</b></button></div><div id="helper-targeting" class="helper-targeting"><span id="helper-prompt" role="status">Соберите блюда, показанные сверху</span><button id="helper-cancel" hidden aria-label="Отменить помощника">×</button></div>
+<div class="helper-bar" id="helper-bar"><button id="rolling" class="helper-button"><img src="./assets/ui/rolling-pin.png" alt=""><span class="helper-name">Скалка</span> <b id="rolling-count">1</b></button><button id="kettle" class="helper-button"><img src="./assets/ui/tea-kettle.png" alt=""><span class="helper-name">Чайник</span> <b id="kettle-count">1</b></button></div><div id="helper-targeting" class="helper-targeting"><span id="helper-prompt" role="status">Соберите блюда, показанные сверху</span><button id="helper-cancel" tabindex="-1" hidden aria-label="Отменить помощника">×</button></div>
 <p id="game-message" class="game-message" role="status" aria-live="polite"></p>
-<div class="game-bottom"><span>Без спешки. С любовью.</span><button id="sound" aria-label="Музыка и звуки">♫ Музыка и звуки</button></div>
+
 </section>
 <p id="storage-warning" class="warning" role="alert" hidden></p>
 </main>
 <aside id="update-notice" class="update-notice" hidden aria-label="Обновление игры"><span id="update-text" role="status">Доступно обновление</span><button id="update-game">Обновить игру</button></aside>
-<dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-ornament" aria-hidden="true">❧</div><h2 id="dialog-title"></h2><div id="dialog-content"></div><div id="dialog-actions"></div></dialog>
+<dialog id="dialog" aria-labelledby="dialog-title"><h2 id="dialog-title"></h2><div id="dialog-content"></div><div id="dialog-actions"></div></dialog>
 <noscript>Для игры необходимо включить JavaScript в браузере.</noscript>
 <script type="module" src="./app.js"></script>
 </body></html>
