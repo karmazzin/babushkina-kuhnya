@@ -33,5 +33,53 @@
     "target": "dist/assets/postcards/card-17.jpg",
     "prompt": "Use case: illustration-story. Create one premium finished Russian greeting postcard, vertical 4:5. a cheerful old-fashioned cottage windowsill with a ginger cat sleeping beside a geranium, a cup of tea and a small bowl of cherries, bright gentle summer morning. Detailed natural watercolor/gouache, warm nostalgic home, delicate paper texture, beautifully composed real objects, gentle light, refined painterly realism. Large extremely readable dark olive or burgundy Cyrillic calligraphy at top exactly «Радости в каждом дне!». Bottom line exactly «И маленьких чудес». Text entirely inside generous margins. Full bleed artwork, no watermark, logo, game UI, dates or numbers. This is a standalone beautiful postcard for an older woman, matching a cozy Russian grandma cooking game.",
     "tool": "image_gen"
+  },
+  {
+    "key": "card18",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-ec7ca2df-359a-47ad-86c2-5615600a258d.png",
+    "target": "dist/assets/postcards/card-18.jpg",
+    "prompt": "Use case: illustration-story. Create a premium finished Russian greeting postcard, vertical 4:5. a round table on a cottage terrace with a beautiful copper samovar, two patterned porcelain cups, a plate of homemade cottage cheese pastries, a bowl of raspberry jam, a blue linen tablecloth, golden afternoon. Detailed natural watercolor/gouache illustration, refined painterly realism, warm nostalgic home, delicate paper texture. Elegant extremely readable Cyrillic calligraphy at the top exactly «Уютного чаепития!» and bottom exactly «С добрыми разговорами», dark olive or burgundy. All letters accurate and safely within generous margins. Full bleed artwork, no logos, watermarks, game UI, dates or numbers."
+  },
+  {
+    "key": "card19",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-70c733e2-c0fd-4d17-9cfd-3f31959e159c.png",
+    "target": "dist/assets/postcards/card-19.jpg",
+    "prompt": "Use case: illustration-story. Create a premium finished Russian greeting postcard, vertical 4:5. a bright kitchen with sunflowers in a simple ceramic vase, a plate of golden potato pancakes with sour cream, an embroidered white linen cloth, yellow sunlight from a wide window. Detailed natural watercolor/gouache illustration, refined painterly realism, warm nostalgic home, delicate paper texture. Elegant extremely readable Cyrillic calligraphy at the top exactly «Солнечного настроения!» and bottom exactly «Пусть сердце улыбается», dark olive or burgundy. All letters accurate and safely within generous margins. Full bleed artwork, no logos, watermarks, game UI, dates or numbers."
+  },
+  {
+    "key": "card20",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-61891dfd-6587-46d8-8fef-374fc3f56f32.png",
+    "target": "dist/assets/postcards/card-20.jpg",
+    "prompt": "Use case: illustration-story. Create a premium finished Russian greeting postcard, vertical 4:5. a cozy autumn grandmother kitchen, pumpkin on a wooden shelf, a steaming bowl of red borscht with dill and sour cream, fresh dark bread, burgundy embroidered tablecloth, warm copper light. Detailed natural watercolor/gouache illustration, refined painterly realism, warm nostalgic home, delicate paper texture. Elegant extremely readable Cyrillic calligraphy at the top exactly «Тепла и заботы!» and bottom exactly «Вам и вашим близким», dark olive or burgundy. All letters accurate and safely within generous margins. Full bleed artwork, no logos, watermarks, game UI, dates or numbers."
+  },
+  {
+    "key": "card21",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-c0213bca-f048-4c68-b0ee-707abb08e4aa.png",
+    "target": "dist/assets/postcards/card-21.jpg",
+    "prompt": "Use case: illustration-story. Create a premium finished Russian greeting postcard, vertical 4:5. a peaceful snowy evening visible through a cottage window, knitted mittens on a bench, a teapot and baked apples with cinnamon on an old wooden table, warm candle glow, cream and muted blue. Detailed natural watercolor/gouache illustration, refined painterly realism, warm nostalgic home, delicate paper texture. Elegant extremely readable Cyrillic calligraphy at the top exactly «Пусть дома будет уютно!» and bottom exactly «А на душе спокойно», dark olive or burgundy. All letters accurate and safely within generous margins. Full bleed artwork, no logos, watermarks, game UI, dates or numbers."
+  },
+  {
+    "key": "casserole",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-80647996-f8d3-4f2a-8cd6-78675ed13ad4.png",
+    "target": "dist/assets/foods/casserole.png",
+    "prompt": "Use case: stylized-concept. Asset type: one square mobile match-three game food sprite on genuinely transparent background. Subject: one tall rectangular slice of Russian cottage-cheese casserole, creamy ivory interior with a few raisins, a clearly golden brown top, three red raspberries beside it, on a small dark teal square ceramic plate. Match the provided reference's appetizing detailed hand-painted 3D food icon style, warm lighting, strong silhouette, restrained realistic gloss, 3/4 overhead angle. One entire compact dish centered, occupies 85% of square canvas, complete plate and food visible, small clean margin. Readable at 40 pixels. No text, background, table, props outside plate, frame, watermark, drop shadow outside the object, or multiple panels. Reference is style only; create the requested new dish as a single icon."
+  },
+  {
+    "key": "fritters",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-2630328d-c865-453f-8be8-c4f578b4f731.png",
+    "target": "dist/assets/foods/fritters.png",
+    "prompt": "Use case: stylized-concept. Asset type: one square mobile match-three game food sprite on genuinely transparent background. Subject: four small thick fluffy Russian oladьи pancakes arranged in a compact overlapping fan, golden tops, white sour cream and a bright strawberry preserve accent, on a simple white oval plate with a dark blue rim; not a tall pancake stack. Match the provided reference's appetizing detailed hand-painted 3D food icon style, warm lighting, strong silhouette, restrained realistic gloss, 3/4 overhead angle. One entire compact dish centered, occupies 85% of square canvas, complete plate and food visible, small clean margin. Readable at 40 pixels. No text, background, table, props outside plate, frame, watermark, drop shadow outside the object, or multiple panels. Reference is style only; create the requested new dish as a single icon."
+  },
+  {
+    "key": "cherry-dumplings",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-e6dd417b-ed19-43ec-93a0-e91492764e35.png",
+    "target": "dist/assets/foods/cherry-dumplings.png",
+    "prompt": "Use case: stylized-concept. Asset type: one square mobile match-three game food sprite on genuinely transparent background. Subject: three large crescent-shaped Russian cherry vareniki with braided crimped edges, one slightly open showing deep red cherry filling, a small red cherry pair as garnish, on a light turquoise plate. Match the provided reference's appetizing detailed hand-painted 3D food icon style, warm lighting, strong silhouette, restrained realistic gloss, 3/4 overhead angle. One entire compact dish centered, occupies 85% of square canvas, complete plate and food visible, small clean margin. Readable at 40 pixels. No text, background, table, props outside plate, frame, watermark, drop shadow outside the object, or multiple panels. Reference is style only; create the requested new dish as a single icon."
+  },
+  {
+    "key": "potato-pancakes",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-775f031f-3a91-4922-8473-d5fff6db1365.png",
+    "target": "dist/assets/foods/potato-pancakes.png",
+    "prompt": "Use case: stylized-concept. Asset type: one square mobile match-three game food sprite on genuinely transparent background. Subject: three irregular flat crisp potato pancakes (draniki), clearly shredded potato texture, warm golden brown, a single white sour cream dollop and green chives, on a small burgundy ceramic plate. Match the provided reference's appetizing detailed hand-painted 3D food icon style, warm lighting, strong silhouette, restrained realistic gloss, 3/4 overhead angle. One entire compact dish centered, occupies 85% of square canvas, complete plate and food visible, small clean margin. Readable at 40 pixels. No text, background, table, props outside plate, frame, watermark, drop shadow outside the object, or multiple panels. Reference is style only; create the requested new dish as a single icon."
   }
 ]
