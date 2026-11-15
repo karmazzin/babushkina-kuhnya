@@ -7,6 +7,11 @@ import * as storage from '../dist/storage.js';
 import * as book from '../dist/book.js';
 import * as recipes from '../dist/recipes.js';
 import * as daily from '../dist/daily.js';
+import * as progression from '../dist/progression.js';
+import * as recipeCards from '../dist/recipe-cards.js';
+import * as relaxed from '../dist/relaxed.js';
+import * as pacing from '../dist/pacing.js';
+import {FOODS} from '../dist/foods.js';
 import {postcardMarkup} from '../dist/postcards.js';
 import {createDialogControls} from '../dist/dialog.js';
 const source=(await fs.readFile(new URL('../dist/app.js',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
@@ -19,7 +24,7 @@ function harness(){
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
  const saved=new Map();const localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
  const document={getElementById:get,createElement:()=>new Node(),addEventListener(){},body:new Node(),hidden:false};
- const context=vm.createContext({...engine,...storage,...book,...recipes,...daily,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
+ const context=vm.createContext({...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
  vm.runInContext(source,context);
  const run=s=>vm.runInContext(s,context);
  const buttons=()=>get('dialog-actions').children.map(b=>b.textContent);
@@ -37,7 +42,7 @@ for(const escape of [false,true]){
  test(`installation instructions: ${suffix} returns to menu`,async()=>{const h=harness();await h.run('install()');exit(h,'Назад');assert.equal(h.get('menu').hidden,false);assert.equal(h.get('dialog').open,false);h.start();h.playable();});
 }
 test('positive new game and reset routes remain usable',async()=>{const h=harness();h.start();h.run('menu();requestStart()');h.click('Начать заново');h.playable();h.run('settings()');h.get('reset').onclick();h.click('Да, сбросить');assert.equal(h.get('menu').hidden,false);assert.equal(h.run('data.game'),null);h.start();h.playable();});
-test('help and recipe forward buttons reach a final return, without a hidden third exit',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<5;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();h.run('book(0);recipePage(CHAPTERS[0])');for(let i=1;i<recipes.CHAPTERS[0].steps.length;i++)h.click('Дальше');assert.deepEqual(h.buttons(),['В книгу']);h.click('В книгу');assert.equal(h.get('book').hidden,false);});
+test('help and recipe forward buttons reach a final return, without a hidden third exit',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<5;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();h.run('book(0);recipePage(CHAPTERS[0])');for(let i=1;i<book.recipePages(recipes.CHAPTERS[0]).length;i++)h.click('Дальше');assert.deepEqual(h.buttons(),['Предыдущая страница','В книгу']);h.click('В книгу');assert.equal(h.get('book').hidden,false);});
 for(const status of ['won','lost'])test(`result ${status}: primary action opens a playable next/retry game`,()=>{const h=harness();h.start();h.run(`data.game.status='${status}';outcome()`);h.click(status==='won'?'Следующий уровень':'Попробовать ещё');assert.equal(h.run('data.game.level'),status==='won'?2:1);h.playable();});
 test('confirm level selection starts the selected level',()=>{const h=harness();h.start();h.run('data.unlocked=2;book(0);chooseLevel(2)');h.click('Открыть уровень');assert.equal(h.run('data.game.level'),2);h.playable();});
 test('credits source keeps a route back after opening the source',()=>{const h=harness();h.start();for(let page=0;page<2;page++){h.run(`credits(${page})`);h.click('Источник и лицензия ↗');h.click('Назад к настройкам');h.click('Продолжить игру');h.playable();}});
@@ -70,3 +75,39 @@ test('a local action cannot overwrite a newer save before its storage event is d
  const h=harness();h.start();h.run("storage.setItem(KEY,JSON.stringify({...data,best:999}));data.best=100;persist()");
  assert.equal(h.run('loadProgress(storage).data.best'),999);assert.equal(h.run('saveDirty'),true);
 });
+
+for(const mode of ['regular','daily','relaxed'])test(`${mode}: independent saved game resumes after menu`,()=>{
+ const h=harness();h.start();const before=h.run('JSON.stringify(data.game)');
+ if(mode==='daily')h.run('beginDaily()');if(mode==='relaxed')h.run('requestRelaxed()');
+ const active=h.run('JSON.stringify(activeGame())');h.run(`menu();openGame('${mode}')`);h.playable();assert.equal(h.run('JSON.stringify(activeGame())'),active);
+ if(mode!=='regular')assert.equal(h.run('JSON.stringify(data.game)'),before);
+ if(mode==='relaxed'){assert.equal(h.get('moves').textContent,'∞');assert.equal(h.run('activeGame().moves'),null);}
+});
+for(const mode of ['regular','daily'])test(`${mode}: last-move helpers resume, block swaps and allow a finishing helper`,async()=>{
+ const h=harness();h.start();if(mode==='daily')h.run('beginDaily()');
+ h.run("activeGame().moves=0;activeGame().status='helpers';activeGame().plates=[24];activeGame().goals=[{kind:'plates',amount:1}];persist();menu()");
+ h.run(`data=loadProgress(storage).data;openGame('${mode}')`);assert.equal(h.get('dialog').open,false);assert.equal(h.get('kettle').disabled,false);assert.equal(h.get('finish-attempt').hidden,false);
+ h.run('choose(0)');assert.equal(h.run('selected'),null);
+ await h.run("data.settings.reduced=true;selectHelper('kettle');swap(24,null,'kettle')");
+ assert.equal(h.run('activeGame().status'),'won');assert.equal(h.get('dialog').open,true);
+ h.escape();assert.equal(h.get(mode==='daily'?'collection':'book').hidden,false);
+});
+for(const escape of [false,true])test(`finish attempt: ${escape?'Escape keeps helpers':'confirm ends attempt'} has a usable route`,()=>{
+ const h=harness();h.start();h.run("data.game.moves=0;data.game.status='helpers';openGame();requestFinish()");
+ if(escape){h.escape();assert.equal(h.run('data.game.status'),'helpers');assert.equal(h.get('dialog').open,false);}
+ else{h.click('Завершить попытку');assert.equal(h.run('data.game.status'),'lost');h.click('Попробовать ещё');h.playable();}
+});
+test('relaxed victory advances its order without awarding campaign recipes or postcards',()=>{
+ const h=harness();h.start();const regular=h.run('JSON.stringify(data.game)');h.run("requestRelaxed();data.relaxed.game.status='won';outcome()");h.click('Следующее угощение');h.playable();
+ assert.equal(h.run('data.relaxed.game.order'),2);assert.equal(h.run('JSON.stringify(data.game)'),regular);assert.equal(h.run('data.daily.cards.length'),0);assert.equal(h.run('data.recipes.unlocked.length'),0);
+ h.run("data.relaxed.game.status='won';outcome()");h.escape();assert.equal(h.get('menu').hidden,false);h.run('requestRelaxed()');h.click('Следующее угощение');h.playable();
+});
+test('first earned helper explains its rule once and returns to play',()=>{
+ const h=harness();h.start();h.run("earnedHelperNotice({rolling:1,kettle:0},()=>{})");assert.equal(h.get('dialog').open,true);assert.match(h.get('dialog-content').innerHTML,/четыре|4/i);h.escape();h.playable();
+ assert.equal(h.run("earnedHelperNotice({rolling:1,kettle:0},()=>{})"),false);assert.equal(h.get('dialog').open,false);
+});
+test('recipe milestone result records reward, opens its full recipe and returns safely',()=>{
+ const h=harness();h.start();h.run("data.completed=[1,2,3,4,5];data.game=newGame(6);data.game.status='won';outcome()");assert.equal(h.run('data.recipes.unlocked[0]'),'blini');
+ h.click('Посмотреть рецепт');assert.match(h.get('dialog-content').innerHTML,/4 порции/);h.escape();assert.equal(h.get('book').hidden,false);h.run('start()');h.playable();
+});
+test('settings label describes animation rather than a separate game mode',()=>{const h=harness();h.run('settings()');assert.match(h.get('dialog-content').innerHTML,/Меньше анимации/);assert.doesNotMatch(h.get('dialog-content').innerHTML,/Спокойный режим/);});

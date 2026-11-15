@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="kitchen-build" content="ca55e854">
+<meta name="kitchen-build" content="f2bb1745">
 <meta name="kitchen-version" content="1.0.1">
 <meta name="theme-color" content="#536b40">
 <meta name="description" content="Бабушкина кухня — уютная игра три в ряд с книгой рецептов и кухонными помощниками. Без таймера, с сохранением прогресса и работой без интернета.">
@@ -44,7 +44,7 @@
 <p class="welcome">Заходите на огонёк</p>
 <button id="continue" class="button primary">Продолжить</button>
 <button id="start" class="button secondary">Начать готовить</button>
-<button id="open-daily" class="button daily-button"><span id="daily-label">Угощение дня</span><small id="daily-caption">Короткая игра · открытка в подарок</small></button><div class="menu-action-row"><button id="open-book" class="button secondary">Книга рецептов</button><button id="open-collection" class="button secondary">Открытки · <span id="collection-count">0</span></button></div>
+<button id="open-daily" class="button daily-button"><span id="daily-label">Угощение дня</span><small id="daily-caption">Короткая игра · открытка в подарок</small></button><button id="open-relaxed" class="button secondary">Без спешки <small>Ходы не ограничены</small></button><div class="menu-action-row"><button id="open-book" class="button secondary">Книга рецептов</button><button id="open-collection" class="button secondary">Открытки · <span id="collection-count">0</span></button></div>
 <div class="menu-stats"><span>Открыт уровень <b id="unlocked">1</b></span><span>Рекорд <b id="best">0</b></span></div>
 </div>
 <nav class="menu-links" aria-label="Дополнительно"><button id="how">Как играть</button><button id="settings">Настройки</button><button id="install">Установить</button></nav>
@@ -55,9 +55,9 @@
 <section id="game" class="screen game-screen" hidden aria-labelledby="game-title">
 <header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><h1 id="game-title" class="level-label"><span id="game-mode">Уровень</span> <b id="level">1</b></h1><button id="sound" class="round-button sound-control" aria-label="Музыка и звуки">♫</button><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
 
-<div class="scorecard"><div class="score-block"><div id="score-metric"><span class="stat-label">Очки</span><div><strong id="score">0</strong><span class="target"> / <span id="target">1 000</span></span></div><progress id="progress" value="0" max="1000" aria-label="Прогресс к цели"></progress></div><div id="recipe-goals"></div></div><div class="moves-block"><span class="stat-label">Ходы</span><strong id="moves">24</strong></div></div>
+<div class="scorecard"><div class="score-block"><div id="score-metric"><span class="stat-label">Очки</span><div><strong id="score">0</strong><span class="target"> / <span id="target">1 000</span></span></div><progress id="progress" value="0" max="1000" aria-label="Прогресс к цели"></progress></div><div id="recipe-goals"></div></div><div class="moves-block"><span id="moves-label" class="stat-label">Ходы</span><strong id="moves">24</strong></div></div>
 <div class="board-stage"><div class="board-frame"><div id="board" role="group" aria-label="Игровое поле: 7 столбцов, 8 строк"></div><div id="helper-effect" aria-hidden="true"></div><div id="score-pop" aria-hidden="true"></div></div></div>
-<div class="helper-bar" id="helper-bar"><button id="rolling" class="helper-button"><img src="./assets/ui/rolling-pin.png" alt=""><span class="helper-name">Скалка</span> <b id="rolling-count">1</b></button><button id="kettle" class="helper-button"><img src="./assets/ui/tea-kettle.png" alt=""><span class="helper-name">Чайник</span> <b id="kettle-count">1</b></button></div><div id="helper-targeting" class="helper-targeting"><span id="helper-prompt" role="status">Соберите блюда, показанные сверху</span><button id="helper-cancel" tabindex="-1" hidden aria-label="Отменить помощника">×</button></div>
+<div class="helper-bar" id="helper-bar"><button id="rolling" class="helper-button"><img src="./assets/ui/rolling-pin.png" alt=""><span class="helper-name">Скалка</span> <b id="rolling-count">1</b></button><button id="kettle" class="helper-button"><img src="./assets/ui/tea-kettle.png" alt=""><span class="helper-name">Чайник</span> <b id="kettle-count">1</b></button></div><div id="helper-targeting" class="helper-targeting"><span id="helper-prompt" role="status">Соберите блюда, показанные сверху</span><button id="finish-attempt" hidden>Завершить</button><button id="helper-cancel" hidden aria-label="Отменить помощника">×</button></div>
 <p id="game-message" class="game-message" role="status" aria-live="polite"></p>
 
 </section>

@@ -41,9 +41,9 @@
 ## Task 3: Complete player-facing flows
 **Files:** dist/app.js, dist/book.js, dist/index.html, dist/gameplay.css, dist/style.css, dist/postcards.js; tests/dialog-routes.test.js and new mode routes.
 **Interfaces:** campaign wins through recordCampaignWin; active mode can be regular/daily/relaxed; rendered recipe shelf invokes recipe pages; helper phase resumes and permits voluntary finish.
-- [ ] Add failing integration tests for helpers at zero, all modes' result exits, recipe pages/back, helper guidance and legacy restore.
-- [ ] Implement useful hints/overlays, reward/goal-led results, recipe shelf and next reward, relaxed controls, settings label, compact layout and stable postcard identities.
-- [ ] Run focused and whole suite; commit.
+- [x] Add failing integration tests for helpers at zero, all modes' result exits, recipe pages/back, helper guidance and legacy restore.
+- [x] Implement useful hints/overlays, reward/goal-led results, recipe shelf and next reward, relaxed controls, settings label, compact layout and stable postcard identities.
+- [x] Run focused and whole suite; commit.
 
 ## Task 4: Finished artwork and offline packaging
 **Files:** dist/assets/postcards/card-13..24.jpg, dist/assets/foods/*.png, dist/assets/recipes/*.jpg; docs/balance-art-prompts.json; style references and sw.js/build release manifest.
