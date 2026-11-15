@@ -1,0 +1,17 @@
+MUSIC
+Porch Swing Days - slower — Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons Attribution 4.0 International.
+https://creativecommons.org/licenses/by/4.0/
+Source: https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100715
+Download: https://incompetech.com/music/royalty-free/mp3-royaltyfree/Porch%20Swing%20Days%20-%20slower.mp3
+Modification: transcoded from MP3 to AAC 96 kbps for a smaller offline download. Full composition retained; volume reduced during playback; looped.
+
+SOUND EFFECTS
+Interface Sounds — Kenney (Kenney Vleugels)
+License: Creative Commons Zero (CC0), public domain dedication.
+https://creativecommons.org/publicdomain/zero/1.0/
+Author page: https://kenney.nl/assets/interface-sounds
+Author's OpenGameArt publication: https://opengameart.org/content/interface-sounds
+Download: https://opengameart.org/sites/default/files/kenney_interfaceSounds.zip
+Mapping: click_001.ogg → select.mp3; confirmation_002.ogg → match.mp3; drop_002.ogg → land.mp3; error_003.ogg → invalid.mp3; confirmation_004.ogg → win.mp3.
+Modification: transcoded OGG to MP3 96 kbps for browser compatibility. No synthesized or generated sound effects.

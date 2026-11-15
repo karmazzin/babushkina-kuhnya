@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#536b40"><meta name="description" content="Бабушкина кухня — уютная игра три в ряд. Собирайте блюда, проходите уровни и играйте без интернета.">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./assets/icon-192.png"><link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./style.css"><title>Бабушкина кухня · Три в ряд</title>
+</head>
+<body>
+<main id="app">
+<section id="menu" class="screen menu-screen" aria-labelledby="menu-title">
+
+<header class="brand"><div class="berry" aria-hidden="true">✦ ❧ ✦</div><h1 id="menu-title">Бабушкина<br>кухня</h1><p>Три в ряд с любовью</p></header>
+<div class="hero-food" aria-hidden="true"><span class="food f0"></span><span class="food f1"></span><span class="food f2"></span></div>
+<div class="menu-card">
+<p class="welcome">Заходите на огонёк</p>
+<button id="continue" class="button primary">Продолжить</button>
+<button id="start" class="button secondary">Начать готовить</button>
+<button id="open-book" class="button secondary">Книга рецептов</button>
+<div class="menu-stats"><span>Открыт уровень <b id="unlocked">1</b></span><span>Рекорд <b id="best">0</b></span></div>
+</div>
+<nav class="menu-links" aria-label="Дополнительно"><button id="how">Как играть</button><button id="settings">Настройки</button><button id="install">Установить</button></nav>
+<p id="offline" class="offline" role="status">Готовим игру для работы без интернета…</p>
+</section>
+<section id="book" class="screen book-screen" hidden aria-labelledby="book-title"><header class="book-top"><button id="book-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="book-title">Бабушкина книга</h1><span aria-hidden="true">❧</span></header><div id="book-content"></div></section>
+<section id="game" class="screen game-screen" hidden aria-labelledby="game-title">
+<header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><div><span class="logo-ornament" aria-hidden="true">✦ ❧ ✦</span><h1 id="game-title"><span>Бабушкина</span><span>кухня</span></h1><span class="level-label">Уровень <b id="level">1</b></span></div><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
+
+<div class="scorecard"><div class="score-block"><div id="score-metric"><span class="stat-label">Очки</span><div><strong id="score">0</strong><span class="target"> / <span id="target">1 000</span></span></div><progress id="progress" value="0" max="1000" aria-label="Прогресс к цели"></progress></div><div id="recipe-goals"></div></div><div class="moves-block"><span class="stat-label">Ходы</span><strong id="moves">24</strong></div></div>
+<div class="board-stage"><div class="board-frame"><div id="board" role="group" aria-label="Игровое поле: 7 столбцов, 8 строк"></div><div id="helper-effect" aria-hidden="true"></div><div id="score-pop" aria-hidden="true"></div></div></div>
+<div class="helper-bar" id="helper-bar"><button id="rolling" class="helper-button"><img src="./assets/rolling.svg" alt="">Скалка <b id="rolling-count">1</b></button><button id="kettle" class="helper-button"><img src="./assets/kettle.svg" alt="">Чайник <b id="kettle-count">1</b></button></div><div id="helper-targeting" class="helper-targeting" hidden><span id="helper-prompt">Выберите место</span><button id="helper-apply" disabled>Применить</button><button id="helper-cancel" aria-label="Отменить помощника">×</button></div>
+<p id="game-message" class="game-message" role="status" aria-live="polite"></p>
+<div class="game-bottom"><span>Без спешки. С любовью.</span><button id="sound" aria-label="Музыка и звуки">♫ Музыка и звуки</button></div>
+</section>
+<p id="storage-warning" class="warning" role="alert" hidden></p>
+</main>
+<dialog id="dialog" aria-labelledby="dialog-title"><button id="close-dialog" class="close-dialog" aria-label="Закрыть">×</button><div class="dialog-ornament" aria-hidden="true">❧</div><h2 id="dialog-title"></h2><div id="dialog-content"></div><div id="dialog-actions"></div></dialog>
+<noscript>Для игры необходимо включить JavaScript в браузере.</noscript>
+<script type="module" src="./app.js"></script>
+</body></html>
