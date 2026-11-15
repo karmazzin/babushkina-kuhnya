@@ -4,7 +4,7 @@ import * as engine from '../dist/engine.js';
 import * as pacing from '../dist/pacing.js';
 
 const board=[1,2,0,1,1,3,1,1,0,3,3,4,3,4,0,4,2,0,0,4,2,3,4,0,2,3,3,4,0,0,3,0,4,4,3,0,4,1,2,2,1,2,2,1,1,0,4,3,4,0,3,4,0,2,2,0];
-const state=(extra={})=>({level:1,board:board.slice(),moves:24,target:1000,score:0,status:'playing',goals:[{kind:'food',type:2,amount:12}],plates:[],collected:[0,0,0,0,0],boosters:{rolling:1,kettle:1},helperRule:'turn',...extra});
+const state=(extra={})=>({level:1,board:board.slice(),moves:24,score:0,status:'playing',goals:[{kind:'food',type:2,amount:12}],plates:[],collected:Array(10).fill(0),boosters:{rolling:1,kettle:1},rng:7,pool:[0,1,2,3,4],actions:0,stalled:0,...extra});
 
 test('hint collects the requested dish instead of the first top-row match',()=>{
  assert.equal(typeof pacing.hintAction,'function');
@@ -38,21 +38,18 @@ test('new plate game cannot win from any single initial helper, including cascad
  }
 });
 test('last ordinary move leaves new rules in the helper phase',()=>{
- const g=state({ruleVersion:3,rng:7,moves:1,goals:[{kind:'food',type:2,amount:1000}]});
+ const g=state({rng:7,moves:1,goals:[{kind:'food',type:2,amount:1000}]});
  const r=engine.play(g,5,6);assert.equal(r.game.moves,0);assert.equal(r.game.status,'helpers');assert.equal(engine.play(r.game,40,41).valid,false);
 });
 test('zero-move helper can complete the goal and otherwise exhausts into loss',()=>{
- const g=state({ruleVersion:3,rng:7,moves:0,status:'helpers',goals:[{kind:'plates',amount:1}],plates:[52],boosters:{rolling:0,kettle:1}});
+ const g=state({rng:7,moves:0,status:'helpers',goals:[{kind:'plates',amount:1}],plates:[52],boosters:{rolling:0,kettle:1}});
  const r=engine.useBooster(g,'kettle',52);assert.equal(r.valid,true);assert.equal(r.game.status,'won');assert.equal(r.game.moves,0);
  const loss=engine.useBooster({...g,plates:[],goals:[{kind:'food',type:2,amount:1000}]},'kettle',52);assert.equal(loss.game.status,'lost');
 });
 test('voluntary finish is explicit and leaves an already won game unchanged',()=>{
  assert.equal(typeof engine.finishAttempt,'function');
- const g=state({ruleVersion:3,moves:0,status:'helpers'}),r=engine.finishAttempt(g);
+ const g=state({moves:0,status:'helpers'}),r=engine.finishAttempt(g);
  assert.equal(r.status,'lost');assert.equal(g.status,'helpers');assert.equal(engine.finishAttempt({...g,status:'won'}).status,'won');
-});
-test('unversioned games keep their original last-move result',()=>{
- const g=state({rng:7,moves:1,goals:[{kind:'food',type:2,amount:1000}]});assert.equal(engine.play(g,5,6).game.status,'lost');
 });
 test('refill stays inside the five saved active dish types',()=>{
  assert.equal(typeof engine.createGame,'function');

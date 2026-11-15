@@ -18,8 +18,8 @@ test('recipe pages contain all ingredients and steps, with a bounded amount per 
 test('new food names and capped result counters stay meaningful',()=>{
  const g=newGame(19);g.collected[5]=100;assert.match(book.goalText(g),/Запеканк/);assert.doesNotMatch(book.goalMarkup(g),/undefined/);assert.match(book.resultGoalText(g),/18 из 18/);
 });
-test('old thirteenth postcard keeps its image while new art is shown explicitly',()=>{
- assert.match(postcardMarkup('2026-11-15',12,false,0),/card-01\.jpg/);
- assert.match(postcardMarkup('2026-11-16',13,false,12),/card-13\.jpg/);
+test('postcards and collection use their saved artwork identities',()=>{
+ assert.match(postcardMarkup('2026-11-15',12,false,12),/card-13\.jpg/);
+ assert.match(postcardMarkup('2026-11-16',13,false,13),/card-14\.jpg/);
  const r=root();renderCollection(r,['2026-11-15'],0,()=>{},()=>{},()=>{},[20]);assert.match(r.innerHTML,/card-21\.jpg/);
 });

@@ -46,19 +46,6 @@ test('missing earlier levels cannot be bypassed to claim a recipe',()=>{
  const p={...defaultProgress(),completed:[1,2,3,4],unlocked:6,game:{...newGame(6,{seed:9}),status:'won'}};
  assert.deepEqual(progression.recordCampaignWin(p).recipes.unlocked,[]);
 });
-test('legacy recipes survive and the next future milestone grants the next unseen dish',()=>{
- const s=memory(),old={version:1,unlocked:20,best:10,game:null,completed:completeTo(19),daily:{game:null,cards:[]},settings:{sound:true,music:true,reduced:false}};
- s.setItem('babushkina-kuhnya:v2',JSON.stringify(old));let p=loadProgress(s).data;
- assert.deepEqual(p.recipes?.unlocked,['blini','pelmeni','syrniki']);assert.deepEqual(p.recipes.milestones,[6,18]);
- p={...p,completed:completeTo(29),unlocked:30,game:{...newGame(30,{seed:3}),status:'won'}};p=progression.recordCampaignWin(p);
- assert.deepEqual(p.recipes.unlocked,['blini','pelmeni','syrniki','pirozhki']);
-});
-test('old repeated postcards keep their art when collection expands',()=>{
- const s=memory(),cards=Array.from({length:13},(_,i)=>`2026-10-${String(i+1).padStart(2,'0')}`);
- s.setItem('babushkina-kuhnya:v2',JSON.stringify({version:1,unlocked:1,best:0,game:null,completed:[],daily:{game:null,cards},settings:{sound:true,music:true,reduced:false}}));
- const {data:p,warning}=loadProgress(s);assert.equal(warning,null);assert.equal(p.daily.art?.[12],0);
- const daily=recordDailyWin({...p.daily,game:{...newDailyGame('2026-11-15'),status:'won'}});assert.equal(daily.art[13],12);assert.equal(daily.art[12],0);
-});
 test('daily year covers all four goals and never offers a one-helper win',()=>{
  const kinds=new Set();for(let i=0;i<40;i++){const date=new Date(Date.UTC(2026,0,1+i)).toISOString().slice(0,10),g=newDailyGame(date);kinds.add(g.goals.map(x=>x.kind).sort().join('+'));assert.equal(g.moves,16);assert.equal(openingHelperWin(g),false);}
  assert.deepEqual([...kinds].sort(),['food','food+food','food+plates','plates']);
@@ -75,7 +62,4 @@ test('relaxed orders have no move limit and save independently from both other g
 test('zero-move phase and active dish pool survive reload while corrupt pools are rejected',()=>{
  const g={...newGame(31,{seed:2}),moves:0,status:'helpers'},p={...defaultProgress(),game:g},s=memory();saveProgress(s,p);assert.equal(loadProgress(s).warning,null);assert.deepEqual(loadProgress(s).data.game,g);
  for(const change of [{pool:[0,0,1,2,3]},{pool:[0,1,2,3,4]},{goals:[{kind:'food',type:9,amount:10}]}]){saveProgress(s,{...p,game:{...g,...change}});assert.ok(loadProgress(s).warning);}
-});
-test('old-tab writes cannot overwrite migrated recipes and relaxed progress',()=>{
- assert.notEqual(KEY,'babushkina-kuhnya:v2');const s=memory(),p=defaultProgress();saveProgress(s,p);s.setItem('babushkina-kuhnya:v2',JSON.stringify({version:1,unlocked:1,best:0,game:null,completed:[],settings:{sound:true,reduced:false}}));assert.deepEqual(loadProgress(s).data,p);
 });

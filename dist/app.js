@@ -103,7 +103,7 @@ function dailyOutcome(){
  const g=data.daily.game,won=g.status==='won';
  if(won){const rewarded=recordDailyWin(data.daily);if(rewarded!==data.daily){data.daily=rewarded;persist();}}
  const index=data.daily.cards.indexOf(g.dailyDate);
- modal(won?'Открытка для вас':'Попробуем ещё?',won?postcardMarkup(g.dailyDate,index,false,data.daily.art[index])+'<p class="daily-reassurance">Открытка останется в коллекции.<br>Возвращайтесь, когда захочется.</p>':'<p>Угощение можно попробовать снова — столько раз, сколько хочется. Открытки и обычная партия сохранены.</p>',won?[{text:'В коллекцию',cancel:true,action:()=>collection()},{text:g.dailyDate===localDay()?'В главное меню':'Сегодняшнее угощение',secondary:true,action:()=>g.dailyDate===localDay()?menu():requestDaily()}]:[{text:'Попробовать ещё',action:()=>beginDaily(g.dailyDate)},{text:'В главное меню',cancel:true,secondary:true,action:menu}]);
+ modal(won?'Открытка для вас':'Попробуем ещё?',won?postcardMarkup(g.dailyDate,index,false,data.daily.art[index])+'<p class="daily-reassurance">Открытка останется в коллекции.<br>Возвращайтесь, когда захочется.</p>':`<div class="result-goals">${goalMarkup(g)}</div><p class="result-detail">${resultGoalText(g)}</p><p>Угощение можно попробовать снова — столько раз, сколько хочется. Открытки и обычная партия сохранены.</p>`,won?[{text:'В коллекцию',cancel:true,action:()=>collection()},{text:g.dailyDate===localDay()?'В главное меню':'Сегодняшнее угощение',secondary:true,action:()=>g.dailyDate===localDay()?menu():requestDaily()}]:[{text:'Попробовать ещё',action:()=>beginDaily(g.dailyDate)},{text:'В главное меню',cancel:true,secondary:true,action:menu}]);
 }
 const tiles=[];
 for(let i=0;i<56;i++){
@@ -122,9 +122,9 @@ function paintBoard(board,removed=[],plates=activeGame()?.plates??[]){
 }
 function selection(){tiles.forEach((tile,i)=>{tile.classList.toggle('selected',i===selected);tile.setAttribute('aria-pressed',String(i===selected));});}
 function stats(g=activeGame()){
- if(!g)return;if(!helper)$('helper-prompt').textContent=goalHint(g);$('game-mode').textContent=gameMode==='daily'?'Угощение дня':gameMode==='relaxed'?'Без спешки':'Уровень';$('level').textContent=gameMode==='daily'?displayDay(g.dailyDate).slice(0,5):gameMode==='relaxed'?g.order:g.level;$('score').textContent=fmt(g.score);$('target').textContent=fmt(g.target);$('moves').textContent=g.moves===null?'∞':g.moves;$('moves-label').textContent=g.moves===null?'Без лимита':'Ходы';$('finish-attempt').hidden=g.status!=='helpers';$('progress').max=g.target;$('progress').value=Math.min(g.target,g.score);
- $('score-metric').hidden=!!g.goals&&!g.goals.some(x=>x.kind==='score');$('recipe-goals').innerHTML=goalMarkup(g);$('score-metric').classList.toggle('mixed-goal',!!g.goals?.some(x=>x.kind==='food'));
- for(const kind of ['rolling','kettle']){$(kind+'-count').textContent=g.boosters?.[kind]??1;$(kind).disabled=busy||(g.boosters?.[kind]??1)===0||!isActiveGame(g);}
+ if(!g)return;if(!helper)$('helper-prompt').textContent=goalHint(g);$('game-mode').textContent=gameMode==='daily'?'Угощение дня':gameMode==='relaxed'?'Без спешки':'Уровень';$('level').textContent=gameMode==='daily'?displayDay(g.dailyDate).slice(0,5):gameMode==='relaxed'?g.order:g.level;$('moves').textContent=g.moves===null?'∞':g.moves;$('moves-label').textContent=g.moves===null?'Без лимита':'Ходы';$('finish-attempt').hidden=g.status!=='helpers';
+ $('recipe-goals').innerHTML=goalMarkup(g);
+ for(const kind of ['rolling','kettle']){$(kind+'-count').textContent=g.boosters[kind];$(kind).disabled=busy||(g.boosters[kind])===0||!isActiveGame(g);}
 }
 function goalInstruction(){return goalHint(activeGame());}
 function clearHelper(){
@@ -134,7 +134,7 @@ function clearHelper(){
  tiles.forEach(t=>t.classList.remove('helper-preview'));
 }
 function selectHelper(kind){
- if(busy||!isActiveGame(activeGame())||!(activeGame().boosters?.[kind]??1))return;
+ if(busy||!isActiveGame(activeGame())||!(activeGame().boosters[kind]))return;
  if(helper===kind){clearHelper();armHint();return;}
  clearHelper();clearHint();selected=null;selection();helper=kind;
  $(kind).classList.add('helper-selected');$(kind).setAttribute('aria-pressed','true');
@@ -170,7 +170,7 @@ async function swapVisual(a,b,back=false){
 async function swap(a,b,kind=null){
  if(busy||!isActiveGame(activeGame())||(!kind&&activeGame().status==='helpers'))return;
  clearHint();pacing=createPacing();
- const oldScore=activeGame().score,result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
+ const result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
  if(!result.valid){
   $('game-message').textContent='Нет совпадения. Ход сохранён.';
   if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
@@ -178,7 +178,6 @@ async function swap(a,b,kind=null){
  // Persist settled state first, but reveal points as each cascade resolves.
  setActiveGame(result.game);if(gameMode==='daily')data.daily=recordDailyWin(data.daily);else if(gameMode==='regular'){data.best=Math.max(data.best,activeGame().score);data=recordCampaignWin(data);}else if(activeGame().status==='won')data.relaxed.completed=Math.max(data.relaxed.completed,activeGame().order);persist();
  $('moves').textContent=activeGame().moves??'∞';$('board').setAttribute('aria-busy','true');
- let shownScore=oldScore;
  try{
   if(!reduce()&&kind){await helperVisual(kind,a);if(turn!==epoch)return;}
   if(!reduce()&&!kind){const cleanup=await swapVisual(a,b);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
@@ -190,10 +189,9 @@ async function swap(a,b,kind=null){
    await sleep(TIMING.highlight);if(turn!==epoch)return;audio.effect('match');
    const clearFade=await animate(frame.removed.map(food),[{opacity:1,transform:'scale(1)'},{opacity:.7,transform:'scale(1.08)',offset:.35},{opacity:0,transform:'scale(.75)'}],{duration:TIMING.fade,easing:'ease-in',fill:'forwards'},a=>pacing.track(a));
    if(turn!==epoch){clearFade();return;}
-   shownScore+=frame.removed.length*10*frame.multiplier;$('score').textContent=fmt(shownScore);$('progress').value=Math.min(activeGame().target,shownScore);
    $('score-pop').textContent=`+${frame.removed.length*10*frame.multiplier}`;$('score-pop').classList.remove('show');void $('score-pop').offsetWidth;$('score-pop').classList.add('show');
    const step=tiles[7].getBoundingClientRect().y-tiles[0].getBoundingClientRect().y;
-   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup({...activeGame(),plates:frame.platesAfter,collected:frame.collected});$('helper-prompt').textContent=goalHint({...activeGame(),score:shownScore,plates:frame.platesAfter,collected:frame.collected});clearFade();
+   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup({...activeGame(),plates:frame.platesAfter,collected:frame.collected});$('helper-prompt').textContent=goalHint({...activeGame(),plates:frame.platesAfter,collected:frame.collected});clearFade();
    const falling=gravityMap(frame.removed).filter(m=>m.from!==m.to).map(m=>food(m.to).animate([{transform:`translateY(${(m.from-m.to)/7*step}px)`,opacity:m.from<0?0:1},{transform:'translateY(0)',opacity:1}],{duration:TIMING.fall,easing:'cubic-bezier(.22,.68,.3,1)',fill:'both'}));
    falling.forEach(a=>pacing.track(a));
    await Promise.all(falling.map(a=>a.finished.catch(()=>{})));falling.forEach(a=>a.cancel());if(turn!==epoch)return;
@@ -270,7 +268,7 @@ function help(page=0){
 }
 function credits(page=0){const music=page===0;modal(music?'Музыка на кухне':'Звуки на кухне',music?'<p><b>Porch Swing Days — slower<br>Easy Lemon · Summer Day · Carefree</b></p><p>Kevin MacLeod · incompetech.com<br>Creative Commons Attribution 4.0.</p><p>Полные композиции, AAC; громкость выровнена.</p>':'<p><b>Interface Sounds</b><br>Kenney · kenney.nl</p><p>Creative Commons Zero (CC0).<br>Готовые записи, перекодированы в MP3.</p>',[...(music?[{text:'Звуковые эффекты →',action:()=>credits(1)}]:[]),{text:'Назад к настройкам',cancel:true,action:settings},{text:'Источник и лицензия ↗',secondary:true,action:()=>{window.open(music?'https://incompetech.com/music/royalty-free/licenses/':'https://kenney.nl/assets/interface-sounds','_blank','noopener');credits(page);}}]);}
 function settings(){
- modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume??.35)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume??.35)*100)}"></label><label class="setting">Меньше анимации<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="check-update">Проверить обновление</button><p id="update-status" role="status"></p><button class="button secondary" id="reset">Сброс прогресса</button><p class="installed-version"><span id="installed-version"></span><small id="installed-build"></small></p></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
+ modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume)*100)}"></label><label class="setting">Меньше анимации<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="check-update">Проверить обновление</button><p id="update-status" role="status"></p><button class="button secondary" id="reset">Сброс прогресса</button><p class="installed-version"><span id="installed-version"></span><small id="installed-build"></small></p></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
  for(const key of ['music','sound','reduced'])$('setting-'+key).onchange=e=>{data.settings[key]=e.target.checked;settingsApplied();persist();};
  $('setting-volume').oninput=e=>{data.settings.soundVolume=Number(e.target.value)/100;$('volume-value').textContent=e.target.value+'%';settingsApplied();persist();};
  $('setting-volume').onchange=()=>audio.effect('match');

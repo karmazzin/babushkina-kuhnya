@@ -24,4 +24,4 @@ test('nested windows replace the Escape destination without retaining a stale ac
  c.actions([{cancel:true,action:()=>{screen='settings';}}]);d.dispatchEvent(new Event('cancel',{cancelable:true}));assert.equal(screen,'settings');
 });
 test('loss shows actual food count, not just target',()=>{assert.equal(resultGoalText({goals:[{kind:'food',type:4,amount:20}],collected:[0,0,0,0,16]}),'Сырники: собрано 16 из 20');});
-test('result reports score and plates as actual / target',()=>{assert.equal(resultGoalText({score:930,target:1000}),'Очки: 930 из 1000');assert.equal(resultGoalText({goals:[{kind:'plates',amount:12}],plates:[0,1,2]}),'Тарелки: убрано 9 из 12');});
+test('result reports plates as actual / target',()=>{assert.equal(resultGoalText({goals:[{kind:'plates',amount:12}],plates:[0,1,2]}),'Тарелки: убрано 9 из 12');});

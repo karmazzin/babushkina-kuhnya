@@ -3,10 +3,9 @@ import {legalMoves,matches,earnedBoosters,boosterArea,isActiveGame} from './engi
 function merit(game,board,cells){
  const counts=new Map();for(const i of cells)counts.set(board[i],(counts.get(board[i])??0)+1);
  let progress=0,complete=true;
- for(const goal of game.goals??[{kind:'score'}]){
+ for(const goal of game.goals){
   if(goal.kind==='plates'){const remaining=game.plates??[],hit=remaining.filter(i=>cells.includes(i)).length;progress+=hit*4;if(hit<remaining.length)complete=false;}
   else if(goal.kind==='food'){const remaining=Math.max(0,goal.amount-(game.collected?.[goal.type]??0)),hit=Math.min(remaining,counts.get(goal.type)??0);progress+=hit;if(hit<remaining)complete=false;}
-  else {progress+=cells.length;if(game.score+cells.length*10<game.target)complete=false;}
  }
  return {progress,complete};
 }
@@ -17,7 +16,7 @@ export function hintAction(game){
  if(game.status==='playing')for(const move of legalMoves(game.board)){
   const board=game.board.slice();[board[move[0]],board[move[1]]]=[board[move[1]],board[move[0]]];
   const cells=matches(board),m=merit(game,board,cells),earned=earnedBoosters(board,cells);
-  const charges=['rolling','kettle'].reduce((n,k)=>n+(earned[k]&&((game.boosters?.[k]??1)<3)?1:0),0);
+  const charges=['rolling','kettle'].reduce((n,k)=>n+(earned[k]&&(game.boosters[k]<3)?1:0),0);
   const action={kind:'swap',move,rank:[Number(m.complete),Number(m.progress>0),m.progress,charges,cells.length,Math.max(...cells)]};
   if(!best||compare(action,best)>0)best=action;
  }

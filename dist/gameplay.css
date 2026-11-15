@@ -8,7 +8,7 @@
 .game-header h1.level-label span{display:inline;font:inherit}.game-header h1.level-label b{font-weight:bold}.game-header .sound-control{font-size:21px}
 .scorecard{display:grid;grid-template-columns:minmax(0,5fr) minmax(96px,2fr);align-items:center;gap:8px;flex:0 0 112px;height:112px;margin:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none;color:#5c422a;text-shadow:none}
 .score-block{display:flex;align-items:center;justify-content:center;height:100%;padding:20px 24px;background:url('./assets/ui/recipe-tray.png') center/100% 100% no-repeat;filter:drop-shadow(0 4px 3px #55381924);min-width:0}
-#score-metric{flex:1;max-width:225px;min-width:0;text-align:center}#score-metric .stat-label{font:14px Georgia;color:#745c3e;letter-spacing:0}#score-metric strong{font-size:27px;font-weight:bold;color:#5d4126}.target{font-size:15px;color:#846745}#score-metric progress{height:5px;margin-top:5px;background:#ddcba7;border-color:#c8b58e}
+
 #recipe-goals{justify-content:space-evenly;gap:10px;min-width:0}.dish-goal{flex-direction:column;gap:1px;font-size:22px;line-height:1.1;color:#5e4229}.dish-goal .food{width:40px;height:40px}.dish-goal .plate-icon{width:37px;height:37px;margin:4px}.dish-goal small{font-size:15px;color:#856b4e}.goal-check{left:auto;right:-7px;top:1px;font-size:18px}
 .moves-block{height:112px;min-width:0;padding:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:url('./assets/ui/moves-plate.png') center/contain no-repeat;filter:drop-shadow(0 4px 3px #55381924)}
 .moves-block .stat-label{font:14px Georgia,serif;color:#6b7350;letter-spacing:0;margin-top:0}.moves-block strong{font:bold 36px/1.1 Georgia,serif;color:#4f6138;text-shadow:0 1px #fff9ea}
@@ -24,14 +24,14 @@
 @media(max-height:700px) and (orientation:portrait){
  .game-screen{padding:0;gap:8px}.game-header{margin:0;gap:6px}.game-header h1.level-label{font-size:17px}
  .scorecard{flex-basis:86px;height:86px;grid-template-columns:minmax(0,5fr) minmax(80px,2fr);gap:8px;margin:0}.score-block{padding:12px 17px}.moves-block{height:80px}.moves-block strong{font-size:29px}.moves-block .stat-label{font-size:12px}
- .dish-goal{font-size:18px}.dish-goal .food{width:33px;height:33px}.dish-goal .plate-icon{width:28px;height:28px;margin:2px}.dish-goal small{font-size:12px}#recipe-goals{gap:7px}#score-metric strong{font-size:23px}#score-metric .stat-label{font-size:12px}.target{font-size:12px}
+ .dish-goal{font-size:18px}.dish-goal .food{width:33px;height:33px}.dish-goal .plate-icon{width:28px;height:28px;margin:2px}.dish-goal small{font-size:12px}#recipe-goals{gap:7px}
  .board-frame{padding:4px;border-radius:18px}#board{gap:2px}.tile{border-radius:8px}
  .helper-bar{flex-basis:64px;gap:8px;margin:0}.helper-button{width:112px;min-height:64px;grid-template-rows:39px 18px;border-radius:18px;padding:2px 8px 3px;font-size:13px}.helper-button img{width:74px;height:39px}.helper-button#kettle img{height:42px;width:52px;margin-top:-2px}.helper-button b{width:23px;min-width:23px;height:23px;font-size:13px;line-height:23px}.helper-name{line-height:18px}
 }
 @media(orientation:landscape) and (max-height:620px){
  .game-screen{display:grid;max-width:calc((100dvh - 8px) * .875 + 336px);max-height:none;grid-template-columns:minmax(230px,1fr) minmax(0,calc((100dvh - 8px) * .875));grid-template-rows:48px minmax(90px,1fr) 76px;gap:8px 16px;padding:0}
  .game-header{grid-column:1;grid-row:1;margin:0;gap:6px}.game-header h1.level-label{font-size:17px}
- .scorecard{grid-column:1;grid-row:2;height:104px;align-self:center;grid-template-columns:minmax(0,1fr) 85px;gap:6px;margin:0}.score-block{padding:16px 17px}.moves-block{height:85px}.moves-block strong{font-size:30px}.moves-block .stat-label{font-size:12px}.dish-goal{font-size:18px}.dish-goal .food{width:35px;height:35px}.dish-goal small{font-size:12px}.dish-goal .plate-icon{width:30px;height:30px}#recipe-goals{gap:6px}#score-metric strong{font-size:22px}.target{font-size:12px}
+ .scorecard{grid-column:1;grid-row:2;height:104px;align-self:center;grid-template-columns:minmax(0,1fr) 85px;gap:6px;margin:0}.score-block{padding:16px 17px}.moves-block{height:85px}.moves-block strong{font-size:30px}.moves-block .stat-label{font-size:12px}.dish-goal{font-size:18px}.dish-goal .food{width:35px;height:35px}.dish-goal small{font-size:12px}.dish-goal .plate-icon{width:30px;height:30px}#recipe-goals{gap:6px}
  .board-stage{grid-column:2;grid-row:1/4;max-height:none;height:100%}.board-frame{width:100%;height:100%;aspect-ratio:auto;padding:4px;max-height:100%}
  .helper-bar{grid-column:1;grid-row:3;margin:0;gap:8px}.helper-button{width:105px;min-height:70px;grid-template-rows:44px 18px;padding:2px 8px;font-size:13px}.helper-button img{height:44px;width:80px}.helper-button#kettle img{height:48px;width:55px}.helper-button b{font-size:13px;width:24px;min-width:24px;height:24px;line-height:24px}
 }

@@ -1,10 +1,9 @@
 import {foodPool,FOODS} from './foods.js';
-import {RECIPE_CARDS} from './recipe-cards.js';
 export const CHAPTERS=[
- {...RECIPE_CARDS[0],title:'Завтрак',dish:'Бабушкины блины',types:[1,4]},
- {...RECIPE_CARDS[1],title:'Воскресный обед',dish:'Домашние пельмени',types:[2,3]},
- {...RECIPE_CARDS[2],title:'Гости к чаю',dish:'Сырники',types:[4,0]},
- {...RECIPE_CARDS[3],title:'Большой семейный стол',dish:'Пирожки с картошкой',types:[0,1]}
+ {title:'Завтрак'},
+ {title:'Воскресный обед'},
+ {title:'Гости к чаю'},
+ {title:'Большой семейный стол'}
 ];
 export const PLATE_LAYOUTS={
  pairs:[15,16,39,40],

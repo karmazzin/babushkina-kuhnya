@@ -20,7 +20,7 @@ export function newDailyGame(day=localDay()){
 export function recordDailyWin(daily){
  const date=daily.game?.dailyDate;
  if(daily.game?.status!=='won'||!validDay(date)||daily.cards.includes(date))return daily;
- const art=daily.art??daily.cards.map((_,i)=>i%12),used=new Set(art);
+ const art=daily.art,used=new Set(art);
  const next=Array.from({length:24},(_,i)=>i).find(i=>!used.has(i))??((art.at(-1)??-1)+1)%24;
  return {...daily,cards:[...daily.cards,date],art:[...art,next]};
 }

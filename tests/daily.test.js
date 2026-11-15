@@ -23,7 +23,7 @@ test('daily retries repeat the same board, and saved RNG repeats subsequent turn
 });
 test('winning awards one card per played date and gaps never reset collection',()=>{
  assert.equal(typeof daily.recordDailyWin,'function');
- const state={game:{...daily.newDailyGame('2026-11-15'),status:'won'},cards:['2026-10-01']};
+ const state={game:{...daily.newDailyGame('2026-11-15'),status:'won'},cards:['2026-10-01'],art:[0]};
  const copy=structuredClone(state),won=daily.recordDailyWin(state);
  assert.deepEqual(state,copy);assert.deepEqual(won.cards,['2026-10-01','2026-11-15']);
  assert.deepEqual(daily.recordDailyWin(won),won);
@@ -37,12 +37,9 @@ test('unfinished previous day and completed today have explicit non-destructive 
  assert.equal(daily.dailyOffer(state,'2026-11-15'),'resume');
  assert.equal(daily.dailyOffer({game:null,cards:['2026-11-16']},'2026-11-16'),'completed');
 });
-test('daily save migrates independently and never modifies a campaign slot',()=>{
- assert.equal(typeof daily.newDailyGame,'function');
- const old={...defaultProgress(),game:newGame(5)};delete old.daily;
+test('daily save roundtrips independently and never modifies a campaign slot',()=>{
+ const full={...defaultProgress(),game:newGame(5),daily:{game:daily.newDailyGame('2026-11-15'),cards:['2026-11-01'],art:[0]}};
  const read=p=>loadProgress({getItem:()=>JSON.stringify(p)});
- const migrated=read(old);assert.equal(migrated.warning,null);assert.deepEqual(migrated.data.game,old.game);assert.deepEqual(migrated.data.daily,{game:null,cards:[],art:[]});
- const full={...migrated.data,daily:{game:daily.newDailyGame('2026-11-15'),cards:['2026-11-01'],art:[0]}};
  assert.deepEqual(read(full).data,full);
  for(const change of [{cards:['2026-02-30']},{cards:['2026-11-01','2026-11-01']},{game:{...full.daily.game,rng:-1}},{game:{...full.daily.game,dailyDate:'2026-02-30'}},{game:{...full.daily.game,dailyDate:undefined}}])assert.ok(read({...full,daily:{...full.daily,...change}}).warning);
 });

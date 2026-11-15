@@ -35,8 +35,6 @@ test('plate save roundtrips and corrupt or missing plate cells are rejected',()=
  const p={...defaultProgress(),game:newGame(4)};const read=x=>loadProgress({getItem:()=>JSON.stringify(x)});
  assert.deepEqual(read(p).data,p);assert.equal(read(p).warning,null);
  for(const plates of [[-1],[56],[1,1],undefined])assert.ok(read({...p,game:{...p.game,plates}}).warning);
- const legacy={...p,game:{...newGame(2),goals:[{kind:'score'}]}};delete legacy.game.plates;
- assert.equal(read(legacy).warning,null);assert.deepEqual(read(legacy).data.game,legacy.game);
 });
 test('plate goal text and accessible progress are meaningful',()=>{
  const g={...newGame(4),plates:[24],goals:[{kind:'plates',amount:4}]};
