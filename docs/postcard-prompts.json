@@ -1,0 +1,56 @@
+{
+  "tool": "Built-in image_gen",
+  "date": "2026-11-15",
+  "output": "dist/assets/postcards/card-01.jpg … card-12.jpg",
+  "processing": "sips JPEG quality 85, original resolution retained",
+  "prompts": [
+    {
+      "card": 1,
+      "prompt": "Portrait 4:5 premium watercolor/gouache Russian greeting postcard. Sunlit pancakes, honey, blue porcelain tea cup and daisies by a country window. Text: Тёплого утра! / Пусть день начнётся с хорошего. Ivory paper, sage accents; no icons, UI, counters, logos or watermark."
+    },
+    {
+      "card": 2,
+      "prompt": "Use case: illustration-story. Create a standalone premium Russian greeting postcard, portrait 4:5. A beautiful blue porcelain teapot and two cups of amber tea, raspberry jam, fresh syrniki, lush pink peonies, linen cloth in a sunlit garden. Exquisite detailed watercolor and gouache illustration on ivory paper, warm natural light, sophisticated handmade textures, graceful botanical accents. Large beautiful legible Russian calligraphy at top EXACTLY «Заходите на чай!». Small elegant bottom line EXACTLY «Рада нашей встрече». Full scene filling card, stylish mature stationery, generous readable text margins. No icons, no SVG look, no UI, no device, no logo, no counters, no watermark, no glitter. Harmonious cream sage rose honey palette."
+    },
+    {
+      "card": 3,
+      "prompt": "Use case: illustration-story. Create a standalone premium Russian greeting postcard, portrait 4:5. A peaceful country kitchen with a window into autumn garden, freshly baked pirozhki on a ceramic plate, cozy terracotta tea cup, soft linen napkin, small cream chrysanthemum bouquet. Exquisite detailed watercolor and gouache illustration on ivory paper, warm natural light, sophisticated handmade textures, graceful botanical accents. Large beautiful legible Russian calligraphy at top EXACTLY «Уюта вашему дому». Small elegant bottom line EXACTLY «И тепла каждому сердцу». Full scene filling card, stylish mature stationery, generous readable text margins. No icons, no SVG look, no UI, no device, no logo, no counters, no watermark, no glitter. Harmonious cream sage rose honey palette."
+    },
+    {
+      "card": 4,
+      "prompt": "Use case: illustration-story. Create a standalone premium Russian greeting postcard, portrait 4:5. A lovingly laid rustic lunch table, elegant red borscht soup bowl with sour cream and dill, crusty bread, delicate pink garden roses, gentle afternoon sunlight. Exquisite detailed watercolor and gouache illustration on ivory paper, warm natural light, sophisticated handmade textures, graceful botanical accents. Large beautiful legible Russian calligraphy at top EXACTLY «С любовью к вам». Small elegant bottom line EXACTLY «Пусть на душе будет тепло». Full scene filling card, stylish mature stationery, generous readable text margins. No icons, no SVG look, no UI, no device, no logo, no counters, no watermark, no glitter. Harmonious cream sage rose honey palette."
+    },
+    {
+      "card": 5,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A sunny garden veranda, a generous dish of homemade dumplings with sour cream and dill, elegant china, blue cornflowers and fresh bread, peaceful dappled shade. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Хорошего выходного!». Small elegant bottom line EXACTLY «Побудьте с теми, кто дорог». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 6,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. An exquisite berry tart on a porcelain cake stand, a cup of tea, strawberries and soft pink roses, dreamy sunlit summer table. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Сладких мгновений». Small elegant bottom line EXACTLY «И маленьких радостей каждый день». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 7,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. Golden fresh baked pirozhki on a vintage floral platter, an open recipe book without readable text, cream wildflowers and a warm kitchen oven glow. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Домашнего тепла». Small elegant bottom line EXACTLY «Пусть рядом будут любимые». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 8,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. Delicate folded crepes with strawberries on a floral china plate, a small bouquet of pink tulips, a pink tea cup, soft morning window light. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Для вас — с любовью». Small elegant bottom line EXACTLY «Обнимаю всем сердцем». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 9,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A beautiful homely family table with a braided bread loaf, embroidered linen, a blue tea pot, yellow daisies and sunlit country kitchen. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Счастья вашему дому». Small elegant bottom line EXACTLY «Пусть близкие будут рядом». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 10,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A lovely rustic lunch still life, ceramic pot of homemade dumplings, bowl of sour cream and fresh dill, warm bread, sky blue linen and little wildflower bouquet. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Приятного аппетита!». Small elegant bottom line EXACTLY «И доброго дня». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 11,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A cozy welcoming garden table for two with tea cups, assorted homemade pastries, lilac bouquet and sunny flowering garden gate. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Заходите в гости». Small elegant bottom line EXACTLY «Вместе всегда теплее». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    },
+    {
+      "card": 12,
+      "prompt": "Use case: illustration-story. Standalone premium Russian greeting postcard portrait 4:5. A heartfelt still life of small bouquet of garden roses and daisies beside a blue teacup, honey cookies on delicate porcelain, soft golden evening light. Exquisite detailed watercolor and gouache on ivory textured paper, warm natural light, sophisticated handcrafted stationery, botanical flourishes. Large beautiful legible Russian calligraphy at top EXACTLY «Спасибо, что вы есть». Small elegant bottom line EXACTLY «Дарю вам немного тепла». Full rich scene, generous text margins. Tasteful mature art, cream sage rose honey palette. No icons, no flat vector art, no UI, no device, no logo, no counters, no watermark, no glitter."
+    }
+  ]
+}

@@ -1,8 +1,10 @@
+import {bindPostcardSharing} from './sharing.js';
 import {localDay,displayDay,newDailyGame,recordDailyWin,dailyOffer} from './daily.js';
 import {renderCollection,postcardMarkup} from './postcards.js';
+import {createDialogControls} from './dialog.js';
 import {swipeIntent} from './gestures.js';
 import {createUpdater} from './update.js';
-import {renderBook,goalText,goalMarkup,goalHint} from './book.js';
+import {renderBook,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {CHAPTERS,levelRecipe} from './recipes.js';
 import {createPacing,hintMove} from './pacing.js';
 import {gravityMap,TIMING,animate} from './animation.js';
@@ -53,6 +55,7 @@ function openGame(mode='regular'){
 function beginDaily(day=localDay()){cancelMotion();data.daily.game=newDailyGame(day);persist();openGame('daily');}
 function requestDaily(){
  const today=localDay(),offer=dailyOffer(data.daily,today),saved=data.daily.game;
+ if(saved?.status==='won'&&!data.daily.cards.includes(saved.dailyDate))return openGame('daily');
  if(offer==='resume')return openGame('daily');
  if(offer==='previous')return modal('Угощение вас дождалось',`<p>Осталась партия за ${displayDay(saved.dailyDate)}. Можно спокойно её закончить и получить открытку.</p><p>Или начать сегодняшнюю — незавершённая ежедневная партия будет заменена. Обычная игра и открытки сохранятся.</p>`,[{text:'Продолжить начатое',action:()=>openGame('daily')},{text:'Сегодняшнее угощение',secondary:true,action:()=>beginDaily(today)}]);
  if(offer==='completed')return modal('Открытка уже у вас','<p>Сегодняшнее угощение пройдено. Можно сыграть ещё для удовольствия или посмотреть коллекцию.</p>',[{text:'Мои открытки',action:()=>collection()},{text:'Сыграть ещё',secondary:true,action:()=>beginDaily(today)}]);
@@ -67,7 +70,7 @@ function dailyOutcome(){
  const g=data.daily.game,won=g.status==='won';
  if(won){const rewarded=recordDailyWin(data.daily);if(rewarded!==data.daily){data.daily=rewarded;persist();}}
  const index=data.daily.cards.indexOf(g.dailyDate);
- modal(won?'Открытка для вас':'Попробуем ещё?',won?postcardMarkup(g.dailyDate,index)+'<p class="daily-reassurance">Открытка останется в коллекции.<br>Возвращайтесь, когда захочется.</p>':'<p>Угощение можно попробовать снова — столько раз, сколько хочется. Открытки и обычная партия сохранены.</p>',won?[{text:'В коллекцию',action:()=>collection()},{text:g.dailyDate===localDay()?'В главное меню':'Сегодняшнее угощение',secondary:true,action:()=>g.dailyDate===localDay()?menu():requestDaily()}]:[{text:'Попробовать ещё',action:()=>beginDaily(g.dailyDate)},{text:'В главное меню',secondary:true,action:menu}]);
+ modal(won?'Открытка для вас':'Попробуем ещё?',won?postcardMarkup(g.dailyDate,index)+'<p class="daily-reassurance">Открытка останется в коллекции.<br>Возвращайтесь, когда захочется.</p>':'<p>Угощение можно попробовать снова — столько раз, сколько хочется. Открытки и обычная партия сохранены.</p>',won?[{text:'В коллекцию',action:()=>collection()},{text:g.dailyDate===localDay()?'В главное меню':'Сегодняшнее угощение',secondary:true,action:()=>g.dailyDate===localDay()?menu():requestDaily()}]:[{text:'Попробовать ещё',action:()=>beginDaily(g.dailyDate)},{text:'В главное меню',secondary:true,action:menu}],menu);
 }
 const tiles=[];
 for(let i=0;i<56;i++){
@@ -216,13 +219,13 @@ $('board').addEventListener('pointercancel',cancelPointer);
 $('board').addEventListener('lostpointercapture',cancelPointer);
 window.addEventListener('blur',cancelPointer);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelPointer();});
-function modal(title,html,actions=[]){resetPointer();clearHelper();clearHint();$('dialog-title').textContent=title;$('dialog-content').innerHTML=html;$('dialog-actions').replaceChildren();for(const a of actions){const b=document.createElement('button');b.className=`button ${a.secondary?'secondary':'primary'}`;b.textContent=a.text;b.onclick=()=>{$('dialog').close();a.action();};$('dialog-actions').append(b);}if(!$('dialog').open)$('dialog').showModal();}
+const dialogControls=createDialogControls($('dialog'),$('close-dialog'));
+function modal(title,html,actions=[],onDismiss=null){dialogControls.onDismiss(onDismiss);resetPointer();clearHelper();clearHint();$('dialog-title').textContent=title;$('dialog-content').innerHTML=html;$('dialog-actions').replaceChildren();for(const a of actions){const b=document.createElement('button');b.className=`button ${a.secondary?'secondary':'primary'}`;b.textContent=a.text;b.onclick=()=>{dialogControls.close();a.action();};$('dialog-actions').append(b);}if(!$('dialog').open)$('dialog').showModal();bindPostcardSharing($('dialog-content'));}
 $('dialog').addEventListener('close',armHint);
 document.addEventListener('pointerdown',armHint,{capture:true});
 document.addEventListener('keydown',armHint,{capture:true});
 document.addEventListener('visibilitychange',armHint);
-$('close-dialog').onclick=()=>$('dialog').close();
-function outcome(){if(gameMode==='daily')return dailyOutcome();const g=activeGame(),won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${goalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}]);}
+function outcome(){if(gameMode==='daily')return dailyOutcome();const g=activeGame(),won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${resultGoalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}],menu);}
 function help(page=0){
  const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','Соберите блюда рецепта или наберите очки за отведённые ходы. Таймера нет. Неудачная перестановка не тратит ход.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
  modal(pages[page][0],`<div class="legend">${names.map((_,i)=>`<span class="food f${i}"></span>`).join('')}</div><p>${pages[page][1]}</p><p class="page-count">${page+1} / ${pages.length}</p>`,[{text:page===pages.length-1?'Понятно!':'Дальше →',action:()=>{if(page<pages.length-1)help(page+1);} }]);
@@ -257,7 +260,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installProm
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
 $('start').onclick=requestStart;$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
-window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);$('dialog').close();settingsApplied();menu();});
+window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);dialogControls.close();settingsApplied();menu();});
 settingsApplied();menu();
 try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();}catch{}
 let updater=null;
