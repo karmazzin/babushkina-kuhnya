@@ -19,7 +19,7 @@ test('helpers clip at edges, never wrap rows, and reject invalid targets',()=>{
 test('helper consumes one charge, no move, counts all removals, does not earn helpers',()=>{
  const g=newGame(3),copy=structuredClone(g);const r=useBooster(g,'kettle',24);assert.equal(r.valid,true);assert.equal(r.game.moves,24);
  assert.deepEqual(g,copy);assert.deepEqual(r.game.boosters,{rolling:1,kettle:0});
- const counts=[0,0,0,0,0];r.frames.forEach(f=>f.removed.forEach(i=>counts[f.before[i]]++));assert.deepEqual(r.game.collected,counts);
+ const counts=Array(10).fill(0);r.frames.forEach(f=>f.removed.forEach(i=>counts[f.before[i]]++));assert.deepEqual(r.game.collected,counts);
  assert.equal(useBooster(r.game,'kettle',24).valid,false);assert.equal(useBooster({...g,status:'won'},'rolling',5).valid,false);
 });
 test('four in a row earns rolling pin; intersection earns kettle; rewards capped by inventory',()=>{

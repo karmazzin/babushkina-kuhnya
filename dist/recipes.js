@@ -5,7 +5,7 @@ export const CHAPTERS=[
 ];
 const food=(type,amount)=>({kind:'food',type,amount});
 const plates=cells=>({kind:'plates',amount:cells.length});
-const center=[23,24,30,31],tea=[15,17,19,29,31,33],table=[8,10,12,22,24,26,36,38,40,43,45,47],guests=[8,10,12,15,19,22,24,26,29,33,36,38,40,45],feast=[8,10,12,15,19,22,24,26,29,33,36,38,40,43,45,47];
+const center=[15,16,39,40],tea=[15,17,19,29,31,33],table=[8,10,12,22,24,26,36,38,40,43,45,47],guests=[8,10,12,15,19,22,24,26,29,33,36,38,40,45],feast=[8,10,12,15,19,22,24,26,29,33,36,38,40,43,45,47];
 // Each early level has its own composition. Plates stay under their original cells.
 export const FIRST_LEVELS=[
  {title:'Первые блинчики',goals:[food(1,10)]},

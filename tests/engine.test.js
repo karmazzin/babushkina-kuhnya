@@ -17,5 +17,5 @@ test('legal turn settles all cascades, scores and uses one move without mutating
 });
 test('win is evaluated before loss on last move and completed games cannot change',()=>{
  const g={...newGame(1),moves:1,target:10,goals:[{kind:'score'}]};let r=play(g,...legalMoves(g.board)[0]);assert.equal(r.game.status,'won');assert.equal(play(r.game,0,1).valid,false);
- const h={...newGame(2),goals:[{kind:'score'}],moves:1,target:999999};r=play(h,...legalMoves(h.board)[0]);assert.equal(r.game.status,'lost');assert.ok(newGame(2).target>newGame(1).target);
+ const h={...newGame(2),goals:[{kind:'score'}],moves:1,target:999999};delete h.ruleVersion;r=play(h,...legalMoves(h.board)[0]);assert.equal(r.game.status,'lost');assert.ok(newGame(2).target>newGame(1).target);
 });

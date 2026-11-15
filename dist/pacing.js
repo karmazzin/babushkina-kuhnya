@@ -1,4 +1,5 @@
 import {legalMoves} from './engine.js';
+export {hintAction} from './hints.js';
 export const hintMove=board=>legalMoves(board)[0]??null;
 export function createPacing(clock=globalThis){
  let rate=1;const animations=new Set(),pauses=new Set();

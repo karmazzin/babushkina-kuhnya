@@ -1,6 +1,6 @@
 # Balance and Recipes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver the approved balance, 42 levels, 12 recipes, 24 postcards, ten food illustrations and relaxed mode on the existing 7×8 PWA.
 
@@ -27,9 +27,9 @@
 ## Task 1: Pure engine and meaningful hints
 **Files:** dist/engine.js, dist/foods.js (new), dist/hints.js (new), dist/pacing.js, tests/balance-engine.test.js (new).
 **Interfaces:** newGame(level, options?), createGame(recipe, options), freshBoard(random, pool?), gameStatus(game), isActiveGame(game), finishAttempt(game); hintAction(game) returns swap/helper descriptor using visible board only. New rule version/pool/RNG are saved in game.
-- [ ] Write behavioral tests for goal hints, clipped objective credit, tie bias, last-move helper finish, pool refill and first-helper full-cascade rejection.
-- [ ] Run RED; implement engine, seeded board validation with bounded generation and checked fallback; implement hints without looking at future RNG.
-- [ ] Run focused and whole test suites; commit implementation and tests.
+- [x] Write behavioral tests for goal hints, clipped objective credit, tie bias, last-move helper finish, pool refill and first-helper full-cascade rejection.
+- [x] Run RED; implement engine, seeded board validation with bounded generation and checked fallback; implement hints without looking at future RNG.
+- [x] Run focused and whole test suites; commit implementation and tests.
 
 ## Task 2: Authored progression, recipes and storage
 **Files:** dist/recipes.js, dist/recipe-cards.js (new), dist/progression.js (new), dist/daily.js, dist/relaxed.js (new), dist/storage.js; tests/content-progress.test.js and save migration tests.
