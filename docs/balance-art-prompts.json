@@ -1,0 +1,37 @@
+[
+  {
+    "key": "card13",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-f76b7d37-10f4-4135-a328-359a32065acc.png",
+    "target": "dist/assets/postcards/card-13.jpg",
+    "prompt": "Vertical Russian watercolor postcard: lilac in grandmother's kitchen, tea, open garden window. Exact text: «Пусть день порадует!» / «И принесёт добрые встречи». No UI, watermark, dates or numbers.",
+    "tool": "image_gen"
+  },
+  {
+    "key": "card14",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-f9cd9bc5-5b34-45cc-a517-25a39c1eb721.png",
+    "target": "dist/assets/postcards/card-14.jpg",
+    "prompt": "Use case: illustration-story. Create one premium finished Russian greeting postcard, vertical 4:5. a cozy wooden veranda after summer rain, a berry tart and two different porcelain tea cups on a lace tablecloth, a bouquet of cornflowers, soft blue and honey colors. Detailed natural watercolor/gouache, warm nostalgic home, delicate paper texture, beautifully composed real objects, gentle light, refined painterly realism. Large extremely readable dark olive or burgundy Cyrillic calligraphy at top exactly «Счастливых мгновений!». Bottom line exactly «Пусть рядом будут любимые». Text entirely inside generous margins. Full bleed artwork, no watermark, logo, game UI, dates or numbers. This is a standalone beautiful postcard for an older woman, matching a cozy Russian grandma cooking game.",
+    "tool": "image_gen"
+  },
+  {
+    "key": "card15",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-c2285ade-c3a1-450e-9517-627f464efbcd.png",
+    "target": "dist/assets/postcards/card-15.jpg",
+    "prompt": "Use case: illustration-story. Create one premium finished Russian greeting postcard, vertical 4:5. an intimate grandmother's kitchen in twilight, a warm glowing table lamp, fresh buns in a wicker basket, a quiet steaming teapot, amber light and deep blue window. Detailed natural watercolor/gouache, warm nostalgic home, delicate paper texture, beautifully composed real objects, gentle light, refined painterly realism. Large extremely readable dark olive or burgundy Cyrillic calligraphy at top exactly «Доброго вечера!». Bottom line exactly «Отдохните душой». Text entirely inside generous margins. Full bleed artwork, no watermark, logo, game UI, dates or numbers. This is a standalone beautiful postcard for an older woman, matching a cozy Russian grandma cooking game.",
+    "tool": "image_gen"
+  },
+  {
+    "key": "card16",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-b11aef9d-01ff-498b-a31a-b9fd69122f63.png",
+    "target": "dist/assets/postcards/card-16.jpg",
+    "prompt": "Use case: illustration-story. Create one premium finished Russian greeting postcard, vertical 4:5. a sunny kitchen worktop with freshly baked apple pie on a green ceramic stand, red garden apples and a folded linen towel, a small blue jug of field flowers. Detailed natural watercolor/gouache, warm nostalgic home, delicate paper texture, beautifully composed real objects, gentle light, refined painterly realism. Large extremely readable dark olive or burgundy Cyrillic calligraphy at top exactly «Пусть всё получится!». Bottom line exactly «С теплом и верой в вас». Text entirely inside generous margins. Full bleed artwork, no watermark, logo, game UI, dates or numbers. This is a standalone beautiful postcard for an older woman, matching a cozy Russian grandma cooking game.",
+    "tool": "image_gen"
+  },
+  {
+    "key": "card17",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-1d40cbe4-8aab-4be1-9662-f09744561ab0.png",
+    "target": "dist/assets/postcards/card-17.jpg",
+    "prompt": "Use case: illustration-story. Create one premium finished Russian greeting postcard, vertical 4:5. a cheerful old-fashioned cottage windowsill with a ginger cat sleeping beside a geranium, a cup of tea and a small bowl of cherries, bright gentle summer morning. Detailed natural watercolor/gouache, warm nostalgic home, delicate paper texture, beautifully composed real objects, gentle light, refined painterly realism. Large extremely readable dark olive or burgundy Cyrillic calligraphy at top exactly «Радости в каждом дне!». Bottom line exactly «И маленьких чудес». Text entirely inside generous margins. Full bleed artwork, no watermark, logo, game UI, dates or numbers. This is a standalone beautiful postcard for an older woman, matching a cozy Russian grandma cooking game.",
+    "tool": "image_gen"
+  }
+]
