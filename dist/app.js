@@ -282,11 +282,11 @@ function settings(){
 let bookReturnPage=0;
 function showRecipe(recipe,complete){if(complete)recipePage(recipe);else {const next=nextRecipeReward(data);modal('Ещё немного угощений',`<p>Следующий рецепт — «${next?.recipe.dish??recipe.dish}» — откроется после уровня ${next?.level??6}.</p><p>Уже полученные рецепты всегда доступны в книге.</p>`,[{text:'Назад',cancel:true,action:()=>{}}]);}}
 function book(page=Math.floor((data.unlocked-1)/6)){
- cancelMotion();hideScreens();$('book').hidden=false;bookReturnPage=page;$('book-title').textContent='Бабушкина книга';$('book-back').onclick=menu;
+ cancelMotion();hideScreens();$('book').hidden=false;bookReturnPage=page;$('book-title').textContent='Бабушкина книга';$('book-back').setAttribute('aria-label','В главное меню');$('book-back').onclick=menu;
  renderBook($('book-content'),data,page,chooseLevel,showRecipe,book,()=>recipeShelf());
 }
 function recipeShelf(page=0){
- cancelMotion();hideScreens();$('book').hidden=false;$('book-title').textContent='Мои рецепты';$('book-back').onclick=()=>book(bookReturnPage);
+ cancelMotion();hideScreens();$('book').hidden=false;$('book-title').textContent='Мои рецепты';$('book-back').setAttribute('aria-label','К уровням');$('book-back').onclick=()=>book(bookReturnPage);
  renderRecipeShelf($('book-content'),data,page,showRecipe,recipeShelf);
 }
 function chooseLevel(level){if(level>data.unlocked)return;const begin=()=>{data.game=newGame(level);persist();openGame('regular');};if(isActiveGame(data.game))modal('Открыть другой уровень?','<p>Обычная партия будет заменена. Остальные партии, рецепты и открытки останутся.</p>',[{text:'Открыть уровень',action:begin},{text:'Отмена',cancel:true,secondary:true,action:()=>{}}]);else begin();}

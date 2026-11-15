@@ -111,3 +111,5 @@ test('recipe milestone result records reward, opens its full recipe and returns 
  h.click('Посмотреть рецепт');assert.match(h.get('dialog-content').innerHTML,/4 порции/);h.escape();assert.equal(h.get('book').hidden,false);h.run('start()');h.playable();
 });
 test('settings label describes animation rather than a separate game mode',()=>{const h=harness();h.run('settings()');assert.match(h.get('dialog-content').innerHTML,/Меньше анимации/);assert.doesNotMatch(h.get('dialog-content').innerHTML,/Спокойный режим/);});
+
+test('recipe shelf back button names its real destination',()=>{const h=harness();h.run('recipeShelf()');assert.equal(h.get('book-back').getAttribute('aria-label'),'К уровням');h.get('book-back').onclick();assert.equal(h.get('book-back').getAttribute('aria-label'),'В главное меню');});

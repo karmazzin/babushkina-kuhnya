@@ -1,19 +1,45 @@
+import assert from 'node:assert/strict';
+import {writeFile} from 'node:fs/promises';
+import {performance} from 'node:perf_hooks';
+import {newGame,openingHelperWin,isActiveGame,legalMoves,play,useBooster,boosterArea} from '../dist/engine.js';
+import {hintAction} from '../dist/hints.js';
 import {newDailyGame} from '../dist/daily.js';
-import {newGame,legalMoves,matches,play,useBooster,boosterArea} from '../dist/engine.js';
-let seed=14932;Math.random=()=>((seed=(1664525*seed+1013904223)>>>0)/4294967296);
-function value(g,indices){let n=0;for(const i of indices){n+=1;if(g.plates?.includes(i))n+=12;for(const goal of g.goals??[])if(goal.kind==='food'&&g.board[i]===goal.type&&g.collected[goal.type]<goal.amount)n+=4;}return n;}
-for(let level=0;level<=12;level++){
- let wins=0,turns=0;
- for(let run=0;run<100;run++){
-  let g=level===0?newDailyGame(`2026-11-${String(run%30+1).padStart(2,'0')}`):newGame(level),actions=0;const initialMoves=g.moves;
-  while(g.status==='playing'&&actions++<60){
-   let choice=null,score=-1;
-   for(const [a,b] of legalMoves(g.board)){const board=g.board.slice();[board[a],board[b]]=[board[b],board[a]];const s=value({...g,board},matches(board));if(s>score){score=s;choice=[a,b];}}
-   if(g.moves<=8){let helper=null,best=0;for(const kind of ['rolling','kettle'])if(g.boosters[kind])for(let i=0;i<56;i++){const s=value(g,boosterArea(kind,i));if(s>best){best=s;helper=[kind,i];}}
-    if(helper&&best>score){g=useBooster(g,...helper).game;continue;}}
-   if(!choice)throw Error('no moves');g=play(g,...choice).game;
-  }
-  if(g.status==='won')wins++;turns+=initialMoves-g.moves;
+import {seededRandom} from '../dist/random.js';
+const samples=Number(process.env.BALANCE_SAMPLES??50);
+const levels=[...Array.from({length:42},(_,i)=>i+1),54,66,78,90,102,114,126,138,150,200,500,10000];
+const draws=Array(10).fill(0),drawSlots=Array(5).fill(0),timings=[],policies=['random','goals','assisted'];
+let starts=0,actions=0,maxActions=0;
+function run(initial,policy,seed){
+ let g=structuredClone(initial),turns=0,helpers=0;const random=seededRandom(seed);
+ while(isActiveGame(g)){
+  if(g.status==='helpers'&&policy!=='assisted')break;
+  let action=hintAction(policy==='goals'?{...g,stalled:0}:g);
+  if(policy==='random'){const moves=legalMoves(g.board);action={kind:'swap',move:moves[Math.floor(random()*moves.length)]};}
+  assert.ok(action);const result=action.kind==='swap'?play(g,...action.move):useBooster(g,action.helper,action.index);
+  assert.ok(result.valid);if(action.kind==='helper')helpers++;
+  for(const frame of result.frames){for(let c=0;c<7;c++){const count=frame.removed.filter(i=>i%7===c).length;for(let r=0;r<count;r++){const type=frame.after[r*7+c];draws[type]++;drawSlots[g.pool.indexOf(type)]++;}}}
+  g=result.game;turns++;actions++;assert.ok(turns<110,'A game must terminate');
  }
- console.log(JSON.stringify({level,wins: `${wins}/100`,meanMoves:Math.round(turns/100*10)/10}));
+ maxActions=Math.max(maxActions,turns);return {won:g.status==='won',movesLeft:g.moves,helpers,turns};
 }
+const results=[];
+for(const level of levels){
+ const stats=Object.fromEntries(policies.map(p=>[p,{wins:0,movesLeft:0,helpers:0,turns:0}]));
+ for(let seed=1;seed<=samples;seed++){
+  const t=performance.now(),g=newGame(level,{seed:seed*7919});timings.push(performance.now()-t);starts++;
+  assert.equal(openingHelperWin(g),false,`Opening helper wins level ${level}`);
+  for(let i=0;i<56;i++){const direct=g.plates.filter(n=>boosterArea('kettle',i).includes(n)).length;assert.ok(direct<=g.plates.length/2);}
+  for(const p of policies){const r=run(g,p,seed*17);stats[p].wins+=Number(r.won);stats[p].movesLeft+=r.movesLeft;stats[p].helpers+=r.helpers;stats[p].turns+=r.turns;}
+ }
+ results.push({level,samples,...Object.fromEntries(policies.map(p=>[p,{winRate:stats[p].wins/samples,meanMovesLeft:stats[p].movesLeft/samples,meanHelpers:stats[p].helpers/samples,meanActions:stats[p].turns/samples}]))});
+ if(level%6===0||level>42)console.log(JSON.stringify(results.at(-1)));
+}
+const daily=[];
+for(let i=0;i<365;i++){
+ const day=new Date(Date.UTC(2026,0,1+i)).toISOString().slice(0,10),g=newDailyGame(day);assert.equal(openingHelperWin(g),false,day);starts++;
+ daily.push({day,...run(g,'assisted',i+1)});
+}
+timings.sort((a,b)=>a-b);
+const report={samples,policies,starts,helperAreasChecked:starts*64,games:levels.length*samples*policies.length+daily.length,actions,maxActions,generationMs:{median:timings[Math.floor(timings.length*.5)],p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1)},draws,drawSlots,results,daily:{games:daily.length,wins:daily.filter(x=>x.won).length,losses:daily.filter(x=>!x.won).map(x=>x.day),meanActions:daily.reduce((n,x)=>n+x.turns,0)/daily.length}};
+await writeFile(new URL('../docs/balance-validation.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({summary:{...report,results:undefined,draws:undefined}},null,2));
