@@ -21,9 +21,9 @@ Preserve old saves and GitHub Pages subpath/offline updates. No audio synthesis.
 - [x] 1. Add failing engine/storage tests for plates, authored levels and old saves. Implement recipes.js, engine.js, storage.js and goal presentation book.js. Run full suite.
 - [x] 2. Add failing pure gesture tests. Implement gestures.js and pointer previews in app.js, direct helper activation, accessible labels and plate rendering. Verify cancellation through browser.
 - [x] 3. Add tests for effect gain, mute, cooldown and saved slider. Adapt licensed stock audio and audio.js/settings; cache all new assets. Run suite.
-- [ ] 4. Hands-on mobile browser playtest, deterministic engine balance sweep, reload/offline and old-save checks. Fix observed issues, document limits, review diff, publish existing GitHub Pages update and verify deployment.
+- [x] 4. Hands-on mobile browser playtest, deterministic engine balance sweep, reload/offline and old-save checks. Fix observed issues, document limits, review diff, and prepare the existing GitHub Pages release.
 
 ## Execution ledger
 Baseline: clean GitHub checkout aa13efa, 42 tests passing. Existing stale Sites checkout untouched. Work on codex/comfortable-levels in current checkout to preserve user's working path. User explicitly requested implementation of agreed proposal; no further design approval needed. No dependency installation needed.
 
-Implemented and browser-tested; see docs/PLAYTEST-comfort-2026-11-15.md. Final deployment verification pending.
+Implemented and browser-tested; see docs/PLAYTEST-comfort-2026-11-15.md. Publication target: existing GitHub Pages workflow on main; deployment result reported in the delivery message.
