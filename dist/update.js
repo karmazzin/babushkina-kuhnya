@@ -14,34 +14,43 @@ export function createUpdater({serviceWorker,registration,isBusy,save,reload,sho
   timer=setTimeout(()=>{requested=false;activating=false;show('retry');},15000);
   registration.waiting.postMessage({type:'ACTIVATE_UPDATE'});
  }
- const hadController=!!serviceWorker.controller;
+ // Ignore only the first claim; this tab must still observe later releases.
+ let hadController=!!serviceWorker.controller;
  listen(serviceWorker,'controllerchange',()=>{
-  if(!hadController)return;
+  if(!hadController){hadController=true;return;}
   changed=true;
   if(requested&&activating)finish();else show('available');
  });
- function watch(){const worker=registration.installing;if(worker)listen(worker,'statechange',()=>{if(worker.state==='installed'&&serviceWorker.controller)show('available');});}
+ const observed=new WeakSet();
+ function watch(){const worker=registration.installing;if(!worker||observed.has(worker))return;observed.add(worker);
+  const inspect=()=>{if(!serviceWorker.controller||activating)return;if(worker.state==='installed')show('available');else if(worker.state==='redundant')show('download-error');else if(worker.state==='installing')show('downloading');};
+  listen(worker,'statechange',inspect);inspect();
+ }
+ listen(serviceWorker,'message',event=>{
+  if(event.data?.type!=='UPDATE_DOWNLOAD'||!serviceWorker.controller||activating||registration.waiting)return;
+  if(['downloading','download-error'].includes(event.data.state))show(event.data.state,event.data);
+ });
  listen(registration,'updatefound',watch);watch();
  if(registration.waiting&&serviceWorker.controller)show('available');
  const interval=setInterval(tick,200);
  return {request(){if(activating||reloaded)return;requested=true;tick();},tick,dispose(){clearInterval(interval);clearTimeout(timer);cleanups.forEach(fn=>fn());}};
 }
 
-// A successful script check can still be downloading assets. Wait for installation.
-export async function checkForUpdate(registration,timeoutMs=45000){
- let timer,detach=()=>{};
- try{return await Promise.race([
-  (async()=>{
-   if(registration.waiting)return 'available';
-   await registration.update();
-   if(registration.waiting)return 'available';
-   const worker=registration.installing;
-   if(!worker)return 'current';
-   return await new Promise((resolve,reject)=>{
-    const inspect=()=>{if(worker.state==='installed'||worker.state==='activated')resolve('available');else if(worker.state==='redundant')reject(Error('Update installation failed'));};
-    worker.addEventListener('statechange',inspect);detach=()=>worker.removeEventListener('statechange',inspect);inspect();
-   });
-  })(),
-  new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Update check timeout')),timeoutMs);})
- ]);}finally{clearTimeout(timer);detach();}
+// Observe before checking: slow network requests must not hide an already installed worker.
+export function checkForUpdate(registration,timeoutMs=120000){
+ return new Promise((resolve,reject)=>{
+  let settled=false;const cleanups=[],seen=new WeakSet();
+  const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);cleanups.forEach(fn=>fn());error?reject(error):resolve(value);};
+  const timer=setTimeout(()=>finish(Error('Update check timeout')),timeoutMs);
+  const listen=(target,event,fn)=>{target.addEventListener?.(event,fn);cleanups.push(()=>target.removeEventListener?.(event,fn));};
+  function watch(){
+   if(registration.waiting){finish(null,'available');return;}
+   const worker=registration.installing;if(!worker||seen.has(worker))return;seen.add(worker);
+   const inspect=()=>{if(worker.state==='installed')finish(null,'available');else if(worker.state==='activated')finish(null,'current');else if(worker.state==='redundant')finish(Error('Update installation failed'));};
+   listen(worker,'statechange',inspect);inspect();
+  }
+  listen(registration,'updatefound',watch);watch();
+  if(settled||registration.installing)return;
+  Promise.resolve().then(()=>registration.update()).then(()=>{if(settled)return;watch();if(!registration.installing&&!registration.waiting)finish(null,'current');},error=>finish(error));
+ });
 }

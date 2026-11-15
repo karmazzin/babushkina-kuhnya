@@ -31,3 +31,28 @@ test('failed or stalled update checks surface errors, never say latest',async()=
  const worker=new EventTarget();worker.state='redundant';
  await assert.rejects(checkForUpdate({update:async()=>{},installing:worker}),/failed/);
 });
+test('waiting worker discovered during a stalled update request resolves the check',async()=>{
+ const {checkForUpdate}=await import('../dist/update.js');const reg=new EventTarget();reg.update=()=>new Promise(()=>{});
+ const pending=checkForUpdate(reg,100);const worker=new EventTarget();worker.state='installing';reg.installing=worker;reg.dispatchEvent(new Event('updatefound'));
+ worker.state='installed';reg.waiting=worker;worker.dispatchEvent(new Event('statechange'));
+ assert.equal(await pending,'available');
+});
+test('an ongoing installation is observed without starting a competing update check',async()=>{
+ const {checkForUpdate}=await import('../dist/update.js');const reg=new EventTarget();const worker=new EventTarget();worker.state='installing';reg.installing=worker;reg.update=()=>assert.fail('must not overlap');
+ const pending=checkForUpdate(reg);worker.state='installed';reg.waiting=worker;worker.dispatchEvent(new Event('statechange'));assert.equal(await pending,'available');
+});
+test('progress and failed downloads are visible, and never activate or reload',()=>{
+ const t=setup();t.reg.waiting=null;
+ t.sw.dispatchEvent(new MessageEvent('message',{data:{type:'UPDATE_DOWNLOAD',state:'downloading',done:4,total:10}}));assert.equal(t.get().view,'downloading');
+ t.sw.dispatchEvent(new MessageEvent('message',{data:{type:'UPDATE_DOWNLOAD',state:'download-error'}}));assert.equal(t.get().view,'download-error');assert.equal(t.get().reloads,0);assert.equal(t.get().sent,0);t.u.dispose();
+});
+test('first claim is quiet, but the same tab can apply a later release',()=>{
+ const sw=new EventTarget(),reg=new EventTarget();let reloads=0,saves=0,view;
+ const first=new EventTarget();first.state='installing';reg.installing=first;
+ const u=createUpdater({serviceWorker:sw,registration:reg,isBusy:()=>false,save:()=>{saves++;return true;},reload:()=>reloads++,show:v=>view=v});
+ try{
+  sw.controller={};sw.dispatchEvent(new Event('controllerchange'));first.state='activated';first.dispatchEvent(new Event('statechange'));assert.equal(view,undefined);
+  const next=new EventTarget();next.state='installing';reg.installing=next;reg.dispatchEvent(new Event('updatefound'));next.state='installed';reg.waiting={postMessage(){}};next.dispatchEvent(new Event('statechange'));
+  u.request();sw.dispatchEvent(new Event('controllerchange'));assert.equal(reloads,1);assert.equal(saves,1);
+ }finally{u.dispose();}
+});

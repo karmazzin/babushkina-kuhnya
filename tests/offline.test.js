@@ -2,13 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
+import {webcrypto,createHash} from 'node:crypto';
 const root=new URL('../dist/',import.meta.url);
 async function harness({fail=false,staleHttp=false}={}){
  const handlers={}, stores=new Map(), scope='https://example.test/kitchen/';let network=0,activations=0;
- const caches={open:async name=>{if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {addAll:async urls=>{if(fail)throw Error('download failed');for(const u of urls){const url=typeof u==='string'?u:u.url;m.set(url,new Response(staleHttp?(u.cache==='reload'?'fresh':'stale'):url));}},match:async u=>m.get(typeof u==='string'?u:u.url),keys:async()=>[...m.keys()].map(url=>({url}))};},keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)};
- const self={skipWaiting:async()=>{activations++;},registration:{scope},location:{origin:'https://example.test'},clients:{claim:async()=>{}},addEventListener:(n,f)=>handlers[n]=f};
- vm.runInNewContext(await fs.readFile(new URL('sw.js',root),'utf8'),{self,caches,URL,Request,Response,fetch:async()=>{network++;throw Error('offline');}});
- const fire=async(name,extra={})=>{let p;handlers[name]({...extra,waitUntil:q=>p=q,respondWith:q=>p=q});return await p;};
+ const caches={open:async name=>{if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {addAll:async urls=>{if(fail)throw Error('download failed');for(const u of urls){const url=typeof u==='string'?u:u.url;m.set(url,new Response(staleHttp?(u.cache==='reload'?'fresh':'stale'):url));}},put:async(u,response)=>m.set(u,response.clone()),match:async u=>m.get(typeof u==='string'?u:u.url)?.clone(),keys:async()=>[...m.keys()].map(url=>({url}))};},keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)};
+ const self={skipWaiting:async()=>{activations++;},registration:{scope},location:{origin:'https://example.test'},clients:{claim:async()=>{},matchAll:async()=>[]},addEventListener:(n,f)=>handlers[n]=f};
+ let source=await fs.readFile(new URL('sw.js',root),'utf8');
+ const original=JSON.parse(source.match(/const HASHES=([\s\S]*?);\n\/\/ END RELEASE/)[1]);
+ const hashes=Object.fromEntries(Object.keys(original).map(path=>[path,createHash('sha256').update(staleHttp?'fresh':scope+path).digest('hex')]));
+ source=source.replace(/const HASHES=[\s\S]*?;\n\/\/ END RELEASE/,`const HASHES=${JSON.stringify(hashes)};\n// END RELEASE`);
+ let installing=false;
+ const context=vm.createContext({self,caches,URL,Request,Response,crypto:webcrypto,AbortController,setTimeout,clearTimeout,
+  fetch:async request=>{if(!installing){network++;throw Error('offline');}if(fail)throw Error('download failed');return new Response(staleHttp?(request.cache==='reload'?'fresh':'stale'):request.url);}});
+ const helper=await fs.readFile(new URL('cache-install.js',root),'utf8');context.importScripts=()=>vm.runInContext(helper,context);
+ vm.runInContext(source,context);
+ const fire=async(name,extra={})=>{installing=name==='install';let p;handlers[name]({...extra,waitUntil:q=>p=q,respondWith:q=>p=q});return await p;};
  return {handlers,stores,scope,fire,network:()=>network,activations:()=>activations};
 }
 test('installation caches every shipped runtime file, including icons and start URL',async()=>{
@@ -24,7 +33,7 @@ test('offline navigation and assets work without any network call',async()=>{
 });
 test('failed resource download rejects installation',async()=>{const h=await harness({fail:true});await assert.rejects(h.fire('install'),/download failed/);});
 test('readiness requires all cached files and activation preserves other apps caches',async()=>{
- const h=await harness();let reply;await h.fire('install');h.stores.set('unrelated',new Map());h.stores.set('babushkina-kuhnya-v0',new Map());await h.fire('activate');assert.ok(h.stores.has('unrelated'));assert.equal(h.stores.has('babushkina-kuhnya-v0'),false);
+ const h=await harness();let reply;await h.fire('install');h.stores.set('unrelated',new Map());h.stores.set('babushkina-kuhnya-v0',new Map());await h.fire('activate');assert.ok(h.stores.has('unrelated'));assert.equal(h.stores.has('babushkina-kuhnya-v0'),true);
  await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,true);
  [...h.stores.values()][0].delete(h.scope+'assets/foods.png');await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,false);
 });
