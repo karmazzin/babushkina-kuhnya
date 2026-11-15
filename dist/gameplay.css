@@ -7,7 +7,7 @@
 .scorecard{display:grid;grid-template-columns:minmax(0,1fr) 104px;align-items:center;gap:12px;flex:0 0 116px;height:116px;margin:0 6px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;color:#5c422a;text-shadow:none}
 .score-block{display:flex;align-items:center;justify-content:center;height:100%;padding:20px 24px;background:url('./assets/ui/recipe-tray.png') center/100% 100% no-repeat;filter:drop-shadow(0 4px 3px #55381924);min-width:0}
 #score-metric{flex:1;max-width:225px;min-width:0;text-align:center}#score-metric .stat-label{font:14px Georgia;color:#745c3e;letter-spacing:0}#score-metric strong{font-size:27px;font-weight:bold;color:#5d4126}.target{font-size:15px;color:#846745}#score-metric progress{height:5px;margin-top:5px;background:#ddcba7;border-color:#c8b58e}
-#recipe-goals{justify-content:space-evenly;gap:10px;min-width:0}.dish-goal{flex-direction:column;gap:1px;font-size:22px;line-height:1.1;color:#5e4229}.dish-goal .food{width:46px;height:46px}.dish-goal .plate-icon{width:37px;height:37px;margin:4px}.dish-goal small{font-size:15px;color:#856b4e}.goal-check{left:auto;right:-7px;top:1px;font-size:18px}
+#recipe-goals{justify-content:space-evenly;gap:10px;min-width:0}.dish-goal{flex-direction:column;gap:1px;font-size:22px;line-height:1.1;color:#5e4229}.dish-goal .food{width:40px;height:40px}.dish-goal .plate-icon{width:37px;height:37px;margin:4px}.dish-goal small{font-size:15px;color:#856b4e}.goal-check{left:auto;right:-7px;top:1px;font-size:18px}
 .moves-block{height:104px;min-width:0;padding:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:url('./assets/ui/moves-plate.png') center/contain no-repeat;filter:drop-shadow(0 4px 3px #55381924)}
 .moves-block .stat-label{font:14px Georgia,serif;color:#6b7350;letter-spacing:0;margin-top:0}.moves-block strong{font:bold 36px/1.1 Georgia,serif;color:#4f6138;text-shadow:0 1px #fff9ea}
 .board-stage{flex:1;max-height:min(calc((100vw - 28px) * 1.15),610px);min-height:0}
@@ -37,22 +37,40 @@
 /* Fill the tray with readable goals, preserving room for two objectives. */
 .score-block{padding:12px 18px}
 .dish-goal{font-size:28px;font-weight:bold;gap:2px}
-.dish-goal .food{width:64px;height:64px}
-.dish-goal .plate-icon{width:54px;height:54px;margin:5px}
+.dish-goal .food{width:56px;height:56px}
+.dish-goal .plate-icon{width:46px;height:46px;margin:5px}
 .dish-goal small{font-size:25px;color:#654b31;font-weight:normal}
 .dish-goal:only-child{flex-direction:row;gap:12px;font-size:34px}
-.dish-goal:only-child .food{width:82px;height:82px}
-.dish-goal:only-child .plate-icon{width:68px;height:68px;margin:7px}
+.dish-goal:only-child .food{width:70px;height:70px}
+.dish-goal:only-child .plate-icon{width:58px;height:58px;margin:6px}
 .dish-goal:only-child small{font-size:29px}
 .goal-check{right:-9px;top:-4px;background:#fff4dc;border-radius:50%;font-size:20px}
 #update-status{grid-column:1/-1;margin:2px 0;font-size:13px}
 #update-status:empty{display:none}
 @media(max-height:700px) and (orientation:portrait){
  .scorecard{flex-basis:100px;height:100px}
- .score-block{padding:10px 12px}.dish-goal{font-size:23px;gap:0}.dish-goal .food{width:46px;height:46px}.dish-goal .plate-icon{width:38px;height:38px;margin:4px}.dish-goal small{font-size:21px}
- .dish-goal:only-child{font-size:29px;gap:8px}.dish-goal:only-child .food{width:62px;height:62px}.dish-goal:only-child .plate-icon{width:52px;height:52px;margin:5px}.dish-goal:only-child small{font-size:25px}
+ .score-block{padding:10px 12px}.dish-goal{font-size:23px;gap:0}.dish-goal .food{width:40px;height:40px}.dish-goal .plate-icon{width:32px;height:32px;margin:4px}.dish-goal small{font-size:21px}
+ .dish-goal:only-child{font-size:29px;gap:8px}.dish-goal:only-child .food{width:54px;height:54px}.dish-goal:only-child .plate-icon{width:44px;height:44px;margin:5px}.dish-goal:only-child small{font-size:25px}
 }
 @media(orientation:landscape) and (max-height:620px){
- .score-block{padding:10px 14px}.dish-goal{font-size:24px;gap:0}.dish-goal .food{width:52px;height:52px}.dish-goal .plate-icon{width:44px;height:44px;margin:4px}.dish-goal small{font-size:22px}
- .dish-goal:only-child{font-size:30px;gap:7px}.dish-goal:only-child .food{width:64px;height:64px}.dish-goal:only-child .plate-icon{width:54px;height:54px;margin:5px}.dish-goal:only-child small{font-size:26px}
+ .score-block{padding:10px 14px}.dish-goal{font-size:24px;gap:0}.dish-goal .food{width:46px;height:46px}.dish-goal .plate-icon{width:38px;height:38px;margin:4px}.dish-goal small{font-size:22px}
+ .dish-goal:only-child{font-size:30px;gap:7px}.dish-goal:only-child .food{width:56px;height:56px}.dish-goal:only-child .plate-icon{width:46px;height:46px;margin:5px}.dish-goal:only-child small{font-size:26px}
+}
+
+/* Align controls by their boxes, not by the font's baseline. */
+.round-button{position:relative;display:inline-grid;place-items:center;padding:0;line-height:1;aspect-ratio:1;flex-shrink:0}
+:is(#back,#book-back,#collection-back,#chapter-prev,#chapter-next,#cards-prev,#cards-next).round-button{font-size:0}
+:is(#back,#book-back,#collection-back,#chapter-prev,#chapter-next,#cards-prev,#cards-next).round-button::before{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translate(calc(-50% + 2px),-50%) rotate(45deg)}
+:is(#chapter-next,#cards-next).round-button::before{transform:translate(calc(-50% - 2px),-50%) rotate(225deg)}
+.game-header h1.level-label{display:flex;align-items:center;justify-content:center;gap:.3em;padding:5px 8px}
+.helper-button{grid-template-rows:52px 26px;min-height:86px}
+.helper-name{display:flex;align-items:center;justify-content:center;justify-self:center;min-width:86px;min-height:26px;padding:2px 10px;border:1px solid #c9ad7b;border-radius:12px;background:#fff3db;color:#50391f;box-shadow:0 1px 2px #60422324;font-weight:bold;line-height:1.15;text-shadow:none}
+.helper-button b{display:grid;place-items:center;padding:0;font-family:Arial,sans-serif;line-height:1;font-variant-numeric:lining-nums tabular-nums;text-align:center}
+.helper-button:disabled{opacity:1}.helper-button:disabled img{opacity:.5}.helper-button:disabled b{background:#7d806c}
+.moves-block strong{line-height:1;font-variant-numeric:lining-nums tabular-nums}
+@media(max-height:700px) and (orientation:portrait){
+ .helper-bar{flex-basis:72px}.helper-button{grid-template-rows:39px 24px;min-height:68px}.helper-name{min-height:24px;min-width:80px}.helper-button b{line-height:1}
+}
+@media(orientation:landscape) and (max-height:620px){
+ .helper-button{grid-template-rows:44px 24px;min-height:72px}.helper-name{min-height:24px;min-width:80px}.helper-button b{line-height:1}
 }
