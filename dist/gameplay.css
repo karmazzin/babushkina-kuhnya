@@ -1,37 +1,39 @@
+/* One shared horizontal grid; give the board priority over decorative spacing. */
+#app:has(#game:not([hidden])){padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))}
 /* Real illustrated kitchen objects, with live and accessible counters on top. */
-.game-screen{max-width:520px;max-height:960px;padding:8px 6px 10px;gap:16px;border:0;border-radius:0;background:none;box-shadow:none;justify-content:center}
-.game-header{flex:0 0 44px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px 44px;gap:8px;margin:0 8px;padding:0;min-height:44px;background:none;border:0;border-radius:0;box-shadow:none}
-.game-header .round-button{width:44px;height:44px;min-height:44px;font-size:26px;background:#fff5dbed;border:1px solid #b79b6c;box-shadow:0 2px 3px #5d3c2830,inset 0 1px #fffbed}
+.game-screen{max-width:560px;max-height:960px;padding:0;gap:12px;border:0;border-radius:0;background:none;box-shadow:none;justify-content:center}
+.game-header{flex:0 0 48px;display:grid;grid-template-columns:48px minmax(0,1fr) 48px 48px;gap:8px;margin:0;padding:0;min-height:48px;background:none;border:0;border-radius:0;box-shadow:none}
+.game-header .round-button{width:48px;height:48px;min-height:48px;font-size:26px;background:#fff5dbed;border:1px solid #b79b6c;box-shadow:0 2px 3px #5d3c2830,inset 0 1px #fffbed}
 .game-header h1.level-label{margin:0;padding:5px 0;font:italic 20px/1.15 Georgia,serif;color:#61462b;letter-spacing:0;text-shadow:0 1px 2px #fff4da,0 0 9px #fff2d0;background:#fff3d7d9;border-radius:16px}
 .game-header h1.level-label span{display:inline;font:inherit}.game-header h1.level-label b{font-weight:bold}.game-header .sound-control{font-size:21px}
-.scorecard{display:grid;grid-template-columns:minmax(0,1fr) 104px;align-items:center;gap:12px;flex:0 0 116px;height:116px;margin:0 6px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;color:#5c422a;text-shadow:none}
+.scorecard{display:grid;grid-template-columns:minmax(0,5fr) minmax(96px,2fr);align-items:center;gap:8px;flex:0 0 112px;height:112px;margin:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none;color:#5c422a;text-shadow:none}
 .score-block{display:flex;align-items:center;justify-content:center;height:100%;padding:20px 24px;background:url('./assets/ui/recipe-tray.png') center/100% 100% no-repeat;filter:drop-shadow(0 4px 3px #55381924);min-width:0}
 #score-metric{flex:1;max-width:225px;min-width:0;text-align:center}#score-metric .stat-label{font:14px Georgia;color:#745c3e;letter-spacing:0}#score-metric strong{font-size:27px;font-weight:bold;color:#5d4126}.target{font-size:15px;color:#846745}#score-metric progress{height:5px;margin-top:5px;background:#ddcba7;border-color:#c8b58e}
 #recipe-goals{justify-content:space-evenly;gap:10px;min-width:0}.dish-goal{flex-direction:column;gap:1px;font-size:22px;line-height:1.1;color:#5e4229}.dish-goal .food{width:40px;height:40px}.dish-goal .plate-icon{width:37px;height:37px;margin:4px}.dish-goal small{font-size:15px;color:#856b4e}.goal-check{left:auto;right:-7px;top:1px;font-size:18px}
-.moves-block{height:104px;min-width:0;padding:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:url('./assets/ui/moves-plate.png') center/contain no-repeat;filter:drop-shadow(0 4px 3px #55381924)}
+.moves-block{height:112px;min-width:0;padding:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:url('./assets/ui/moves-plate.png') center/contain no-repeat;filter:drop-shadow(0 4px 3px #55381924)}
 .moves-block .stat-label{font:14px Georgia,serif;color:#6b7350;letter-spacing:0;margin-top:0}.moves-block strong{font:bold 36px/1.1 Georgia,serif;color:#4f6138;text-shadow:0 1px #fff9ea}
-.board-stage{flex:1;max-height:min(calc((100vw - 28px) * 1.15),610px);min-height:0}
-.board-frame{width:min(100cqw,calc(100cqh * .875));aspect-ratio:7/8;padding:8px;border:2px solid #b38b55;border-radius:22px;background:repeating-linear-gradient(4deg,#cda56d 0,#d2af7c 6px,#cba36b 10px,#d9b987 14px);box-shadow:inset 0 0 0 2px #ffe5af,inset 0 -3px 4px #8b6038,0 4px 0 #916438,0 7px 12px #5d3c2838}
-#board{gap:4px;border-radius:12px}.tile{border-radius:10px}
-.helper-bar{flex:0 0 88px;gap:24px;margin:0 18px;align-items:center}
-.helper-button{position:relative;display:grid;grid-template-columns:1fr;grid-template-rows:52px 20px;width:124px;min-height:80px;padding:3px 10px 5px;gap:0;border:0;background:none;border-radius:22px;box-shadow:none;font:15px Georgia;color:#62472f}
+.board-stage{flex:1;max-height:min(calc((100vw - 8px) * 1.3),700px);min-height:0}
+.board-frame{width:100%;height:100%;aspect-ratio:auto;padding:4px;border:2px solid #b38b55;border-radius:22px;background:repeating-linear-gradient(4deg,#cda56d 0,#d2af7c 6px,#cba36b 10px,#d9b987 14px);box-shadow:inset 0 0 0 2px #ffe5af,inset 0 -3px 4px #8b6038,0 4px 0 #916438,0 7px 12px #5d3c2838}
+#board{gap:2px;border-radius:12px}.tile{border-radius:10px}
+.helper-bar{flex:0 0 88px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;align-items:center;justify-items:center}
+.helper-button{position:relative;display:grid;grid-template-columns:1fr;grid-template-rows:52px 20px;width:140px;min-height:80px;padding:3px 10px 5px;gap:0;border:0;background:none;border-radius:22px;box-shadow:none;font:15px Georgia;color:#62472f}
 .helper-button img{width:86px;height:52px;justify-self:center;object-fit:contain;filter:drop-shadow(0 3px 2px #6c452c30)}.helper-button#kettle img{height:57px;width:65px;margin-top:-4px}.helper-name{text-align:center;line-height:20px}.helper-button b{position:absolute;top:2px;right:2px;width:26px;min-width:26px;height:26px;font:bold 15px/26px Georgia;background:#74884e;box-shadow:0 1px 3px #4c622d40;border:1px solid #fff3d1;color:#fff6de}
 .helper-button.helper-selected{outline:3px solid #638048;outline-offset:3px;background:#e5edc8e8}.helper-button:disabled{opacity:.5}
 .helper-targeting{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;overflow:hidden!important;clip-path:inset(50%);padding:0!important;margin:0!important;white-space:nowrap;pointer-events:none}
 #helper-effect.rolling img{object-fit:contain;width:88%;height:100%}
 @media(max-height:700px) and (orientation:portrait){
- .game-screen{padding:2px 2px 4px;gap:8px}.game-header{margin:0 4px;gap:6px}.game-header h1.level-label{font-size:17px}
- .scorecard{flex-basis:86px;height:86px;grid-template-columns:minmax(0,1fr) 80px;gap:8px;margin:0 2px}.score-block{padding:12px 17px}.moves-block{height:80px}.moves-block strong{font-size:29px}.moves-block .stat-label{font-size:12px}
+ .game-screen{padding:0;gap:8px}.game-header{margin:0;gap:6px}.game-header h1.level-label{font-size:17px}
+ .scorecard{flex-basis:86px;height:86px;grid-template-columns:minmax(0,5fr) minmax(80px,2fr);gap:8px;margin:0}.score-block{padding:12px 17px}.moves-block{height:80px}.moves-block strong{font-size:29px}.moves-block .stat-label{font-size:12px}
  .dish-goal{font-size:18px}.dish-goal .food{width:33px;height:33px}.dish-goal .plate-icon{width:28px;height:28px;margin:2px}.dish-goal small{font-size:12px}#recipe-goals{gap:7px}#score-metric strong{font-size:23px}#score-metric .stat-label{font-size:12px}.target{font-size:12px}
- .board-frame{padding:6px;border-radius:18px}#board{gap:3px}.tile{border-radius:8px}
- .helper-bar{flex-basis:65px;gap:22px;margin:0 12px}.helper-button{width:112px;min-height:64px;grid-template-rows:39px 18px;border-radius:18px;padding:2px 8px 3px;font-size:13px}.helper-button img{width:74px;height:39px}.helper-button#kettle img{height:42px;width:52px;margin-top:-2px}.helper-button b{width:23px;min-width:23px;height:23px;font-size:13px;line-height:23px}.helper-name{line-height:18px}
+ .board-frame{padding:4px;border-radius:18px}#board{gap:2px}.tile{border-radius:8px}
+ .helper-bar{flex-basis:64px;gap:8px;margin:0}.helper-button{width:112px;min-height:64px;grid-template-rows:39px 18px;border-radius:18px;padding:2px 8px 3px;font-size:13px}.helper-button img{width:74px;height:39px}.helper-button#kettle img{height:42px;width:52px;margin-top:-2px}.helper-button b{width:23px;min-width:23px;height:23px;font-size:13px;line-height:23px}.helper-name{line-height:18px}
 }
 @media(orientation:landscape) and (max-height:620px){
- .game-screen{display:grid;max-width:1000px;max-height:none;grid-template-columns:minmax(230px,.8fr) minmax(0,1.2fr);grid-template-rows:44px minmax(90px,1fr) 76px;gap:12px 22px;padding:4px 10px}
+ .game-screen{display:grid;max-width:calc((100dvh - 8px) * .875 + 336px);max-height:none;grid-template-columns:minmax(230px,1fr) minmax(0,calc((100dvh - 8px) * .875));grid-template-rows:48px minmax(90px,1fr) 76px;gap:8px 16px;padding:0}
  .game-header{grid-column:1;grid-row:1;margin:0;gap:6px}.game-header h1.level-label{font-size:17px}
  .scorecard{grid-column:1;grid-row:2;height:104px;align-self:center;grid-template-columns:minmax(0,1fr) 85px;gap:6px;margin:0}.score-block{padding:16px 17px}.moves-block{height:85px}.moves-block strong{font-size:30px}.moves-block .stat-label{font-size:12px}.dish-goal{font-size:18px}.dish-goal .food{width:35px;height:35px}.dish-goal small{font-size:12px}.dish-goal .plate-icon{width:30px;height:30px}#recipe-goals{gap:6px}#score-metric strong{font-size:22px}.target{font-size:12px}
- .board-stage{grid-column:2;grid-row:1/4;max-height:none;height:100%}.board-frame{aspect-ratio:7/8;padding:6px;max-height:100%}
- .helper-bar{grid-column:1;grid-row:3;margin:0;gap:18px}.helper-button{width:105px;min-height:70px;grid-template-rows:44px 18px;padding:2px 8px;font-size:13px}.helper-button img{height:44px;width:80px}.helper-button#kettle img{height:48px;width:55px}.helper-button b{font-size:13px;width:24px;min-width:24px;height:24px;line-height:24px}
+ .board-stage{grid-column:2;grid-row:1/4;max-height:none;height:100%}.board-frame{width:100%;height:100%;aspect-ratio:auto;padding:4px;max-height:100%}
+ .helper-bar{grid-column:1;grid-row:3;margin:0;gap:8px}.helper-button{width:105px;min-height:70px;grid-template-rows:44px 18px;padding:2px 8px;font-size:13px}.helper-button img{height:44px;width:80px}.helper-button#kettle img{height:48px;width:55px}.helper-button b{font-size:13px;width:24px;min-width:24px;height:24px;line-height:24px}
 }
 
 /* Fill the tray with readable goals, preserving room for two objectives. */
@@ -74,3 +76,28 @@
 @media(orientation:landscape) and (max-height:620px){
  .helper-button{grid-template-rows:44px 24px;min-height:72px}.helper-name{min-height:24px;min-width:80px}.helper-button b{line-height:1}
 }
+
+@media(max-height:600px) and (orientation:portrait){
+ .game-screen{gap:6px}.game-header{flex-basis:44px;min-height:44px;grid-template-columns:44px minmax(0,1fr) 44px 44px;gap:6px}.game-header .round-button{width:44px;height:44px;min-height:44px}
+ .scorecard{height:88px;flex-basis:88px}.helper-bar{flex-basis:64px}.helper-button{min-height:64px;grid-template-rows:34px 24px}.helper-button img{height:34px}.helper-button#kettle img{height:36px}
+}
+
+@media(orientation:landscape) and (max-height:620px) and (max-width:700px){
+ .scorecard{grid-template-columns:minmax(0,1fr) 80px}.score-block{padding:8px 10px}
+ .dish-goal:only-child{flex-direction:column;gap:0;font-size:24px}.dish-goal:only-child .food{width:46px;height:46px}.dish-goal:only-child .plate-icon{width:38px;height:38px;margin:4px}.dish-goal:only-child small{font-size:22px}
+}
+
+/* Keep desktop illustrations inside the cell, even when rows are shallow. */
+@media(min-width:600px) and (hover:hover) and (pointer:fine){
+ .tile{container-type:size}
+ .tile .food{inset:0;margin:auto;width:min(92cqw,92cqh,72px);height:min(92cqw,92cqh,72px)}
+ .tile.has-plate .food{inset:0;width:min(82cqw,82cqh,64px);height:min(82cqw,82cqh,64px)}
+}
+
+/* Preserve the upper kitchen scene as wide screens crop the portrait artwork. */
+@media(min-width:600px){body{background-position:center top}}
+
+.settings-tools .installed-version{grid-column:1/-1;margin:5px 0 0;color:#715a3c;font:12px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+.settings-tools .installed-version{font-size:14px;font-weight:600;color:#50391f}
+.installed-version small{display:block;margin-top:2px;font-size:10px;font-weight:400;color:#806c50;line-height:1.2}

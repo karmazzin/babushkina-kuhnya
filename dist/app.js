@@ -11,12 +11,16 @@ import {gravityMap,TIMING,animate} from './animation.js';
 import {createAudio} from './audio.js';
 import {offlineRegistration} from './offline.js';
 import {newGame,play,adjacent,useBooster,boosterArea} from './engine.js';
-import {KEY,loadProgress,saveProgress,defaultProgress} from './storage.js';
+import {KEY,loadProgress,saveProgress,saveBeforeUpdate,defaultProgress} from './storage.js';
 const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('ru-RU');
+// Identify this loaded page, never the waiting or newly activated worker.
+const installedVersion=document.querySelector?.('meta[name="kitchen-version"]')?.content??'неизвестна';
+const installedBuild=document.querySelector?.('meta[name="kitchen-build"]')?.content??'—';
 const names=['Пирожок','Блины','Пельмени','Борщ','Сырники'];
 let storage;try{storage=window.localStorage;}catch{storage=null;}
 let loaded=loadProgress(storage), data=loaded.data, selected=null, busy=false, epoch=0, installPrompt=null;
-let gameMode='regular';
+let gameMode='regular',pendingStorage=false,saveDirty=!!loaded.warning;
+let savedRaw;try{savedRaw=storage?.getItem(KEY)??null;}catch{savedRaw=null;}
 const activeGame=()=>gameMode==='daily'?data.daily.game:data.game;
 function setActiveGame(game){if(gameMode==='daily')data.daily.game=game;else data.game=game;}
 const audio=createAudio();
@@ -26,7 +30,9 @@ document.addEventListener('visibilitychange',()=>audio.visibility(!document.hidd
 const reduce=()=>data.settings.reduced||matchMedia('(prefers-reduced-motion: reduce)').matches;
 function warning(text){$('storage-warning').textContent=text;$('storage-warning').hidden=!text;}
 warning(loaded.warning);
-function persist(){const ok=saveProgress(storage,data);warning(ok?'':'Хранилище недоступно. Не закрывайте игру: прогресс сейчас не сохраняется.');return ok;}
+function persist(){
+ try{if(storage.getItem(KEY)!==savedRaw){saveDirty=true;pendingStorage=true;warning('В другой вкладке есть более новое сохранение. Эта партия пока не сохранена — не закрывайте её.');return false;}}catch{}
+ const ok=saveProgress(storage,data);saveDirty=!ok;if(ok)savedRaw=JSON.stringify(data);warning(ok?'':'Хранилище недоступно. Не закрывайте игру: прогресс сейчас не сохраняется.');return ok;}
 function settingsApplied(){document.body.classList.toggle('reduced',data.settings.reduced);audio.configure(data.settings);}
 let pacing=null,hintTimer=null,helper=null,helperTarget=null;
 function clearHint(){clearTimeout(hintTimer);tiles.forEach(t=>t.classList.remove('hint'));}
@@ -35,7 +41,7 @@ function armHint(){
  hintTimer=setTimeout(()=>{const move=hintMove(activeGame().board);if(move)move.forEach(i=>tiles[i].classList.add('hint'));},9000);
 }
 function accelerate(){if(!busy||!pacing)return;pacing.fast();$('game-message').textContent='Готовим побыстрее…';}
-function cancelMotion(){resetPointer();clearHint();clearHelper();$('helper-effect').getAnimations().forEach(a=>a.cancel());$('helper-effect').replaceChildren();pacing?.cancel();pacing=null;epoch++;busy=false;selected=null;tiles.forEach(t=>{t.firstElementChild.getAnimations().forEach(a=>a.cancel());t.classList.remove('matching');});$('board').removeAttribute('aria-busy');}
+function cancelMotion(){resetPointer();clearHint();clearHelper();$('helper-effect').getAnimations().forEach(a=>a.cancel());$('helper-effect').replaceChildren();pacing?.cancel();pacing=null;epoch++;busy=false;selected=null;tiles.forEach(t=>{t.firstElementChild.getAnimations().forEach(a=>a.cancel());t.classList.remove('matching');});$('board').removeAttribute('aria-busy');syncOtherTab();}
 function hideScreens(){for(const id of ['menu','game','book','collection'])$(id).hidden=true;}
 function refreshDailyMenu(){
  const offer=dailyOffer(data.daily),pending=data.daily.game;
@@ -140,7 +146,7 @@ async function swap(a,b,kind=null){
  const oldScore=activeGame().score,result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
  if(!result.valid){
   $('game-message').textContent='Нет совпадения. Ход сохранён.';
-  if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;armHint();}return;
+  if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
  }
  // Persist settled state first, but reveal points as each cascade resolves.
  setActiveGame(result.game);if(gameMode==='daily'){data.daily=recordDailyWin(data.daily);}else{data.best=Math.max(data.best,activeGame().score);if(activeGame().status==='won'){data.unlocked=Math.max(data.unlocked,activeGame().level+1);if(!data.completed.includes(activeGame().level))data.completed.push(activeGame().level);}}persist();
@@ -169,7 +175,7 @@ async function swap(a,b,kind=null){
   if(turn!==epoch)return;paintBoard(activeGame().board);stats();if(reduce())audio.effect('match');
   $('game-message').textContent=result.shuffled?'Новые блюда — новые ходы!':'';
   if(activeGame().status!=='playing'){if(activeGame().status==='won')audio.effect('win');outcome();}
- }finally{if(turn===epoch){busy=false;$('board').removeAttribute('aria-busy');stats();armHint();}}
+ }finally{if(turn===epoch){busy=false;$('board').removeAttribute('aria-busy');stats();syncOtherTab();armHint();}}
 }
 function choose(i){if(busy){accelerate();return;}if(activeGame()?.status!=='playing')return;if(helper){applyHelper(i);return;}if(selected===null){selected=i;selection();}else if(selected===i){selected=null;selection();}else if(adjacent(selected,i)){swap(selected,i);}else{selected=i;selection();}}
 let pointer=null,suppressClick=0;
@@ -232,11 +238,13 @@ function help(page=0){
 }
 function credits(page=0){const music=page===0;modal(music?'Музыка на кухне':'Звуки на кухне',music?'<p><b>Porch Swing Days — slower<br>Easy Lemon · Summer Day · Carefree</b></p><p>Kevin MacLeod · incompetech.com<br>Creative Commons Attribution 4.0.</p><p>Полные композиции, AAC; громкость выровнена.</p>':'<p><b>Interface Sounds</b><br>Kenney · kenney.nl</p><p>Creative Commons Zero (CC0).<br>Готовые записи, перекодированы в MP3.</p>',[...(music?[{text:'Звуковые эффекты →',action:()=>credits(1)}]:[]),{text:'Назад к настройкам',cancel:true,action:settings},{text:'Источник и лицензия ↗',secondary:true,action:()=>{window.open(music?'https://incompetech.com/music/royalty-free/licenses/':'https://kenney.nl/assets/interface-sounds','_blank','noopener');credits(page);}}]);}
 function settings(){
- modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume??.35)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume??.35)*100)}"></label><label class="setting">Спокойный режим<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="check-update">Проверить обновление</button><p id="update-status" role="status"></p><button class="button secondary" id="reset">Сброс прогресса</button></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
+ modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume??.35)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume??.35)*100)}"></label><label class="setting">Спокойный режим<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="check-update">Проверить обновление</button><p id="update-status" role="status"></p><button class="button secondary" id="reset">Сброс прогресса</button><p class="installed-version"><span id="installed-version"></span><small id="installed-build"></small></p></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
  for(const key of ['music','sound','reduced'])$('setting-'+key).onchange=e=>{data.settings[key]=e.target.checked;settingsApplied();persist();};
  $('setting-volume').oninput=e=>{data.settings.soundVolume=Number(e.target.value)/100;$('volume-value').textContent=e.target.value+'%';settingsApplied();persist();};
  $('setting-volume').onchange=()=>audio.effect('match');
- $('check-update').onclick=manualUpdateCheck;
+ $('installed-version').textContent='Версия '+installedVersion;
+ $('installed-build').textContent='Сборка '+installedBuild;
+ $('check-update').onclick=manualUpdateCheck;paintUpdateStatus();
  $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Обе партии, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
 }
 function book(page=Math.floor((data.unlocked-1)/6)){
@@ -256,55 +264,85 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installProm
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
 $('start').onclick=requestStart;$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
-window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);dialogControls.close();settingsApplied();menu();});
+function syncOtherTab(){
+ if(!pendingStorage||busy||saveDirty)return;
+ const latest=loadProgress(storage);if(latest.warning){warning(latest.warning);return;}
+ pendingStorage=false;data=latest.data;try{savedRaw=storage.getItem(KEY);}catch{};
+ dialogControls.close();settingsApplied();menu();
+}
+window.addEventListener('storage',e=>{if(e.key!==KEY)return;pendingStorage=true;syncOtherTab();});
 settingsApplied();menu();
 try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();}catch{}
-let updater=null,updateRegistration=null,updateAvailable=false,manualChecking=false;
+let updater=null,updateRegistration=null,updateAvailable=false,checking=null,preparing=null;
+let updateState='idle',downloadInfo=null,lastCheck=0;
+const updateMessages={idle:'',checking:'Проверяем обновление…',current:'У вас последняя версия игры.',available:'Новая версия готова. Партия сохранится.',downloading:'Загружаем новую версию…',waiting:'Обновим после этого хода…',activating:'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.','download-error':'Загрузка не завершена. Игра работает; попробуйте ещё раз.','check-error':'Не удалось проверить. Проверьте интернет и попробуйте ещё раз.'};
+function updateText(){return updateState==='downloading'&&downloadInfo?.total?`Загружаем обновление: ${downloadInfo.done} из ${downloadInfo.total}`:updateMessages[updateState];}
+function paintUpdateStatus(){
+ const button=$('check-update'),status=$('update-status');if(!button||!status)return;
+ status.textContent=updateText();button.textContent=updateAvailable?'Обновить игру':'Проверить обновление';
+ button.disabled=['checking','downloading','waiting','activating'].includes(updateState);
+}
+function showUpdate(state,info){
+ if(updateAvailable&&['checking','current','downloading','download-error','check-error'].includes(state))return;
+ updateState=state;downloadInfo=info??null;if(state==='available')updateAvailable=true;
+ const notice=!['idle','checking','current','check-error'].includes(state);
+ $('update-notice').hidden=!notice;$('update-text').textContent=updateText();
+ $('update-game').textContent=updateAvailable?'Обновить игру':'Повторить загрузку';
+ $('update-game').disabled=['downloading','waiting','activating'].includes(state);
+ $('app').inert=state==='activating';paintUpdateStatus();
+}
 async function manualUpdateCheck(){
- if(manualChecking)return;
- const button=$('check-update'),status=$('update-status');
  if(updateAvailable&&updater){dialogControls.close();updater.request();return;}
- manualChecking=true;button.disabled=true;status.textContent='Проверяем и загружаем обновление…';
- try{
-  const registration=updateRegistration??await offlineRegistration(navigator.serviceWorker);
-  watchUpdates(registration);
-  const result=await checkForUpdate(registration);
-  updateAvailable=updateAvailable||result==='available';
-  status.textContent=updateAvailable?'Новая версия готова. Партия сохранится.':'У вас последняя версия игры.';
-  button.textContent=updateAvailable?'Обновить игру':'Проверить ещё раз';
- }catch{status.textContent='Не удалось проверить. Проверьте интернет и попробуйте ещё раз.';}
- finally{manualChecking=false;button.disabled=false;}
+ await checkUpdates(true);
+}
+function checkUpdates(force=false){
+ if(checking)return checking;
+ if(!force&&(document.hidden||Date.now()-lastCheck<30000))return Promise.resolve();
+ lastCheck=Date.now();showUpdate('checking');
+ checking=(async()=>{
+  try{
+   const registration=updateRegistration??await offlineRegistration(navigator.serviceWorker);
+   watchUpdates(registration);
+   const result=await checkForUpdate(registration);
+   if(result==='available'&&navigator.serviceWorker.controller)showUpdate('available');
+   else showUpdate('current');
+  }catch{showUpdate(['downloading','download-error'].includes(updateState)?'download-error':'check-error');}
+  finally{checking=null;paintUpdateStatus();}
+ })();return checking;
 }
 function watchUpdates(registration){
  if(updater)return;
  updateRegistration=registration;
  updater=createUpdater({serviceWorker:navigator.serviceWorker,registration,isBusy:()=>busy,
-  save:()=>{if(!persist())return false;try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':'menu');return true;}catch{return false;}},
-  reload:()=>location.reload(),
-  show:state=>{
-   if(state==='available')updateAvailable=true;
-   $('update-notice').hidden=false;
-   $('update-text').textContent=({'available':'Доступно обновление','waiting':'Обновим после этого хода…','activating':'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.'})[state];
-   $('update-game').disabled=state==='waiting'||state==='activating';
-   $('app').inert=state==='activating';
-  }});
- $('update-game').onclick=()=>updater.request();
- const check=()=>{if(!document.hidden)registration.update().catch(()=>{});};
- document.addEventListener('visibilitychange',check);window.addEventListener('online',check);
- check();
- setInterval(check,5*60*1000);
+  save:()=>{
+   const snapshot=saveBeforeUpdate(storage,data,savedRaw,saveDirty);if(!snapshot.ok)return false;
+   data=snapshot.data;savedRaw=snapshot.raw;saveDirty=false;pendingStorage=false;
+   try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':'menu');return true;}catch{return false;}
+  },reload:()=>location.reload(),show:showUpdate});
+ $('update-game').onclick=()=>updateAvailable?updater.request():checkUpdates(true);
 }
-async function prepareOffline(){
- if(!('serviceWorker' in navigator)||!window.isSecureContext){$('offline').textContent='Для автономной установки откройте игру по HTTPS.';return;}
- try{
-  const registration=await offlineRegistration(navigator.serviceWorker);
-  watchUpdates(registration);
-  const channel=new MessageChannel();
-  const ready=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('timeout')),15000);channel.port1.onmessage=e=>{clearTimeout(timeout);channel.port1.close();resolve(e.data.ready);};registration.active.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);});
-  $('offline').textContent=ready?'Готово к игре без интернета':'Ресурсы ещё загружаются. Откройте игру с интернетом.';
- }catch{$('offline').textContent='Не удалось сохранить игру офлайн. Проверьте сеть и откройте снова.';}
+function prepareOffline(){
+ if(preparing)return preparing;
+ if(!('serviceWorker' in navigator)||!window.isSecureContext){$('offline').textContent='Для автономной установки откройте игру по HTTPS.';return Promise.resolve();}
+ preparing=(async()=>{
+  let port,timer;
+  try{
+   const registration=updateRegistration??await offlineRegistration(navigator.serviceWorker);
+   watchUpdates(registration);checkUpdates();
+   if(!registration.active){
+    await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('timeout')),120000);})]);clearTimeout(timer);
+   }
+   const channel=new MessageChannel();port=channel.port1;
+   const ready=await new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(Error('timeout')),15000);port.onmessage=e=>resolve(e.data.ready);registration.active.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);});
+   $('offline').textContent=ready?'Готово к игре без интернета':'Ресурсы ещё загружаются. Игра продолжит загрузку при подключении.';
+  }catch{$('offline').textContent='Офлайн-версия пока не готова. Проверим снова при подключении.';}
+  finally{clearTimeout(timer);port?.close();preparing=null;}
+ })();return preparing;
 }
-prepareOffline();window.addEventListener('online',prepareOffline);
+function resumeUpdates(){if(!document.hidden){syncOtherTab();prepareOffline();checkUpdates();}}
+prepareOffline();window.addEventListener('online',resumeUpdates);window.addEventListener('pageshow',resumeUpdates);
+document.addEventListener('visibilitychange',resumeUpdates);
+setInterval(resumeUpdates,60000);
 // Calendar refresh updates the menu only; it never replaces a running game.
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDailyMenu();});
 setInterval(()=>{if(!document.hidden&&!$('menu').hidden)refreshDailyMenu();},60000);

@@ -59,3 +59,16 @@ export function loadProgress(storage){
  return {data:defaultProgress(),warning:'Сохранение недоступно или повреждено. Можно играть, но прогресс может не сохраниться.'};
 }
 export function saveProgress(storage,data){try{storage.setItem(KEY,JSON.stringify(data));return true;}catch{return false;}}
+// Update must never write a stale tab's snapshot over a newer persisted game.
+export function saveBeforeUpdate(storage,data,baseline,dirty=false){
+ try{
+  const current=storage.getItem(KEY);
+  if(current!==baseline){
+   if(dirty)return {ok:false,data};
+   const latest=loadProgress(storage);if(latest.warning)return {ok:false,data};
+   data=latest.data;
+  }
+  if(!saveProgress(storage,data))return {ok:false,data};
+  return {ok:true,data,raw:storage.getItem(KEY)};
+ }catch{return {ok:false,data};}
+}

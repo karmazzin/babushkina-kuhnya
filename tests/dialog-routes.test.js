@@ -52,3 +52,21 @@ for(const escape of [false,true]){
 test('daily retry, old-day continuation and today replacement remain playable',()=>{const h=harness();h.start();const regular=h.run('JSON.stringify(data.game)');h.run("beginDaily('2020-01-01');menu();requestDaily()");h.click('Продолжить начатое');h.playable();assert.equal(h.run('data.daily.game.dailyDate'),'2020-01-01');h.run('menu();requestDaily()');h.click('Сегодняшнее угощение');assert.equal(h.run('data.daily.game.dailyDate'),daily.localDay());h.playable();h.run("data.daily.game.status='lost';dailyOutcome()");h.click('Попробовать ещё');h.playable();assert.equal(h.run('JSON.stringify(data.game)'),regular);});
 test('completed daily offers replay or collection; old-day victory opens today',()=>{const h=harness();h.run('data.daily.cards=[localDay()];requestDaily()');h.click('Мои открытки');assert.equal(h.get('collection').hidden,false);h.run('menu();requestDaily()');h.click('Сыграть ещё');h.playable();h.run("beginDaily('2020-01-01');data.daily.game.status='won';dailyOutcome()");h.click('Сегодняшнее угощение');assert.equal(h.get('dialog-title').textContent,'Открытка уже у вас');h.click('В меню');assert.equal(h.get('menu').hidden,false);});
 test('today daily victory has an explicit main-menu action',()=>{const h=harness();h.run("beginDaily();data.daily.game.status='won';dailyOutcome()");h.click('В главное меню');assert.equal(h.get('menu').hidden,false);});
+
+test('remote save during a turn is deferred until the turn finishes',()=>{
+ const h=harness();h.start();h.run('busy=true;pendingStorage=true;syncOtherTab()');
+ assert.equal(h.run('busy'),true);assert.equal(h.get('game').hidden,false);assert.equal(h.run('pendingStorage'),true);
+ h.run('busy=false;syncOtherTab()');assert.equal(h.run('pendingStorage'),false);assert.equal(h.get('menu').hidden,false);
+});
+test('failed local save is not discarded by a remote-tab event',()=>{
+ const h=harness();h.start();h.run('saveDirty=true;pendingStorage=true;syncOtherTab()');
+ assert.equal(h.get('game').hidden,false);assert.equal(h.run('pendingStorage'),true);
+});
+test('leaving the board during a cascade consumes a queued remote save before next actions',()=>{
+ const h=harness();h.start();h.run('busy=true;pendingStorage=true;menu()');
+ assert.equal(h.run('busy'),false);assert.equal(h.run('pendingStorage'),false);assert.equal(h.get('menu').hidden,false);
+});
+test('a local action cannot overwrite a newer save before its storage event is delivered',()=>{
+ const h=harness();h.start();h.run("storage.setItem(KEY,JSON.stringify({...data,best:999}));data.best=100;persist()");
+ assert.equal(h.run('loadProgress(storage).data.best'),999);assert.equal(h.run('saveDirty'),true);
+});
