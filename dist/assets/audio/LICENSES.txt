@@ -15,3 +15,9 @@ Author's OpenGameArt publication: https://opengameart.org/content/interface-soun
 Download: https://opengameart.org/sites/default/files/kenney_interfaceSounds.zip
 Mapping: click_001.ogg → select.mp3; confirmation_002.ogg → match.mp3; drop_002.ogg → land.mp3; error_003.ogg → invalid.mp3; confirmation_004.ogg → win.mp3.
 Modification: transcoded OGG to MP3 96 kbps for browser compatibility. No synthesized or generated sound effects.
+
+Comfort update (2026-11-15): match.mp3 now uses Kenney drop_004.ogg;
+win.mp3 uses confirmation_001.ogg from the same CC0 archive above.
+Edits: low-pass filter (1600/2000 Hz), short fades, duration cap and peak limiting;
+transcoded to MP3 96 kbps. No synthesized sounds. Selection, invalid-move and
+landing recordings are no longer played; music is unchanged.

@@ -29,8 +29,8 @@ export function freshBoard(){
  const b=Array.from({length:56},(_,i)=>(i%7+Math.floor(i/7)*2)%5);
  b[0]=0;b[1]=1;b[2]=0;b[8]=0;return b;
 }
-export function newGame(level=1){return {level,board:freshBoard(),moves:24,target:1000+Math.floor(((level-1)%18)/6)*120+((level-1)%6)*50+Math.min(Math.floor((level-1)/18),4)*75,score:0,status:'playing',goals:levelRecipe(level).goals,collected:[0,0,0,0,0],boosters:{rolling:1,kettle:1}};}
-export function goalComplete(g){return !g.goals?g.score>=g.target:g.goals.every(x=>x.kind==='score'?g.score>=g.target:(g.collected?.[x.type]??0)>=x.amount);}
+export function newGame(level=1){return {level,board:freshBoard(),moves:24,target:1000+Math.floor(((level-1)%18)/6)*120+((level-1)%6)*50+Math.min(Math.floor((level-1)/18),4)*75,score:0,status:'playing',goals:levelRecipe(level).goals,plates:levelRecipe(level).plates,collected:[0,0,0,0,0],boosters:{rolling:1,kettle:1}};}
+export function goalComplete(g){return !g.goals?g.score>=g.target:g.goals.every(x=>x.kind==='score'?g.score>=g.target:x.kind==='plates'?Array.isArray(g.plates)&&g.plates.length===0:(g.collected?.[x.type]??0)>=x.amount);}
 export function boosterArea(kind,index){
  if(!Number.isInteger(index)||index<0||index>=56)return [];
  const row=Math.floor(index/7),col=index%7;
@@ -55,14 +55,15 @@ function settle(game,board,removed,moves,boosters,reward){
  const next={...game,board,moves,collected:[...(game.collected??[0,0,0,0,0])],boosters:{...boosters}};
  const frames=[];let multiplier=1,shuffled=false;
  while(removed.length&&multiplier<=100){
-  const before=board.slice();next.score+=removed.length*10*multiplier;
+  const before=board.slice(),platesBefore=[...(next.plates??[])];next.score+=removed.length*10*multiplier;
   if(reward){const earned=earnedBoosters(before,removed);for(const k of ['rolling','kettle'])next.boosters[k]=Math.min(3,next.boosters[k]+earned[k]);}
+  if(next.plates)next.plates=next.plates.filter(i=>!removed.includes(i));
   removed.forEach(i=>{next.collected[board[i]]++;board[i]=null;});
   for(let c=0;c<7;c++){
    const survivors=[];for(let r=7;r>=0;r--)if(board[r*7+c]!==null)survivors.push(board[r*7+c]);
    for(let r=7;r>=0;r--)board[r*7+c]=survivors[7-r]??randomType();
   }
-  frames.push({before,after:board.slice(),removed,multiplier});multiplier++;removed=matches(board);
+  frames.push({before,after:board.slice(),removed,multiplier,platesBefore,platesAfter:[...(next.plates??[])],collected:[...next.collected]});multiplier++;removed=matches(board);
  }
  if(removed.length||!legalMoves(board).length){next.board=freshBoard();shuffled=true;}
  next.status=goalComplete(next)?'won':next.moves===0?'lost':'playing';
