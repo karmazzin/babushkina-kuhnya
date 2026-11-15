@@ -4,12 +4,12 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 const root=new URL('../dist/',import.meta.url);
 async function harness({fail=false}={}){
- const handlers={}, stores=new Map(), scope='https://example.test/kitchen/';let network=0;
+ const handlers={}, stores=new Map(), scope='https://example.test/kitchen/';let network=0,activations=0;
  const caches={open:async name=>{if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {addAll:async urls=>{if(fail)throw Error('download failed');for(const u of urls)m.set(u,new Response(u));},match:async u=>m.get(typeof u==='string'?u:u.url),keys:async()=>[...m.keys()].map(url=>({url}))};},keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)};
- const self={registration:{scope},location:{origin:'https://example.test'},clients:{claim:async()=>{}},addEventListener:(n,f)=>handlers[n]=f};
+ const self={skipWaiting:async()=>{activations++;},registration:{scope},location:{origin:'https://example.test'},clients:{claim:async()=>{}},addEventListener:(n,f)=>handlers[n]=f};
  vm.runInNewContext(await fs.readFile(new URL('sw.js',root),'utf8'),{self,caches,URL,Response,fetch:async()=>{network++;throw Error('offline');}});
  const fire=async(name,extra={})=>{let p;handlers[name]({...extra,waitUntil:q=>p=q,respondWith:q=>p=q});return await p;};
- return {handlers,stores,scope,fire,network:()=>network};
+ return {handlers,stores,scope,fire,network:()=>network,activations:()=>activations};
 }
 test('installation caches every shipped runtime file, including icons and start URL',async()=>{
  const h=await harness();await h.fire('install');const urls=[...h.stores.values()][0];
@@ -33,4 +33,9 @@ test('cached audio supports byte ranges required by mobile media players',async(
  const response=await h.fire('fetch',{request:{url,method:'GET',mode:'cors',headers:{get:()=> 'bytes=2-8'}}});
  assert.equal(response.status,206);assert.equal(await response.text(),url.slice(2,9));assert.equal(response.headers.get('Content-Range'),`bytes 2-8/${url.length}`);assert.equal(h.network(),0);
  const invalid=await h.fire('fetch',{request:{url,method:'GET',mode:'cors',headers:{get:()=> 'bytes=99999-'}}});assert.equal(invalid.status,416);
+});
+
+test('worker activates early only on explicit update request',async()=>{
+ const h=await harness();await h.fire('install');assert.equal(h.activations(),0);
+ await h.fire('message',{data:{type:'ACTIVATE_UPDATE'}});assert.equal(h.activations(),1);
 });

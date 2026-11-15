@@ -1,3 +1,4 @@
+import {createUpdater} from './update.js';
 import {renderBook,goalText,goalMarkup} from './book.js';
 import {CHAPTERS,levelRecipe} from './recipes.js';
 import {createPacing,hintMove} from './pacing.js';
@@ -158,10 +159,29 @@ $('start').onclick=requestStart;$('continue').onclick=openGame;$('back').onclick
 $('sound').onclick=settings;
 window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);$('dialog').close();settingsApplied();menu();});
 settingsApplied();menu();
+try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='game'&&data.game)openGame();else if(resume==='book')book();}catch{}
+let updater=null;
+function watchUpdates(registration){
+ if(updater)return;
+ updater=createUpdater({serviceWorker:navigator.serviceWorker,registration,isBusy:()=>busy,
+  save:()=>{if(!persist())return false;try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?'game':!$('book').hidden?'book':'menu');return true;}catch{return false;}},
+  reload:()=>location.reload(),
+  show:state=>{
+   $('update-notice').hidden=false;
+   $('update-text').textContent=({'available':'Доступно обновление','waiting':'Обновим после этого хода…','activating':'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.'})[state];
+   $('update-game').disabled=state==='waiting'||state==='activating';
+   $('app').inert=state==='activating';
+  }});
+ $('update-game').onclick=()=>updater.request();
+ const check=()=>{if(!document.hidden)registration.update().catch(()=>{});};
+ document.addEventListener('visibilitychange',check);window.addEventListener('online',check);
+ setInterval(check,60*60*1000);
+}
 async function prepareOffline(){
  if(!('serviceWorker' in navigator)||!window.isSecureContext){$('offline').textContent='Для автономной установки откройте игру по HTTPS.';return;}
  try{
   const registration=await offlineRegistration(navigator.serviceWorker);
+  watchUpdates(registration);
   const channel=new MessageChannel();
   const ready=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('timeout')),15000);channel.port1.onmessage=e=>{clearTimeout(timeout);channel.port1.close();resolve(e.data.ready);};registration.active.postMessage({type:'CHECK_OFFLINE'},[channel.port2]);});
   $('offline').textContent=ready?'Готово к игре без интернета':'Ресурсы ещё загружаются. Откройте игру с интернетом.';
