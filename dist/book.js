@@ -19,3 +19,5 @@ export function renderBook(root,data,page,onSelect,onRecipe,onNav){
  root.querySelector('#chapter-recipe').onclick=()=>onRecipe(chapter,complete);
  root.querySelector('#chapter-prev').onclick=()=>onNav(page-1);root.querySelector('#chapter-next').onclick=()=>onNav(page+1);
 }
+
+export function resultGoalText(g){return (g.goals??[{kind:'score'}]).map(x=>x.kind==='score'?`Очки: ${g.score} из ${g.target}`:x.kind==='plates'?`Тарелки: убрано ${Math.max(0,x.amount-(g.plates?.length??0))} из ${x.amount}`:`${DISHES[x.type]}: собрано ${g.collected?.[x.type]??0} из ${x.amount}`).join(' · ');}

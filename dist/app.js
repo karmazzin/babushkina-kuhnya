@@ -1,6 +1,7 @@
+import {createDialogControls} from './dialog.js';
 import {swipeIntent} from './gestures.js';
 import {createUpdater} from './update.js';
-import {renderBook,goalText,goalMarkup,goalHint} from './book.js';
+import {renderBook,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {CHAPTERS,levelRecipe} from './recipes.js';
 import {createPacing,hintMove} from './pacing.js';
 import {gravityMap,TIMING,animate} from './animation.js';
@@ -180,13 +181,13 @@ $('board').addEventListener('pointercancel',cancelPointer);
 $('board').addEventListener('lostpointercapture',cancelPointer);
 window.addEventListener('blur',cancelPointer);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelPointer();});
-function modal(title,html,actions=[]){resetPointer();clearHelper();clearHint();$('dialog-title').textContent=title;$('dialog-content').innerHTML=html;$('dialog-actions').replaceChildren();for(const a of actions){const b=document.createElement('button');b.className=`button ${a.secondary?'secondary':'primary'}`;b.textContent=a.text;b.onclick=()=>{$('dialog').close();a.action();};$('dialog-actions').append(b);}if(!$('dialog').open)$('dialog').showModal();}
+const dialogControls=createDialogControls($('dialog'),$('close-dialog'));
+function modal(title,html,actions=[],onDismiss=null){dialogControls.onDismiss(onDismiss);resetPointer();clearHelper();clearHint();$('dialog-title').textContent=title;$('dialog-content').innerHTML=html;$('dialog-actions').replaceChildren();for(const a of actions){const b=document.createElement('button');b.className=`button ${a.secondary?'secondary':'primary'}`;b.textContent=a.text;b.onclick=()=>{dialogControls.close();a.action();};$('dialog-actions').append(b);}if(!$('dialog').open)$('dialog').showModal();}
 $('dialog').addEventListener('close',armHint);
 document.addEventListener('pointerdown',armHint,{capture:true});
 document.addEventListener('keydown',armHint,{capture:true});
 document.addEventListener('visibilitychange',armHint);
-$('close-dialog').onclick=()=>$('dialog').close();
-function outcome(){const g=data.game,won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${goalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}]);}
+function outcome(){const g=data.game,won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${resultGoalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}],menu);}
 function help(page=0){
  const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','Соберите блюда рецепта или наберите очки за отведённые ходы. Таймера нет. Неудачная перестановка не тратит ход.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
  modal(pages[page][0],`<div class="legend">${names.map((_,i)=>`<span class="food f${i}"></span>`).join('')}</div><p>${pages[page][1]}</p><p class="page-count">${page+1} / ${pages.length}</p>`,[{text:page===pages.length-1?'Понятно!':'Дальше →',action:()=>{if(page<pages.length-1)help(page+1);} }]);
@@ -220,7 +221,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installProm
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
 $('start').onclick=requestStart;$('continue').onclick=openGame;$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
-window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);$('dialog').close();settingsApplied();menu();});
+window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);dialogControls.close();settingsApplied();menu();});
 settingsApplied();menu();
 try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='game'&&data.game)openGame();else if(resume==='book')book();}catch{}
 let updater=null;
