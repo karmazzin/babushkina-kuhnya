@@ -3,7 +3,7 @@ import {localDay,displayDay,newDailyGame,recordDailyWin,dailyOffer} from './dail
 import {renderCollection,postcardMarkup} from './postcards.js';
 import {createDialogControls} from './dialog.js';
 import {swipeIntent} from './gestures.js';
-import {createUpdater} from './update.js';
+import {createUpdater,checkForUpdate} from './update.js';
 import {renderBook,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {CHAPTERS,levelRecipe} from './recipes.js';
 import {createPacing,hintMove} from './pacing.js';
@@ -232,10 +232,11 @@ function help(page=0){
 }
 function credits(page=0){const music=page===0;modal(music?'Музыка на кухне':'Звуки на кухне',music?'<p><b>Porch Swing Days — slower</b><br>Kevin MacLeod · incompetech.com</p><p>Creative Commons Attribution 4.0.<br>Полная композиция, перекодирована в AAC.</p>':'<p><b>Interface Sounds</b><br>Kenney · kenney.nl</p><p>Creative Commons Zero (CC0).<br>Готовые записи, перекодированы в MP3.</p>',[...(music?[{text:'Звуковые эффекты →',action:()=>credits(1)}]:[]),{text:'Назад к настройкам',cancel:true,action:settings},{text:'Источник и лицензия ↗',secondary:true,action:()=>{window.open(music?'https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100715':'https://kenney.nl/assets/interface-sounds','_blank','noopener');credits(page);}}]);}
 function settings(){
- modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume??.35)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume??.35)*100)}"></label><label class="setting">Спокойный режим<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="reset">Сброс прогресса</button></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
+ modal('Звуки и уют',`<div class="settings-options"><label class="setting">♫ Музыка<input id="setting-music" type="checkbox" ${data.settings.music?'checked':''}></label><label class="setting">♪ Звуки блюд<input id="setting-sound" type="checkbox" ${data.settings.sound?'checked':''}></label><label class="volume-setting" for="setting-volume">Громкость звуков <output id="volume-value">${Math.round((data.settings.soundVolume??.35)*100)}%</output><input id="setting-volume" type="range" min="0" max="100" step="5" value="${Math.round((data.settings.soundVolume??.35)*100)}"></label><label class="setting">Спокойный режим<input id="setting-reduced" type="checkbox" ${data.settings.reduced?'checked':''}></label></div><div class="settings-tools"><button class="button secondary" id="credits">Авторы музыки</button><button class="button secondary" id="check-update">Проверить обновление</button><p id="update-status" role="status"></p><button class="button secondary" id="reset">Сброс прогресса</button></div>`,[{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,action:()=>{}}]);
  for(const key of ['music','sound','reduced'])$('setting-'+key).onchange=e=>{data.settings[key]=e.target.checked;settingsApplied();persist();};
  $('setting-volume').oninput=e=>{data.settings.soundVolume=Number(e.target.value)/100;$('volume-value').textContent=e.target.value+'%';settingsApplied();persist();};
  $('setting-volume').onchange=()=>audio.effect('match');
+ $('check-update').onclick=manualUpdateCheck;
  $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Обе партии, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
 }
 function book(page=Math.floor((data.unlocked-1)/6)){
@@ -258,13 +259,30 @@ $('sound').onclick=settings;
 window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);dialogControls.close();settingsApplied();menu();});
 settingsApplied();menu();
 try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();}catch{}
-let updater=null;
+let updater=null,updateRegistration=null,updateAvailable=false,manualChecking=false;
+async function manualUpdateCheck(){
+ if(manualChecking)return;
+ const button=$('check-update'),status=$('update-status');
+ if(updateAvailable&&updater){dialogControls.close();updater.request();return;}
+ manualChecking=true;button.disabled=true;status.textContent='Проверяем и загружаем обновление…';
+ try{
+  const registration=updateRegistration??await offlineRegistration(navigator.serviceWorker);
+  watchUpdates(registration);
+  const result=await checkForUpdate(registration);
+  updateAvailable=updateAvailable||result==='available';
+  status.textContent=updateAvailable?'Новая версия готова. Партия сохранится.':'У вас последняя версия игры.';
+  button.textContent=updateAvailable?'Обновить игру':'Проверить ещё раз';
+ }catch{status.textContent='Не удалось проверить. Проверьте интернет и попробуйте ещё раз.';}
+ finally{manualChecking=false;button.disabled=false;}
+}
 function watchUpdates(registration){
  if(updater)return;
+ updateRegistration=registration;
  updater=createUpdater({serviceWorker:navigator.serviceWorker,registration,isBusy:()=>busy,
   save:()=>{if(!persist())return false;try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':'menu');return true;}catch{return false;}},
   reload:()=>location.reload(),
   show:state=>{
+   if(state==='available')updateAvailable=true;
    $('update-notice').hidden=false;
    $('update-text').textContent=({'available':'Доступно обновление','waiting':'Обновим после этого хода…','activating':'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.'})[state];
    $('update-game').disabled=state==='waiting'||state==='activating';
@@ -273,7 +291,8 @@ function watchUpdates(registration){
  $('update-game').onclick=()=>updater.request();
  const check=()=>{if(!document.hidden)registration.update().catch(()=>{});};
  document.addEventListener('visibilitychange',check);window.addEventListener('online',check);
- setInterval(check,60*60*1000);
+ check();
+ setInterval(check,5*60*1000);
 }
 async function prepareOffline(){
  if(!('serviceWorker' in navigator)||!window.isSecureContext){$('offline').textContent='Для автономной установки откройте игру по HTTPS.';return;}

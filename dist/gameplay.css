@@ -33,3 +33,26 @@
  .board-stage{grid-column:2;grid-row:1/4;max-height:none;height:100%}.board-frame{aspect-ratio:7/8;padding:6px;max-height:100%}
  .helper-bar{grid-column:1;grid-row:3;margin:0;gap:18px}.helper-button{width:105px;min-height:70px;grid-template-rows:44px 18px;padding:2px 8px;font-size:13px}.helper-button img{height:44px;width:80px}.helper-button#kettle img{height:48px;width:55px}.helper-button b{font-size:13px;width:24px;min-width:24px;height:24px;line-height:24px}
 }
+
+/* Fill the tray with readable goals, preserving room for two objectives. */
+.score-block{padding:12px 18px}
+.dish-goal{font-size:28px;font-weight:bold;gap:2px}
+.dish-goal .food{width:64px;height:64px}
+.dish-goal .plate-icon{width:54px;height:54px;margin:5px}
+.dish-goal small{font-size:25px;color:#654b31;font-weight:normal}
+.dish-goal:only-child{flex-direction:row;gap:12px;font-size:34px}
+.dish-goal:only-child .food{width:82px;height:82px}
+.dish-goal:only-child .plate-icon{width:68px;height:68px;margin:7px}
+.dish-goal:only-child small{font-size:29px}
+.goal-check{right:-9px;top:-4px;background:#fff4dc;border-radius:50%;font-size:20px}
+#update-status{grid-column:1/-1;margin:2px 0;font-size:13px}
+#update-status:empty{display:none}
+@media(max-height:700px) and (orientation:portrait){
+ .scorecard{flex-basis:100px;height:100px}
+ .score-block{padding:10px 12px}.dish-goal{font-size:23px;gap:0}.dish-goal .food{width:46px;height:46px}.dish-goal .plate-icon{width:38px;height:38px;margin:4px}.dish-goal small{font-size:21px}
+ .dish-goal:only-child{font-size:29px;gap:8px}.dish-goal:only-child .food{width:62px;height:62px}.dish-goal:only-child .plate-icon{width:52px;height:52px;margin:5px}.dish-goal:only-child small{font-size:25px}
+}
+@media(orientation:landscape) and (max-height:620px){
+ .score-block{padding:10px 14px}.dish-goal{font-size:24px;gap:0}.dish-goal .food{width:52px;height:52px}.dish-goal .plate-icon{width:44px;height:44px;margin:4px}.dish-goal small{font-size:22px}
+ .dish-goal:only-child{font-size:30px;gap:7px}.dish-goal:only-child .food{width:64px;height:64px}.dish-goal:only-child .plate-icon{width:54px;height:54px;margin:5px}.dish-goal:only-child small{font-size:26px}
+}

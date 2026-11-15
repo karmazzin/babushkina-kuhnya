@@ -26,3 +26,22 @@ export function createUpdater({serviceWorker,registration,isBusy,save,reload,sho
  const interval=setInterval(tick,200);
  return {request(){if(activating||reloaded)return;requested=true;tick();},tick,dispose(){clearInterval(interval);clearTimeout(timer);cleanups.forEach(fn=>fn());}};
 }
+
+// A successful script check can still be downloading assets. Wait for installation.
+export async function checkForUpdate(registration,timeoutMs=45000){
+ let timer,detach=()=>{};
+ try{return await Promise.race([
+  (async()=>{
+   if(registration.waiting)return 'available';
+   await registration.update();
+   if(registration.waiting)return 'available';
+   const worker=registration.installing;
+   if(!worker)return 'current';
+   return await new Promise((resolve,reject)=>{
+    const inspect=()=>{if(worker.state==='installed'||worker.state==='activated')resolve('available');else if(worker.state==='redundant')reject(Error('Update installation failed'));};
+    worker.addEventListener('statechange',inspect);detach=()=>worker.removeEventListener('statechange',inspect);inspect();
+   });
+  })(),
+  new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Update check timeout')),timeoutMs);})
+ ]);}finally{clearTimeout(timer);detach();}
+}
