@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {newGame,play,legalMoves,boosterArea,useBooster,goalComplete,earnedBoosters} from '../dist/engine.js';
 import {levelRecipe} from '../dist/recipes.js';
 import {defaultProgress,loadProgress,saveProgress,KEY} from '../dist/storage.js';
-test('book includes score, single dish, two dishes and combined goals',()=>{
+test('campaign includes single dish, two dishes, plates and combined goals',()=>{
  const levels=Array.from({length:18},(_,i)=>levelRecipe(i+1));
  assert.equal(levels[0].goals[0].kind,'food');assert.equal(levels[1].goals[0].kind,'food');
- assert.equal(levels[2].goals.length,2);assert.ok(levels[5].goals.some(g=>g.kind==='plates'));assert.equal(levelRecipe(19).chapter,'Завтрак');
+ assert.equal(levels[2].goals.length,2);assert.ok(levels[5].goals.some(g=>g.kind==='plates'));assert.equal(levelRecipe(19).chapter,'Гости к чаю');
 });
 test('collection levels require their dishes even with huge score',()=>{
  const g=newGame(3);g.score=99999;assert.equal(goalComplete(g),false);g.goals.forEach(x=>g.collected[x.type]=x.amount);assert.equal(goalComplete(g),true);

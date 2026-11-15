@@ -34,9 +34,9 @@
 ## Task 2: Authored progression, recipes and storage
 **Files:** dist/recipes.js, dist/recipe-cards.js (new), dist/progression.js (new), dist/daily.js, dist/relaxed.js (new), dist/storage.js; tests/content-progress.test.js and save migration tests.
 **Interfaces:** levelRecipe(level) returns goals/plates/moves/pool/title/chapter; recipeMilestone(index), recordCampaignWin(data), nextRecipeReward(data); migrate legacy recipes and postcard artwork indices. newRelaxedGame(order) uses createGame with unlimited moves.
-- [ ] Test milestone idempotence, migration with earned recipes, first six settings, all 42 levels/pools, four daily types, independent relaxed mode and corrupt saves.
-- [ ] Run RED; author 42 levels, 12 recipe texts, 12-level pools and bounded later waves; implement versioned save migration and progress ledger.
-- [ ] Run relevant plus whole suite; commit.
+- [x] Test milestone idempotence, migration with earned recipes, first six settings, all 42 levels/pools, four daily types, independent relaxed mode and corrupt saves.
+- [x] Run RED; author 42 levels, 12 recipe texts, 12-level pools and bounded later waves; implement versioned save migration and progress ledger.
+- [x] Run relevant plus whole suite; commit.
 
 ## Task 3: Complete player-facing flows
 **Files:** dist/app.js, dist/book.js, dist/index.html, dist/gameplay.css, dist/style.css, dist/postcards.js; tests/dialog-routes.test.js and new mode routes.

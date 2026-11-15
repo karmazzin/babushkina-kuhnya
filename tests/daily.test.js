@@ -41,8 +41,8 @@ test('daily save migrates independently and never modifies a campaign slot',()=>
  assert.equal(typeof daily.newDailyGame,'function');
  const old={...defaultProgress(),game:newGame(5)};delete old.daily;
  const read=p=>loadProgress({getItem:()=>JSON.stringify(p)});
- const migrated=read(old);assert.equal(migrated.warning,null);assert.deepEqual(migrated.data.game,old.game);assert.deepEqual(migrated.data.daily,{game:null,cards:[]});
- const full={...migrated.data,daily:{game:daily.newDailyGame('2026-11-15'),cards:['2026-11-01']}};
+ const migrated=read(old);assert.equal(migrated.warning,null);assert.deepEqual(migrated.data.game,old.game);assert.deepEqual(migrated.data.daily,{game:null,cards:[],art:[]});
+ const full={...migrated.data,daily:{game:daily.newDailyGame('2026-11-15'),cards:['2026-11-01'],art:[0]}};
  assert.deepEqual(read(full).data,full);
  for(const change of [{cards:['2026-02-30']},{cards:['2026-11-01','2026-11-01']},{game:{...full.daily.game,rng:-1}},{game:{...full.daily.game,dailyDate:'2026-02-30'}},{game:{...full.daily.game,dailyDate:undefined}}])assert.ok(read({...full,daily:{...full.daily,...change}}).warning);
 });

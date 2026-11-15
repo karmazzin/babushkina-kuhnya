@@ -1,32 +1,74 @@
+import {foodPool,FOODS} from './foods.js';
+import {RECIPE_CARDS} from './recipe-cards.js';
 export const CHAPTERS=[
- {title:'Завтрак',dish:'Бабушкины блины',types:[1,4],ingredients:'Молоко · яйца · мука · щепотка соли',steps:['Размешайте яйца с молоком, добавьте муку и соль. Тесто должно легко стекать с ложки.','Выпекайте тонкие блины на разогретой сковороде с небольшим количеством масла.','Сложите стопкой и подайте со сметаной или вареньем.']},
- {title:'Воскресный обед',dish:'Домашние пельмени',types:[2,3],ingredients:'Мука · вода · яйцо · фарш · лук · соль',steps:['Замесите мягкое тесто из муки, воды, яйца и соли. Дайте ему отдохнуть.','Смешайте фарш с мелко нарезанным луком. Раскатайте тесто, вырежьте кружочки и защипните начинку.','Варите пельмени в кипящей подсоленной воде до полной готовности начинки. Подайте со сметаной.']},
- {title:'Гости к чаю',dish:'Сырники к чаю',types:[4,0],ingredients:'Творог · яйцо · мука · сахар · масло',steps:['Разомните творог с яйцом и небольшим количеством сахара, добавьте немного муки.','Сформируйте небольшие сырники, слегка обваляйте в муке.','Обжарьте на умеренном огне до золотистого цвета и готовности внутри. Подайте с вареньем.']}
+ {...RECIPE_CARDS[0],title:'Завтрак',dish:'Бабушкины блины',types:[1,4]},
+ {...RECIPE_CARDS[1],title:'Воскресный обед',dish:'Домашние пельмени',types:[2,3]},
+ {...RECIPE_CARDS[2],title:'Гости к чаю',dish:'Сырники',types:[4,0]},
+ {...RECIPE_CARDS[3],title:'Большой семейный стол',dish:'Пирожки с картошкой',types:[0,1]}
 ];
+export const PLATE_LAYOUTS={
+ pairs:[15,16,39,40],
+ tea:[8,9,25,26,36,37],
+ table:[8,40,12,36,24,10,38,22,26,43,47,45,17,31],
+ corners:[9,39,11,37,15,33,19,29,23,25,43,47,17,31],
+ garden:[8,47,12,43,22,33,26,29,10,45,17,38,24,31],
+ ribbon:[9,40,15,47,11,36,19,43,23,33,25,29,17,38]
+};
 const food=(type,amount)=>({kind:'food',type,amount});
-const plates=cells=>({kind:'plates',amount:cells.length});
-const center=[15,16,39,40],tea=[15,17,19,29,31,33],table=[8,10,12,22,24,26,36,38,40,43,45,47],guests=[8,10,12,15,19,22,24,26,29,33,36,38,40,45],feast=[8,10,12,15,19,22,24,26,29,33,36,38,40,43,45,47];
-// Each early level has its own composition. Plates stay under their original cells.
+const one=(title,type,amount,moves=24)=>({title,goals:[food(type,amount)],plates:[],moves});
+const two=(title,a,na,b,nb,moves=24)=>({title,goals:[food(a,na),food(b,nb)],plates:[],moves});
+const table=(title,layout,count,type,amount,moves=24)=>({title,plates:PLATE_LAYOUTS[layout].slice(0,count),goals:[{kind:'plates',amount:count},...(type===undefined?[]:[food(type,amount)])],moves});
 export const FIRST_LEVELS=[
- {title:'Первые блинчики',goals:[food(1,10)]},
- {title:'Сырники к завтраку',goals:[food(4,12)]},
- {title:'Завтрак на двоих',goals:[food(1,8),food(4,8)]},
- {title:'Четыре тарелочки',goals:[plates(center)],plates:center},
- {title:'Ещё по блинчику',goals:[food(1,24)]},
- {title:'Семейный завтрак',goals:[plates(tea),food(4,20)],plates:tea,moves:23},
- {title:'Горячие пирожки',goals:[food(0,24)]},
- {title:'Обед готов',goals:[food(2,20),food(3,18)]},
- {title:'Накрываем стол',goals:[plates(table)],plates:table,moves:23},
- {title:'Любимый борщ',goals:[food(3,26)]},
- {title:'Ждём гостей',goals:[plates(guests),food(0,24)],plates:guests,moves:23},
- {title:'Воскресное угощение',goals:[plates(feast),food(2,26)],plates:feast,moves:22}
+ one('Первые блинчики',1,10),
+ one('Сырники к завтраку',4,12),
+ two('Завтрак на двоих',1,8,4,8),
+ table('Четыре тарелочки','pairs',4),
+ one('Ещё по блинчику',1,18),
+ table('Семейный завтрак','tea',6,4,16),
+ one('Пирожки к обеду',0,20),
+ two('Суп и пельмени',2,16,3,16),
+ table('Накрываем стол','table',8),
+ one('Любимый борщ',3,24),
+ table('Пирожки для гостей','corners',8,0,18),
+ two('Чай после обеда',1,18,4,18),
+ one('Тёплая передышка',4,18),
+ table('Цветы на скатерти','garden',10),
+ two('Сытное угощение',2,20,0,18),
+ one('Добавка борща',3,26,23),
+ table('Угощаем соседей','ribbon',10,2,22,23),
+ table('Воскресный обед готов','table',12,2,24,23),
+ one('Запеканка из печи',0,18),
+ two('Обед и десерт',0,16,3,18),
+ table('Кружевная скатерть','corners',8),
+ one('Пельмени со сметаной',2,24),
+ table('Сырники на подносе','garden',8,4,18),
+ two('Сладкая встреча',0,18,1,18),
+ one('Блинчики с вареньем',1,18),
+ table('Чашки в саду','ribbon',10),
+ two('Домашний обед',2,20,3,18),
+ one('Сырники для друзей',4,26,23),
+ table('Запеканка к чаю','corners',10,0,22,23),
+ table('Чаепитие в беседке','garden',12,4,24,23),
+ one('Пышные оладьи',1,18),
+ two('Завтрак выходного дня',0,18,1,18),
+ table('Стол у окна','ribbon',8),
+ one('Борщ по-домашнему',3,24),
+ table('Пельмени для семьи','table',8,2,20),
+ two('Обед с десертом',3,20,4,20),
+ one('Вкусная пауза',2,18),
+ table('Праздничные салфетки','corners',10),
+ two('Сладости к столу',0,22,4,18),
+ one('Оладьи с мёдом',1,26,23),
+ table('Встречаем родных','garden',12,3,22,23),
+ table('Большой семейный праздник','ribbon',14,0,24,23)
 ];
 export function levelRecipe(level){
- const chapterIndex=Math.floor((level-1)/6)%3,step=(level-1)%6,chapter=CHAPTERS[chapterIndex],round=Math.floor((level-1)/18),extra=Math.min(round*2,8);
- const early=FIRST_LEVELS[level-1];
- if(early)return {...early,goals:early.goals.map(g=>({...g})),plates:[...(early.plates??[])],chapter:chapter.title,chapterIndex,step};
- // Subsequent chapters reuse the established spatial puzzles, with bounded growth.
- const template=FIRST_LEVELS[6+step];
- const goals=template.goals.map((g,i)=>g.kind==='food'?{...g,type:chapter.types[i%2],amount:Math.min(40,g.amount+extra)}:{...g});
- return {chapter:chapter.title,chapterIndex,step,title:template.title,goals,plates:[...(template.plates??[])],moves:template.moves??24};
+ const pool=foodPool(level),block=level<=6?0:Math.floor((level-7)/12)+1,step=level<=6?level-1:(level-7)%12;
+ const authored=FIRST_LEVELS[level-1],template=authored??FIRST_LEVELS[30+step];
+ const extra=authored?0:Math.min(8,Math.floor((level-43)/24)*2+2);
+ const goals=template.goals.map(g=>g.kind==='food'?{...g,type:pool[g.type],amount:Math.min(34,g.amount+extra)}:{...g});
+ const plate=goals.some(g=>g.kind==='plates'),foodGoal=goals.find(g=>g.kind==='food');
+ const title=authored?template.title:plate?'Новый стол для гостей':foodGoal?`${FOODS[foodGoal.type].plural} к столу`:'Домашнее угощение';
+ const chapterIndex=block===0?0:1+(block-1)%3,chapter=CHAPTERS[chapterIndex];
+ return {title,goals,plates:[...template.plates],moves:template.moves,pool,chapter:chapter.title,chapterIndex,block,step};
 }

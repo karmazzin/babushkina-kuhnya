@@ -9,11 +9,11 @@ test('a multi-cascade move earns at most one of each helper on new games',()=>{
  assert.deepEqual(play(legacy,25,32).game.boosters,{rolling:2,kettle:1});
 });
 test('chapter finale requires spatial planning and later chapters do not reset to tiny goals',()=>{
- const intro=newGame(1),finale=newGame(12),later=newGame(19),late=newGame(200);
+ const intro=newGame(1),finale=newGame(18),later=newGame(19),late=newGame(200);
  assert.equal(intro.moves,24);assert.ok(finale.moves<intro.moves&&finale.moves>=20);
  assert.ok(finale.goals.find(g=>g.kind==='food').amount>=24);
  const area=new Set(boosterArea('kettle',24));assert.ok(finale.plates.some(i=>!area.has(i)));
- assert.ok(later.goals.find(g=>g.kind==='food').amount>=24);
- assert.ok(late.goals.every(g=>g.kind!=='food'||g.amount<=40));
+ assert.ok(later.goals.find(g=>g.kind==='food').amount>=18);
+ assert.ok(late.goals.every(g=>g.kind!=='food'||g.amount<=34));
  assert.equal(intro.helperRule,'turn');
 });

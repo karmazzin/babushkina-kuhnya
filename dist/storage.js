@@ -1,9 +1,11 @@
 import {validDay} from './daily.js';
 import {matches,legalMoves,gameStatus} from './engine.js';
 import {FOODS,BASE_POOL} from './foods.js';
-// A new slot protects migrated saves from older tabs that discard daily data.
-export const KEY='babushkina-kuhnya:v2';
-export const defaultProgress=()=>({version:1,unlocked:1,best:0,game:null,daily:{game:null,cards:[]},completed:[],settings:{sound:true,music:true,reduced:false}});
+import {recipeById,recipeMilestone,RECIPE_CARDS} from './recipe-cards.js';
+import {legacyRecipes} from './progression.js';
+// Old tabs keep writing v2; they cannot discard the new collection or mode.
+export const KEY='babushkina-kuhnya:v3';
+export const defaultProgress=()=>({version:2,unlocked:1,best:0,game:null,daily:{game:null,cards:[],art:[]},relaxed:{game:null,completed:0},recipes:{unlocked:[],milestones:[]},seenHelpers:[],completed:[],settings:{sound:true,music:true,reduced:false}});
 const integer=(n,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 function validGame(g){
  if(g===null)return true;
@@ -21,20 +23,39 @@ function validGame(g){
  if(g.goals?.some(x=>x.kind==='plates'&&(!Array.isArray(g.plates)||g.plates.length>x.amount)))return false;
  if(g.rng!==undefined&&!integer(g.rng,0,4294967295))return false;
  if(g.dailyDate!==undefined&&(!validDay(g.dailyDate)||g.rng===undefined))return false;
+ if(g.recipeReward!==undefined&&!recipeById(g.recipeReward))return false;
  if(g.helperRule!==undefined&&g.helperRule!=='turn')return false;
  if(g.boosters!==undefined&&(!g.boosters||!integer(g.boosters.rolling,0,3)||!integer(g.boosters.kettle,0,3)))return false;
  return g.status===gameStatus(g);
 }
+function decode(raw){
+ const p=JSON.parse(raw);
+ if(!p||![1,2].includes(p.version)||!integer(p.unlocked,1)||!integer(p.best)||!validGame(p.game)||!p.settings||typeof p.settings.sound!=='boolean'||typeof p.settings.reduced!=='boolean'||(p.settings.music!==undefined&&typeof p.settings.music!=='boolean'))throw Error('invalid save');
+ if(p.settings.soundVolume!==undefined&&(typeof p.settings.soundVolume!=='number'||!Number.isFinite(p.settings.soundVolume)||p.settings.soundVolume<0||p.settings.soundVolume>1))throw Error('invalid volume');
+ if(p.completed!==undefined&&(!Array.isArray(p.completed)||p.completed.length>10000||!p.completed.every(n=>integer(n,1)&&n<=p.unlocked)))throw Error('invalid book');
+ const completed=[...new Set(p.completed??Array.from({length:Math.min(p.unlocked-1,10000)},(_,i)=>i+1))];
+ const daily=p.daily??{game:null,cards:[]};
+ if(!daily||typeof daily!=='object'||!Array.isArray(daily.cards)||daily.cards.length>10000||!daily.cards.every(validDay)||new Set(daily.cards).size!==daily.cards.length||!validGame(daily.game)||(daily.game!==null&&(!validDay(daily.game.dailyDate)||daily.game.mode)))throw Error('invalid daily collection');
+ const art=daily.art??daily.cards.map((_,i)=>i%12);
+ if(!Array.isArray(art)||art.length!==daily.cards.length||!art.every(n=>integer(n,0,23)))throw Error('invalid postcard artwork');
+ if(p.game?.dailyDate!==undefined||p.game?.mode!==undefined)throw Error('another mode in campaign');
+ const relaxed=p.relaxed??{game:null,completed:0};
+ if(!relaxed||!integer(relaxed.completed)||!validGame(relaxed.game)||(relaxed.game!==null&&(relaxed.game.mode!=='relaxed'||relaxed.game.dailyDate!==undefined)))throw Error('invalid relaxed mode');
+ const recipes=p.recipes??legacyRecipes(completed),milestones=RECIPE_CARDS.map((_,i)=>recipeMilestone(i));
+ if(!recipes||!Array.isArray(recipes.unlocked)||recipes.unlocked.length>12||new Set(recipes.unlocked).size!==recipes.unlocked.length||!recipes.unlocked.every(recipeById)||!Array.isArray(recipes.milestones)||recipes.milestones.length>12||new Set(recipes.milestones).size!==recipes.milestones.length||!recipes.milestones.every(n=>milestones.includes(n)))throw Error('invalid recipes');
+ const seenHelpers=p.seenHelpers??[];
+ if(!Array.isArray(seenHelpers)||seenHelpers.length>2||new Set(seenHelpers).size!==seenHelpers.length||!seenHelpers.every(k=>['rolling','kettle'].includes(k)))throw Error('invalid helper guidance');
+ return {version:2,unlocked:p.unlocked,best:p.best,game:p.game,daily:{...daily,art},relaxed,recipes,seenHelpers,completed,settings:{...(p.settings.soundVolume!==undefined?{soundVolume:p.settings.soundVolume}:{}),sound:p.settings.sound,music:p.settings.music??p.settings.sound,reduced:p.settings.reduced}};
+}
 export function loadProgress(storage){
+ let damaged=false;
  try{
-  const raw=storage.getItem(KEY)??storage.getItem('babushkina-kuhnya:v1');if(raw===null)return {data:defaultProgress(),warning:null};const p=JSON.parse(raw);
-  if(!p||p.version!==1||!integer(p.unlocked,1)||!integer(p.best)||!validGame(p.game)||!p.settings||typeof p.settings.sound!=='boolean'||typeof p.settings.reduced!=='boolean'||(p.settings.music!==undefined&&typeof p.settings.music!=='boolean'))throw Error('invalid save');
-  if(p.settings.soundVolume!==undefined&&(typeof p.settings.soundVolume!=='number'||!Number.isFinite(p.settings.soundVolume)||p.settings.soundVolume<0||p.settings.soundVolume>1))throw Error('invalid volume');
-  if(p.completed!==undefined&&(!Array.isArray(p.completed)||p.completed.length>10000||!p.completed.every(n=>integer(n,1)&&n<=p.unlocked)))throw Error('invalid book');
-  const daily=p.daily??{game:null,cards:[]};
-  if(!daily||typeof daily!=='object'||!Array.isArray(daily.cards)||daily.cards.length>10000||!daily.cards.every(validDay)||new Set(daily.cards).size!==daily.cards.length||!validGame(daily.game)||(daily.game!==null&&!validDay(daily.game.dailyDate)))throw Error('invalid daily collection');
-  if(p.game?.dailyDate!==undefined)throw Error('daily game in campaign');
-  return {data:{daily,completed:p.completed??Array.from({length:Math.min(p.unlocked-1,10000)},(_,i)=>i+1),version:1,unlocked:p.unlocked,best:p.best,game:p.game,settings:{...(p.settings.soundVolume!==undefined?{soundVolume:p.settings.soundVolume}:{}),sound:p.settings.sound,music:p.settings.music??p.settings.sound,reduced:p.settings.reduced}},warning:null};
- }catch{return {data:defaultProgress(),warning:'Сохранение недоступно или повреждено. Можно играть, но прогресс может не сохраниться.'};}
+  for(const key of [KEY,'babushkina-kuhnya:v2','babushkina-kuhnya:v1']){
+   const raw=storage.getItem(key);if(raw===null)continue;
+   try{return {data:decode(raw),warning:damaged?'Новое сохранение повреждено. Восстановлен более ранний прогресс.':null};}catch{damaged=true;}
+  }
+  if(!damaged)return {data:defaultProgress(),warning:null};
+ }catch{}
+ return {data:defaultProgress(),warning:'Сохранение недоступно или повреждено. Можно играть, но прогресс может не сохраниться.'};
 }
 export function saveProgress(storage,data){try{storage.setItem(KEY,JSON.stringify(data));return true;}catch{return false;}}

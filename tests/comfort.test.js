@@ -14,7 +14,7 @@ test('first twelve authored levels have distinct names and introduce plates on f
  assert.ok(levels.every(l=>l.goals.length>=1&&l.goals.length<=2));
  assert.ok(levels.slice(0,3).every(l=>l.goals.every(g=>g.kind==='food')));
  assert.ok(levels[3].goals.some(g=>g.kind==='plates'));
- assert.ok(levels[11].goals.some(g=>g.kind==='plates'));
+ assert.ok(levels[10].goals.some(g=>g.kind==='plates'));
  for(let i=0;i<12;i++){const g=newGame(i+1);assert.equal(g.plates.length,new Set(g.plates).size);assert.ok(g.plates.every(n=>n>=0&&n<56));assert.equal(goalComplete(g),false);}
 });
 test('plates stay fixed, clear once under matches and helpers, frames keep progress',()=>{
