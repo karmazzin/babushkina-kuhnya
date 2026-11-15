@@ -1,5 +1,5 @@
 /* Bump CACHE on every release. Activation is requested only after the player saves a settled game. */
-const CACHE='babushkina-kuhnya-large-aligned-board-20261115';
+const CACHE='babushkina-kuhnya-desktop-food-size-20261115';
 const ROOT=self.registration.scope;
 const FILES=['','index.html','style.css','gameplay.css','app.js','engine.js','gestures.js','random.js','daily.js','postcards.js','recipes.js','book.js','dialog.js','sharing.js','assets/ui/recipe-tray.png','assets/ui/moves-plate.png','assets/ui/rolling-pin.png','assets/ui/tea-kettle.png','storage.js','offline.js','update.js','animation.js','pacing.js','audio.js','manifest.webmanifest','assets/foods.png','assets/kitchen.png','favicon.ico','favicon.svg','favicon-16x16.png','favicon-32x32.png','assets/apple-touch-icon.png','assets/icon-maskable-192.png','assets/icon-maskable-512.png','assets/social-preview.png','assets/icon.svg','assets/icon-192.png','assets/icon-512.png','assets/audio/porch-swing.m4a','assets/audio/easy-lemon.m4a','assets/audio/summer-day.m4a','assets/audio/carefree.m4a','assets/audio/select.mp3','assets/audio/match.mp3','assets/audio/land.mp3','assets/audio/invalid.mp3','assets/audio/win.mp3','assets/audio/LICENSES.txt'];
 FILES.push(...Array.from({length:12},(_,i)=>`assets/postcards/card-${String(i+1).padStart(2,'0')}.jpg`));

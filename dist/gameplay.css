@@ -86,3 +86,10 @@
  .scorecard{grid-template-columns:minmax(0,1fr) 80px}.score-block{padding:8px 10px}
  .dish-goal:only-child{flex-direction:column;gap:0;font-size:24px}.dish-goal:only-child .food{width:46px;height:46px}.dish-goal:only-child .plate-icon{width:38px;height:38px;margin:4px}.dish-goal:only-child small{font-size:22px}
 }
+
+/* Keep desktop illustrations inside the cell, even when rows are shallow. */
+@media(min-width:600px) and (hover:hover) and (pointer:fine){
+ .tile{container-type:size}
+ .tile .food{inset:0;margin:auto;width:min(78cqw,78cqh,56px);height:min(78cqw,78cqh,56px)}
+ .tile.has-plate .food{inset:0;width:min(68cqw,68cqh,50px);height:min(68cqw,68cqh,50px)}
+}
