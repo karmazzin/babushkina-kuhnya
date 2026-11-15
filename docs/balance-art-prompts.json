@@ -81,5 +81,41 @@
     "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-775f031f-3a91-4922-8473-d5fff6db1365.png",
     "target": "dist/assets/foods/potato-pancakes.png",
     "prompt": "Use case: stylized-concept. Asset type: one square mobile match-three game food sprite on genuinely transparent background. Subject: three irregular flat crisp potato pancakes (draniki), clearly shredded potato texture, warm golden brown, a single white sour cream dollop and green chives, on a small burgundy ceramic plate. Match the provided reference's appetizing detailed hand-painted 3D food icon style, warm lighting, strong silhouette, restrained realistic gloss, 3/4 overhead angle. One entire compact dish centered, occupies 85% of square canvas, complete plate and food visible, small clean margin. Readable at 40 pixels. No text, background, table, props outside plate, frame, watermark, drop shadow outside the object, or multiple panels. Reference is style only; create the requested new dish as a single icon."
+  },
+  {
+    "key": "card22",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-69445bbc-0f9b-41d9-ba85-340c440dc9e4.png",
+    "target": "dist/assets/postcards/card-22.jpg",
+    "prompt": "Create a single beautiful portrait Russian greeting postcard, aspect ratio 4:5. Rich detailed watercolor/gouache illustration, soft textured cream paper edges, nostalgic cozy cottage aesthetic, warm natural light. A handwritten letter in an open unmarked envelope beside a basket of golden potato pirozhki, blue cornflowers in an enamel pitcher, a morning cottage window, embroidered cream napkin; warm hopeful summer light. Integrate elegant large dark burgundy Cyrillic calligraphy with immaculate exact spelling: at the top \"Добрых вестей!\" and at bottom \"И приятных сюрпризов\". Large readable text with generous margins, no other text, no watermark, no logo, no URL. Full finished card, not a mockup."
+  },
+  {
+    "key": "card23",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-9d2f7a57-347e-4ecd-9062-adb80f3a819c.png",
+    "target": "dist/assets/postcards/card-23.jpg",
+    "prompt": "Create a single beautiful portrait Russian greeting postcard, aspect ratio 4:5. Rich detailed watercolor/gouache illustration, soft textured cream paper edges, nostalgic cozy cottage aesthetic, warm natural light. A cozy cottage kitchen with a large terracotta bowl of mushroom buckwheat, linen tablecloth, a basket of forest mushrooms, a small orange cat asleep on a checked chair, rain outside a warm autumn window. Integrate elegant large dark burgundy Cyrillic calligraphy with immaculate exact spelling: at the top \"Душевного тепла!\" and at bottom \"Пусть каждый день радует\". Large readable text with generous margins, no other text, no watermark, no logo, no URL. Full finished card, not a mockup."
+  },
+  {
+    "key": "card24",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-7a96c713-fb8d-4f2f-85b4-b9b8891a0c9c.png",
+    "target": "dist/assets/postcards/card-24.jpg",
+    "prompt": "Create a single beautiful portrait Russian greeting postcard, aspect ratio 4:5. Rich detailed watercolor/gouache illustration, soft textured cream paper edges, nostalgic cozy cottage aesthetic, warm natural light. A welcoming Sunday family table ready for guests, centerpiece of round golden cheese vatrushki, a blue floral teapot and cups, peonies in a vase, a sunlit cottage garden beyond an open door. No people. Integrate elegant large dark burgundy Cyrillic calligraphy with immaculate exact spelling: at the top \"Счастья вашему дому!\" and at bottom \"И радости за общим столом\". Large readable text with generous margins, no other text, no watermark, no logo, no URL. Full finished card, not a mockup."
+  },
+  {
+    "key": "buckwheat",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-fed00bbe-6415-42d0-815a-a909bb84a4ea.png",
+    "target": "dist/assets/foods/buckwheat.png",
+    "prompt": "Create one isolated food illustration for a cozy Russian grandma's match-three game. Use the attached image only as style reference, not as a subject to reproduce. Buckwheat with mushrooms: a heaped mound of distinct dark golden brown cooked buckwheat grains mixed with 3 clearly recognizable sliced sauteed mushrooms, green parsley garnish, in a low rich cobalt-blue ceramic bowl. Clear compact bowl silhouette, not soup. Match its detailed softly glossy painterly 3D illustrated style and warm lighting, three-quarter top-down view, appetizing, chunky clear readable silhouette at small size, realistic proportions. Entire food and plate inside square canvas, 8% clear margin, transparent background, no backdrop, no text, no extra props."
+  },
+  {
+    "key": "apple-pie",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-656829d8-ecba-4e76-94ff-8b5b13db24dd.png",
+    "target": "dist/assets/recipes/apple-pie.png",
+    "prompt": "Create one isolated food illustration for a cozy Russian grandma's match-three game. Use the attached image only as style reference, not as a subject to reproduce. Rustic apple pie: a round golden pie with apple slices arranged as a spiral rose, one slice cut and pulled slightly forward showing layered apples inside, on a pale blue round ceramic plate. No berries, no cutlery. Match its detailed softly glossy painterly 3D illustrated style and warm lighting, three-quarter top-down view, appetizing, chunky clear readable silhouette at small size, realistic proportions. Entire food and plate inside square canvas, 8% clear margin, transparent background, no backdrop, no text, no extra props."
+  },
+  {
+    "key": "vatrushki",
+    "source": "/Users/antonkarmazin/.codex/generated_images/01a1e081-9925-7063-bc1e-75368d6764b3/exec-13ae342e-ef4c-4e1b-92fb-8750152a9b97.png",
+    "target": "dist/assets/recipes/vatrushki.png",
+    "prompt": "Create one isolated food illustration for a cozy Russian grandma's match-three game. Use the attached image only as style reference, not as a subject to reproduce. Two Russian vatrushki: round shiny golden yeast buns with deep broad wells full of ivory cottage cheese, one slightly behind the other, on a moss-green oval plate. Large clearly visible creamy centres and thick golden bread rims, no fruit. Match its detailed softly glossy painterly 3D illustrated style and warm lighting, three-quarter top-down view, appetizing, chunky clear readable silhouette at small size, realistic proportions. Entire food and plate inside square canvas, 8% clear margin, transparent background, no backdrop, no text, no extra props."
   }
 ]
