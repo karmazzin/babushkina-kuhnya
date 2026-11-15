@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 const root=new URL('../dist/',import.meta.url);
-async function harness({fail=false}={}){
+async function harness({fail=false,staleHttp=false}={}){
  const handlers={}, stores=new Map(), scope='https://example.test/kitchen/';let network=0,activations=0;
- const caches={open:async name=>{if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {addAll:async urls=>{if(fail)throw Error('download failed');for(const u of urls)m.set(u,new Response(u));},match:async u=>m.get(typeof u==='string'?u:u.url),keys:async()=>[...m.keys()].map(url=>({url}))};},keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)};
+ const caches={open:async name=>{if(!stores.has(name))stores.set(name,new Map());const m=stores.get(name);return {addAll:async urls=>{if(fail)throw Error('download failed');for(const u of urls){const url=typeof u==='string'?u:u.url;m.set(url,new Response(staleHttp?(u.cache==='reload'?'fresh':'stale'):url));}},match:async u=>m.get(typeof u==='string'?u:u.url),keys:async()=>[...m.keys()].map(url=>({url}))};},keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)};
  const self={skipWaiting:async()=>{activations++;},registration:{scope},location:{origin:'https://example.test'},clients:{claim:async()=>{}},addEventListener:(n,f)=>handlers[n]=f};
- vm.runInNewContext(await fs.readFile(new URL('sw.js',root),'utf8'),{self,caches,URL,Response,fetch:async()=>{network++;throw Error('offline');}});
+ vm.runInNewContext(await fs.readFile(new URL('sw.js',root),'utf8'),{self,caches,URL,Request,Response,fetch:async()=>{network++;throw Error('offline');}});
  const fire=async(name,extra={})=>{let p;handlers[name]({...extra,waitUntil:q=>p=q,respondWith:q=>p=q});return await p;};
  return {handlers,stores,scope,fire,network:()=>network,activations:()=>activations};
 }
@@ -39,3 +39,5 @@ test('worker activates early only on explicit update request',async()=>{
  const h=await harness();await h.fire('install');assert.equal(h.activations(),0);
  await h.fire('message',{data:{type:'ACTIVATE_UPDATE'}});assert.equal(h.activations(),1);
 });
+
+test('update bypasses fresh HTTP cache entries from the previous release',async()=>{const h=await harness({staleHttp:true});await h.fire('install');const response=await h.fire('fetch',{request:{url:h.scope+'app.js',method:'GET',mode:'cors'}});assert.equal(await response.text(),'fresh');});

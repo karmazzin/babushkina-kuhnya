@@ -1,11 +1,13 @@
 /* Bump CACHE on every release. Activation is requested only after the player saves a settled game. */
-const CACHE='babushkina-kuhnya-simple-settings-20261115';
+const CACHE='babushkina-kuhnya-fresh-download-20261115';
 const ROOT=self.registration.scope;
 const FILES=['','index.html','style.css','app.js','engine.js','gestures.js','random.js','daily.js','postcards.js','recipes.js','book.js','dialog.js','sharing.js','assets/rolling.svg','assets/kettle.svg','storage.js','offline.js','update.js','animation.js','pacing.js','audio.js','manifest.webmanifest','assets/foods.png','assets/kitchen.png','favicon.ico','favicon.svg','favicon-16x16.png','favicon-32x32.png','assets/apple-touch-icon.png','assets/icon-maskable-192.png','assets/icon-maskable-512.png','assets/social-preview.png','assets/icon.svg','assets/icon-192.png','assets/icon-512.png','assets/audio/porch-swing.m4a','assets/audio/select.mp3','assets/audio/match.mp3','assets/audio/land.mp3','assets/audio/invalid.mp3','assets/audio/win.mp3','assets/audio/LICENSES.txt'];
 FILES.push(...Array.from({length:12},(_,i)=>`assets/postcards/card-${String(i+1).padStart(2,'0')}.jpg`));
 const URLS=FILES.map(path=>new URL(path,ROOT).href);
 self.addEventListener('install',event=>event.waitUntil((async()=>{
- const cache=await caches.open(CACHE);await cache.addAll(URLS);
+ const cache=await caches.open(CACHE);
+ // A new offline release must not copy still-fresh files from the previous HTTP cache.
+ await cache.addAll(URLS.map(url=>new Request(url,{cache:'reload'})));
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
  for(const key of await caches.keys())if(key.startsWith('babushkina-kuhnya-')&&key!==CACHE)await caches.delete(key);
