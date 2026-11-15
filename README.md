@@ -27,7 +27,11 @@ PORT=4189 BASE_PATH=/babushkina-kuhnya/ npm start
 ```
 
 ## GitHub Pages
-Исходники предназначены для **приватного** репозитория. Для Pages из приватного репозитория нужен подходящий тариф GitHub (Pro/Team/Enterprise). Сам сайт должен оставаться публичным, без авторизации для игрока.
+Игра: https://karmazzin.github.io/babushkina-kuhnya/
+
+Репозиторий: https://github.com/karmazzin/babushkina-kuhnya
+
+По решению владельца репозиторий публичный: текущий тариф GitHub не поддерживает Pages из приватного репозитория. Сайт доступен без авторизации.
 
 Workflow `.github/workflows/pages.yml` проверяет тесты и публикует только `dist/` при push в `main`. В Settings → Pages выберите GitHub Actions. Все URL относительные: проектный путь поддерживается, включая манифест и service worker.
 
