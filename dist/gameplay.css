@@ -90,6 +90,9 @@
 /* Keep desktop illustrations inside the cell, even when rows are shallow. */
 @media(min-width:600px) and (hover:hover) and (pointer:fine){
  .tile{container-type:size}
- .tile .food{inset:0;margin:auto;width:min(78cqw,78cqh,56px);height:min(78cqw,78cqh,56px)}
- .tile.has-plate .food{inset:0;width:min(68cqw,68cqh,50px);height:min(68cqw,68cqh,50px)}
+ .tile .food{inset:0;margin:auto;width:min(92cqw,92cqh,72px);height:min(92cqw,92cqh,72px)}
+ .tile.has-plate .food{inset:0;width:min(82cqw,82cqh,64px);height:min(82cqw,82cqh,64px)}
 }
+
+/* Preserve the upper kitchen scene as wide screens crop the portrait artwork. */
+@media(min-width:600px){body{background-position:center top}}
