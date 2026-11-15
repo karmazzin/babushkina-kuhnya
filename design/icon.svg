@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="green" x2=".8" y2="1"><stop stop-color="#7d925a"/><stop offset="1" stop-color="#405933"/></linearGradient>
+ <radialGradient id="cream" cx=".35" cy=".25" r=".85"><stop stop-color="#fffbe8"/><stop offset="1" stop-color="#e6cc96"/></radialGradient>
+ <linearGradient id="pot" x2="0" y2="1"><stop stop-color="#c16d4b"/><stop offset=".5" stop-color="#a44837"/><stop offset="1" stop-color="#7f302b"/></linearGradient>
+</defs>
+<rect id="back" width="512" height="512" rx="108" fill="url(#green)"/>
+<circle cx="256" cy="256" r="184" fill="#304426" opacity=".3" transform="translate(0 8)"/>
+<circle cx="256" cy="250" r="183" fill="url(#cream)"/>
+<circle cx="256" cy="250" r="171" fill="none" stroke="#b49a5c" stroke-width="3"/>
+<ellipse cx="256" cy="348" rx="116" ry="22" fill="#ad8d57" opacity=".3"/>
+<path d="M219 187c-30-29 28-36 1-69M273 189c-29-29 29-39 3-69" fill="none" stroke="#b19760" stroke-width="11" stroke-linecap="round"/>
+<path d="M139 238h234l-18 68c-8 35-58 52-99 52s-91-17-99-52z" fill="url(#pot)" stroke="#813b2a" stroke-width="4"/>
+<ellipse cx="256" cy="237" rx="119" ry="38" fill="#d18557" stroke="#874a2e" stroke-width="4"/>
+<ellipse cx="256" cy="236" rx="101" ry="25" fill="#913b30"/>
+<path d="M214 233c24-17 68-11 78 2-13 13-46 16-63 3" fill="none" stroke="#fff0d0" stroke-width="10" stroke-linecap="round"/>
+<path d="M173 278c10 25 21 34 42 41" fill="none" stroke="#e8ac78" stroke-width="7" stroke-linecap="round" opacity=".65"/>
+<path d="M309 214c-3-17 6-27 23-29-1 16-8 25-23 29M309 215c-18-1-26-10-27-24 17 0 27 8 27 24" fill="#657e46"/>
+<path d="M251 291c-10-14-26-2-17 9l17 16 17-16c9-11-7-23-17-9" fill="#f5d8a5"/>
+</svg>
