@@ -42,15 +42,16 @@
 <p class="welcome">Заходите на огонёк</p>
 <button id="continue" class="button primary">Продолжить</button>
 <button id="start" class="button secondary">Начать готовить</button>
-<button id="open-book" class="button secondary">Книга рецептов</button>
+<button id="open-daily" class="button daily-button"><span id="daily-label">Угощение дня</span><small id="daily-caption">Короткая игра · открытка в подарок</small></button><div class="menu-action-row"><button id="open-book" class="button secondary">Книга рецептов</button><button id="open-collection" class="button secondary">Открытки · <span id="collection-count">0</span></button></div>
 <div class="menu-stats"><span>Открыт уровень <b id="unlocked">1</b></span><span>Рекорд <b id="best">0</b></span></div>
 </div>
 <nav class="menu-links" aria-label="Дополнительно"><button id="how">Как играть</button><button id="settings">Настройки</button><button id="install">Установить</button></nav>
 <p id="offline" class="offline" role="status">Готовим игру для работы без интернета…</p>
 </section>
 <section id="book" class="screen book-screen" hidden aria-labelledby="book-title"><header class="book-top"><button id="book-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="book-title">Бабушкина книга</h1><span aria-hidden="true">❧</span></header><div id="book-content"></div></section>
+<section id="collection" class="screen collection-screen" hidden aria-labelledby="collection-title"><header class="book-top"><button id="collection-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="collection-title">Мои открытки</h1><span aria-hidden="true">❧</span></header><div id="collection-content"></div></section>
 <section id="game" class="screen game-screen" hidden aria-labelledby="game-title">
-<header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><div><span class="logo-ornament" aria-hidden="true">✦ ❧ ✦</span><h1 id="game-title"><span>Бабушкина</span><span>кухня</span></h1><span class="level-label">Уровень <b id="level">1</b></span></div><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
+<header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><div><span class="logo-ornament" aria-hidden="true">✦ ❧ ✦</span><h1 id="game-title"><span>Бабушкина</span><span>кухня</span></h1><span class="level-label"><span id="game-mode">Уровень</span> <b id="level">1</b></span></div><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
 
 <div class="scorecard"><div class="score-block"><div id="score-metric"><span class="stat-label">Очки</span><div><strong id="score">0</strong><span class="target"> / <span id="target">1 000</span></span></div><progress id="progress" value="0" max="1000" aria-label="Прогресс к цели"></progress></div><div id="recipe-goals"></div></div><div class="moves-block"><span class="stat-label">Ходы</span><strong id="moves">24</strong></div></div>
 <div class="board-stage"><div class="board-frame"><div id="board" role="group" aria-label="Игровое поле: 7 столбцов, 8 строк"></div><div id="helper-effect" aria-hidden="true"></div><div id="score-pop" aria-hidden="true"></div></div></div>

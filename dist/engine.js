@@ -1,3 +1,4 @@
+import {seededRandom} from './random.js';
 import {levelRecipe} from './recipes.js';
 export const COLS=7, ROWS=8, TYPES=5;
 export function adjacent(a,b){return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<56&&b<56&&(Math.abs(a-b)===7||(Math.floor(a/7)===Math.floor(b/7)&&Math.abs(a-b)===1));}
@@ -15,13 +16,13 @@ export function legalMoves(board){
   const copy=board.slice();[copy[a],copy[b]]=[copy[b],copy[a]];if(matches(copy).length)result.push([a,b]);
  }return result;
 }
-function randomType(){return Math.floor(Math.random()*TYPES);}
-export function freshBoard(){
+function randomType(random){return Math.floor(random()*TYPES);}
+export function freshBoard(random=Math.random){
  for(let attempt=0;attempt<100;attempt++){
   const b=[];
   for(let i=0;i<56;i++){
    const choices=[0,1,2,3,4].filter(t=>!(i%7>1&&b[i-1]===t&&b[i-2]===t)&&!(i>=14&&b[i-7]===t&&b[i-14]===t));
-   b.push(choices[Math.floor(Math.random()*choices.length)]);
+   b.push(choices[Math.floor(random()*choices.length)]);
   }
   if(legalMoves(b).length)return b;
  }
@@ -29,7 +30,7 @@ export function freshBoard(){
  const b=Array.from({length:56},(_,i)=>(i%7+Math.floor(i/7)*2)%5);
  b[0]=0;b[1]=1;b[2]=0;b[8]=0;return b;
 }
-export function newGame(level=1){return {level,board:freshBoard(),moves:24,target:1000+Math.floor(((level-1)%18)/6)*120+((level-1)%6)*50+Math.min(Math.floor((level-1)/18),4)*75,score:0,status:'playing',goals:levelRecipe(level).goals,plates:levelRecipe(level).plates,collected:[0,0,0,0,0],boosters:{rolling:1,kettle:1}};}
+export function newGame(level=1){const recipe=levelRecipe(level);return {level,helperRule:'turn',board:freshBoard(),moves:recipe.moves??24,target:1000+Math.floor(((level-1)%18)/6)*120+((level-1)%6)*50+Math.min(Math.floor((level-1)/18),4)*75,score:0,status:'playing',goals:recipe.goals,plates:recipe.plates,collected:[0,0,0,0,0],boosters:{rolling:1,kettle:1}};}
 export function goalComplete(g){return !g.goals?g.score>=g.target:g.goals.every(x=>x.kind==='score'?g.score>=g.target:x.kind==='plates'?Array.isArray(g.plates)&&g.plates.length===0:(g.collected?.[x.type]??0)>=x.amount);}
 export function boosterArea(kind,index){
  if(!Number.isInteger(index)||index<0||index>=56)return [];
@@ -53,19 +54,21 @@ export function earnedBoosters(board,removed){
 }
 function settle(game,board,removed,moves,boosters,reward){
  const next={...game,board,moves,collected:[...(game.collected??[0,0,0,0,0])],boosters:{...boosters}};
- const frames=[];let multiplier=1,shuffled=false;
+ const random=Number.isInteger(game.rng)?seededRandom(game.rng):Math.random;
+ const frames=[],awarded={rolling:0,kettle:0};let multiplier=1,shuffled=false;
  while(removed.length&&multiplier<=100){
   const before=board.slice(),platesBefore=[...(next.plates??[])];next.score+=removed.length*10*multiplier;
-  if(reward){const earned=earnedBoosters(before,removed);for(const k of ['rolling','kettle'])next.boosters[k]=Math.min(3,next.boosters[k]+earned[k]);}
+  if(reward){const earned=earnedBoosters(before,removed);for(const k of ['rolling','kettle']){const charge=game.helperRule==='turn'?Math.max(0,earned[k]-awarded[k]):earned[k];next.boosters[k]=Math.min(3,next.boosters[k]+charge);awarded[k]=Math.max(awarded[k],earned[k]);}}
   if(next.plates)next.plates=next.plates.filter(i=>!removed.includes(i));
   removed.forEach(i=>{next.collected[board[i]]++;board[i]=null;});
   for(let c=0;c<7;c++){
    const survivors=[];for(let r=7;r>=0;r--)if(board[r*7+c]!==null)survivors.push(board[r*7+c]);
-   for(let r=7;r>=0;r--)board[r*7+c]=survivors[7-r]??randomType();
+   for(let r=7;r>=0;r--)board[r*7+c]=survivors[7-r]??randomType(random);
   }
   frames.push({before,after:board.slice(),removed,multiplier,platesBefore,platesAfter:[...(next.plates??[])],collected:[...next.collected]});multiplier++;removed=matches(board);
  }
- if(removed.length||!legalMoves(board).length){next.board=freshBoard();shuffled=true;}
+ if(removed.length||!legalMoves(board).length){next.board=freshBoard(random);shuffled=true;}
+ if(Number.isInteger(game.rng))next.rng=random.state;
  next.status=goalComplete(next)?'won':next.moves===0?'lost':'playing';
  return {game:next,valid:true,frames,shuffled};
 }

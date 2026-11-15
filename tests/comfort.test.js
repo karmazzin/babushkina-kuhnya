@@ -63,5 +63,5 @@ test('instruction switches to the remaining dish after all plates are cleared',(
  assert.equal(typeof book.goalHint,'function');
  const g={...newGame(6),plates:[]};
  assert.match(book.goalHint(g),/блюда/);assert.doesNotMatch(book.goalHint(g),/тарел/);
- g.collected[4]=10;assert.match(book.goalHint(g),/готово/);
+ g.collected[4]=g.goals.find(x=>x.kind==='food').amount;assert.match(book.goalHint(g),/готово/);
 });

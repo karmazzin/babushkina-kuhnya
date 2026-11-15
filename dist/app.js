@@ -1,3 +1,5 @@
+import {localDay,displayDay,newDailyGame,recordDailyWin,dailyOffer} from './daily.js';
+import {renderCollection,postcardMarkup} from './postcards.js';
 import {swipeIntent} from './gestures.js';
 import {createUpdater} from './update.js';
 import {renderBook,goalText,goalMarkup,goalHint} from './book.js';
@@ -12,6 +14,9 @@ const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('ru-RU');
 const names=['Пирожок','Блины','Пельмени','Борщ','Сырники'];
 let storage;try{storage=window.localStorage;}catch{storage=null;}
 let loaded=loadProgress(storage), data=loaded.data, selected=null, busy=false, epoch=0, installPrompt=null;
+let gameMode='regular';
+const activeGame=()=>gameMode==='daily'?data.daily.game:data.game;
+function setActiveGame(game){if(gameMode==='daily')data.daily.game=game;else data.game=game;}
 const audio=createAudio();
 document.addEventListener('pointerdown',()=>audio.unlock(),{capture:true});
 document.addEventListener('keydown',()=>audio.unlock(),{capture:true});
@@ -24,15 +29,46 @@ function settingsApplied(){document.body.classList.toggle('reduced',data.setting
 let pacing=null,hintTimer=null,helper=null,helperTarget=null;
 function clearHint(){clearTimeout(hintTimer);tiles.forEach(t=>t.classList.remove('hint'));}
 function armHint(){
- clearHint();if(helper||busy||document.hidden||$('game').hidden||$('dialog').open||data.game?.status!=='playing')return;
- hintTimer=setTimeout(()=>{const move=hintMove(data.game.board);if(move)move.forEach(i=>tiles[i].classList.add('hint'));},9000);
+ clearHint();if(helper||busy||document.hidden||$('game').hidden||$('dialog').open||activeGame()?.status!=='playing')return;
+ hintTimer=setTimeout(()=>{const move=hintMove(activeGame().board);if(move)move.forEach(i=>tiles[i].classList.add('hint'));},9000);
 }
 function accelerate(){if(!busy||!pacing)return;pacing.fast();$('game-message').textContent='Готовим побыстрее…';}
 function cancelMotion(){resetPointer();clearHint();clearHelper();$('helper-effect').getAnimations().forEach(a=>a.cancel());$('helper-effect').replaceChildren();pacing?.cancel();pacing=null;epoch++;busy=false;selected=null;tiles.forEach(t=>{t.firstElementChild.getAnimations().forEach(a=>a.cancel());t.classList.remove('matching');});$('board').removeAttribute('aria-busy');}
-function menu(){cancelMotion();$('game').hidden=true;$('book').hidden=true;$('menu').hidden=false;$('continue').hidden=!data.game;$('continue').textContent=data.game?.status==='playing'?'Продолжить готовить':'Результат уровня';$('start').textContent=data.game?`Играть · уровень ${data.unlocked}`:'Начать готовить';$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);}
-function start(){data.game=newGame(data.unlocked);persist();openGame();navigator.storage?.persist?.().catch(()=>{});}
-function requestStart(){if(data.game?.status==='playing'){modal('Начать заново?','<p>Текущая партия будет заменена. Открытые уровни и рекорд останутся.</p>',[{text:'Продолжить партию',action:openGame},{text:'Начать заново',action:start,secondary:true}]);}else start();}
-function openGame(){if(!data.game)return start();cancelMotion();$('menu').hidden=true;$('book').hidden=true;$('game').hidden=false;paint();if(data.game.status!=='playing')outcome();else armHint();}
+function hideScreens(){for(const id of ['menu','game','book','collection'])$(id).hidden=true;}
+function refreshDailyMenu(){
+ const offer=dailyOffer(data.daily),pending=data.daily.game;
+ $('daily-label').textContent=offer==='resume'||offer==='previous'?'Продолжить угощение':'Угощение дня';
+ $('daily-caption').textContent=offer==='previous'?`Начато ${displayDay(pending.dailyDate)}`:offer==='completed'?'Открытка уже в коллекции':offer==='resume'?'Партия сохранена':'Короткая игра · открытка в подарок';
+ $('collection-count').textContent=data.daily.cards.length;
+}
+function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=!data.game;$('continue').textContent=data.game?.status==='playing'?'Продолжить готовить':'Результат уровня';$('start').textContent=data.game?`Играть · уровень ${data.unlocked}`:'Начать готовить';$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
+function start(){data.game=newGame(data.unlocked);persist();openGame('regular');navigator.storage?.persist?.().catch(()=>{});}
+function requestStart(){if(data.game?.status==='playing'){modal('Начать заново?','<p>Текущая обычная партия будет заменена. Угощение дня, уровни и открытки останутся.</p>',[{text:'Продолжить партию',action:()=>openGame('regular')},{text:'Начать заново',action:start,secondary:true}]);}else start();}
+function openGame(mode='regular'){
+ cancelMotion();gameMode=mode;
+ if(!activeGame())return mode==='daily'?requestDaily():start();
+ hideScreens();$('game').hidden=false;paint();
+ if(activeGame().status!=='playing')outcome();else armHint();
+}
+function beginDaily(day=localDay()){cancelMotion();data.daily.game=newDailyGame(day);persist();openGame('daily');}
+function requestDaily(){
+ const today=localDay(),offer=dailyOffer(data.daily,today),saved=data.daily.game;
+ if(offer==='resume')return openGame('daily');
+ if(offer==='previous')return modal('Угощение вас дождалось',`<p>Осталась партия за ${displayDay(saved.dailyDate)}. Можно спокойно её закончить и получить открытку.</p><p>Или начать сегодняшнюю — незавершённая ежедневная партия будет заменена. Обычная игра и открытки сохранятся.</p>`,[{text:'Продолжить начатое',action:()=>openGame('daily')},{text:'Сегодняшнее угощение',secondary:true,action:()=>beginDaily(today)}]);
+ if(offer==='completed')return modal('Открытка уже у вас','<p>Сегодняшнее угощение пройдено. Можно сыграть ещё для удовольствия или посмотреть коллекцию.</p>',[{text:'Мои открытки',action:()=>collection()},{text:'Сыграть ещё',secondary:true,action:()=>beginDaily(today)}]);
+ if(saved?.dailyDate===today&&saved.status==='lost')return openGame('daily');
+ beginDaily(today);
+}
+function collection(page=0){
+ cancelMotion();hideScreens();$('collection').hidden=false;
+ renderCollection($('collection-content'),data.daily.cards,page,i=>modal('Ваша открытка',postcardMarkup(data.daily.cards[i],i),[{text:'К коллекции',action:()=>collection(page)}]),collection,requestDaily);
+}
+function dailyOutcome(){
+ const g=data.daily.game,won=g.status==='won';
+ if(won){const rewarded=recordDailyWin(data.daily);if(rewarded!==data.daily){data.daily=rewarded;persist();}}
+ const index=data.daily.cards.indexOf(g.dailyDate);
+ modal(won?'Открытка для вас':'Попробуем ещё?',won?postcardMarkup(g.dailyDate,index)+'<p class="daily-reassurance">Открытка останется в коллекции.<br>Возвращайтесь, когда захочется.</p>':'<p>Угощение можно попробовать снова — столько раз, сколько хочется. Открытки и обычная партия сохранены.</p>',won?[{text:'В коллекцию',action:()=>collection()},{text:g.dailyDate===localDay()?'В главное меню':'Сегодняшнее угощение',secondary:true,action:()=>g.dailyDate===localDay()?menu():requestDaily()}]:[{text:'Попробовать ещё',action:()=>beginDaily(g.dailyDate)},{text:'В главное меню',secondary:true,action:menu}]);
+}
 const tiles=[];
 for(let i=0;i<56;i++){
  const tile=document.createElement('button');tile.className='tile';tile.type='button';tile.dataset.index=i;tile.tabIndex=i===0?0:-1;tile.innerHTML='<span class="food" aria-hidden="true"></span>';
@@ -44,17 +80,17 @@ for(let i=0;i<56;i++){
  });
  $('board').append(tile);tiles.push(tile);
 }
-function paintBoard(board,removed=[],plates=data.game?.plates??[]){
+function paintBoard(board,removed=[],plates=activeGame()?.plates??[]){
  const set=new Set(removed);
  board.forEach((t,i)=>{const tile=tiles[i];tile.dataset.type=t;tile.classList.toggle('has-plate',plates.includes(i));tile.firstElementChild.className=`food f${t}`;tile.setAttribute('aria-label',`${names[t]}${plates.includes(i)?', на тарелке':''}, строка ${Math.floor(i/7)+1}, столбец ${i%7+1}`);tile.classList.toggle('matched',set.has(i));tile.classList.remove('falling','invalid','matching');});selection();
 }
 function selection(){tiles.forEach((tile,i)=>{tile.classList.toggle('selected',i===selected);tile.setAttribute('aria-pressed',String(i===selected));});}
-function stats(g=data.game){
- if(!g)return;if(!helper)$('helper-prompt').textContent=goalHint(g);$('level').textContent=g.level;$('score').textContent=fmt(g.score);$('target').textContent=fmt(g.target);$('moves').textContent=g.moves;$('progress').max=g.target;$('progress').value=Math.min(g.target,g.score);
+function stats(g=activeGame()){
+ if(!g)return;if(!helper)$('helper-prompt').textContent=goalHint(g);$('game-mode').textContent=gameMode==='daily'?'Угощение дня':'Уровень';$('level').textContent=gameMode==='daily'?displayDay(g.dailyDate).slice(0,5):g.level;$('score').textContent=fmt(g.score);$('target').textContent=fmt(g.target);$('moves').textContent=g.moves;$('progress').max=g.target;$('progress').value=Math.min(g.target,g.score);
  $('score-metric').hidden=!!g.goals&&!g.goals.some(x=>x.kind==='score');$('recipe-goals').innerHTML=goalMarkup(g);$('score-metric').classList.toggle('mixed-goal',!!g.goals?.some(x=>x.kind==='food'));
  for(const kind of ['rolling','kettle']){$(kind+'-count').textContent=g.boosters?.[kind]??1;$(kind).disabled=busy||(g.boosters?.[kind]??1)===0||g.status!=='playing';}
 }
-function goalInstruction(){return goalHint(data.game);}
+function goalInstruction(){return goalHint(activeGame());}
 function clearHelper(){
  helper=null;helperTarget=null;$('helper-cancel').hidden=true;
  $('helper-prompt').textContent=goalInstruction();
@@ -62,7 +98,7 @@ function clearHelper(){
  tiles.forEach(t=>t.classList.remove('helper-preview'));
 }
 function selectHelper(kind){
- if(busy||data.game?.status!=='playing'||!(data.game.boosters?.[kind]??1))return;
+ if(busy||activeGame()?.status!=='playing'||!(activeGame().boosters?.[kind]??1))return;
  if(helper===kind){clearHelper();armHint();return;}
  clearHelper();clearHint();selected=null;selection();helper=kind;
  $(kind).classList.add('helper-selected');$(kind).setAttribute('aria-pressed','true');
@@ -84,7 +120,7 @@ async function helperVisual(kind,index){
  const cleanup=await animate([host],kind==='rolling'?[{opacity:0,transform:'translateX(-12%)'},{opacity:1,offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateX(12%)'}]:[{opacity:0,transform:'scale(.65)'},{opacity:.85,offset:.4},{opacity:0,transform:'scale(1.15) translateY(-10px)'}],{duration:900,easing:'ease-in-out'},a=>pacing.track(a));cleanup();if(motionEpoch===epoch)host.replaceChildren();
 }
 
-function paint(){paintBoard(data.game.board);stats();settingsApplied();$('game-message').textContent='';}
+function paint(){paintBoard(activeGame().board);stats();settingsApplied();$('game-message').textContent='';}
 const sleep=ms=>pacing.wait(ms);
 function food(i){return tiles[i].firstElementChild;}
 async function swapVisual(a,b,back=false){
@@ -96,16 +132,16 @@ async function swapVisual(a,b,back=false){
  await Promise.all([aa.finished.catch(()=>{}),ab.finished.catch(()=>{})]);return ()=>{aa.cancel();ab.cancel();};
 }
 async function swap(a,b,kind=null){
- if(busy||!data.game||data.game.status!=='playing')return;
+ if(busy||!activeGame()||activeGame().status!=='playing')return;
  clearHint();pacing=createPacing();
- const oldScore=data.game.score,result=kind?useBooster(data.game,kind,a):play(data.game,a,b);selected=null;selection();busy=true;const turn=++epoch;
+ const oldScore=activeGame().score,result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
  if(!result.valid){
   $('game-message').textContent='Нет совпадения. Ход сохранён.';
   if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;armHint();}return;
  }
  // Persist settled state first, but reveal points as each cascade resolves.
- data.game=result.game;data.best=Math.max(data.best,data.game.score);if(data.game.status==='won'){data.unlocked=Math.max(data.unlocked,data.game.level+1);if(!data.completed.includes(data.game.level))data.completed.push(data.game.level);}persist();
- $('moves').textContent=data.game.moves;$('board').setAttribute('aria-busy','true');
+ setActiveGame(result.game);if(gameMode==='daily'){data.daily=recordDailyWin(data.daily);}else{data.best=Math.max(data.best,activeGame().score);if(activeGame().status==='won'){data.unlocked=Math.max(data.unlocked,activeGame().level+1);if(!data.completed.includes(activeGame().level))data.completed.push(activeGame().level);}}persist();
+ $('moves').textContent=activeGame().moves;$('board').setAttribute('aria-busy','true');
  let shownScore=oldScore;
  try{
   if(!reduce()&&kind){await helperVisual(kind,a);if(turn!==epoch)return;}
@@ -118,21 +154,21 @@ async function swap(a,b,kind=null){
    await sleep(TIMING.highlight);if(turn!==epoch)return;audio.effect('match');
    const clearFade=await animate(frame.removed.map(food),[{opacity:1,transform:'scale(1)'},{opacity:.7,transform:'scale(1.08)',offset:.35},{opacity:0,transform:'scale(.75)'}],{duration:TIMING.fade,easing:'ease-in',fill:'forwards'},a=>pacing.track(a));
    if(turn!==epoch){clearFade();return;}
-   shownScore+=frame.removed.length*10*frame.multiplier;$('score').textContent=fmt(shownScore);$('progress').value=Math.min(data.game.target,shownScore);
+   shownScore+=frame.removed.length*10*frame.multiplier;$('score').textContent=fmt(shownScore);$('progress').value=Math.min(activeGame().target,shownScore);
    $('score-pop').textContent=`+${frame.removed.length*10*frame.multiplier}`;$('score-pop').classList.remove('show');void $('score-pop').offsetWidth;$('score-pop').classList.add('show');
    const step=tiles[7].getBoundingClientRect().y-tiles[0].getBoundingClientRect().y;
-   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup({...data.game,plates:frame.platesAfter,collected:frame.collected});$('helper-prompt').textContent=goalHint({...data.game,score:shownScore,plates:frame.platesAfter,collected:frame.collected});clearFade();
+   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup({...activeGame(),plates:frame.platesAfter,collected:frame.collected});$('helper-prompt').textContent=goalHint({...activeGame(),score:shownScore,plates:frame.platesAfter,collected:frame.collected});clearFade();
    const falling=gravityMap(frame.removed).filter(m=>m.from!==m.to).map(m=>food(m.to).animate([{transform:`translateY(${(m.from-m.to)/7*step}px)`,opacity:m.from<0?0:1},{transform:'translateY(0)',opacity:1}],{duration:TIMING.fall,easing:'cubic-bezier(.22,.68,.3,1)',fill:'both'}));
    falling.forEach(a=>pacing.track(a));
    await Promise.all(falling.map(a=>a.finished.catch(()=>{})));falling.forEach(a=>a.cancel());if(turn!==epoch)return;
    await sleep(TIMING.settle);
   }
-  if(turn!==epoch)return;paintBoard(data.game.board);stats();if(reduce())audio.effect('match');
+  if(turn!==epoch)return;paintBoard(activeGame().board);stats();if(reduce())audio.effect('match');
   $('game-message').textContent=result.shuffled?'Новые блюда — новые ходы!':'';
-  if(data.game.status!=='playing'){if(data.game.status==='won')audio.effect('win');outcome();}
+  if(activeGame().status!=='playing'){if(activeGame().status==='won')audio.effect('win');outcome();}
  }finally{if(turn===epoch){busy=false;$('board').removeAttribute('aria-busy');stats();armHint();}}
 }
-function choose(i){if(busy){accelerate();return;}if(data.game?.status!=='playing')return;if(helper){applyHelper(i);return;}if(selected===null){selected=i;selection();}else if(selected===i){selected=null;selection();}else if(adjacent(selected,i)){swap(selected,i);}else{selected=i;selection();}}
+function choose(i){if(busy){accelerate();return;}if(activeGame()?.status!=='playing')return;if(helper){applyHelper(i);return;}if(selected===null){selected=i;selection();}else if(selected===i){selected=null;selection();}else if(adjacent(selected,i)){swap(selected,i);}else{selected=i;selection();}}
 let pointer=null,suppressClick=0;
 function resetPointer(){
  const p=pointer;pointer=null;
@@ -157,7 +193,7 @@ function dragPreview(e){
 $('board').addEventListener('pointerdown',e=>{
  if(e.isPrimary===false||e.button!==0||pointer)return;
  if(busy){accelerate();suppressClick=Date.now()+500;return;}
- const t=e.target.closest('.tile');if(!t||data.game?.status!=='playing')return;
+ const t=e.target.closest('.tile');if(!t||activeGame()?.status!=='playing')return;
  clearHint();const i=Number(t.dataset.index);
  pointer={id:e.pointerId,i,x:e.clientX,y:e.clientY,size:t.getBoundingClientRect().width,axis:null,target:null,travel:0};
  $('board').setPointerCapture(e.pointerId);
@@ -186,7 +222,7 @@ document.addEventListener('pointerdown',armHint,{capture:true});
 document.addEventListener('keydown',armHint,{capture:true});
 document.addEventListener('visibilitychange',armHint);
 $('close-dialog').onclick=()=>$('dialog').close();
-function outcome(){const g=data.game,won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${goalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}]);}
+function outcome(){if(gameMode==='daily')return dailyOutcome();const g=activeGame(),won=g.status==='won';modal(won?'Вот это угощение!':'Попробуем ещё?',`<p>${won?'Уровень пройден. Бабушка вами гордится!':'До цели осталось совсем немного практики. Всё получится!'}</p><div class="result-score">${fmt(g.score)}</div><p>${goalText(g)} · уровень ${g.level}</p>${won&&g.level%6===0?'<p>Новый рецепт открыт в книге!</p>':''}`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?'Книга рецептов':'В главное меню',action:()=>won?book(Math.floor((g.level-1)/6)):menu(),secondary:true}]);}
 function help(page=0){
  const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','Соберите блюда рецепта или наберите очки за отведённые ходы. Таймера нет. Неудачная перестановка не тратит ход.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
  modal(pages[page][0],`<div class="legend">${names.map((_,i)=>`<span class="food f${i}"></span>`).join('')}</div><p>${pages[page][1]}</p><p class="page-count">${page+1} / ${pages.length}</p>`,[{text:page===pages.length-1?'Понятно!':'Дальше →',action:()=>{if(page<pages.length-1)help(page+1);} }]);
@@ -197,19 +233,20 @@ function settings(){
  for(const key of ['music','sound','reduced'])$('setting-'+key).onchange=e=>{data.settings[key]=e.target.checked;settingsApplied();persist();};
  $('setting-volume').oninput=e=>{data.settings.soundVolume=Number(e.target.value)/100;$('volume-value').textContent=e.target.value+'%';settingsApplied();persist();};
  $('setting-volume').onchange=()=>audio.effect('match');
- $('credits').onclick=()=>credits();$('backup').onclick=exportSave;$('restore').onclick=()=>$('save-file').click();$('save-file').onchange=importSave;$('reset').onclick=()=>modal('Сбросить всё?','<p>Партия, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Оставить прогресс',action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
+ $('credits').onclick=()=>credits();$('backup').onclick=exportSave;$('restore').onclick=()=>$('save-file').click();$('save-file').onchange=importSave;$('reset').onclick=()=>modal('Сбросить всё?','<p>Обе партии, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Оставить прогресс',action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
 }
 function exportSave(){const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='babushkina-kuhnya-save.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function importSave(event){const file=event.target.files[0];if(!file)return;try{
  if(file.size>1000000)throw Error('size');const text=await file.text(),result=loadProgress({getItem:()=>text});if(result.warning)throw Error('invalid');
- modal('Вернуть сохранение?',`<p>Открыт уровень ${result.data.unlocked}. Текущий прогресс на этом устройстве будет заменён.</p>`,[{text:'Загрузить',action:()=>{cancelMotion();data=result.data;persist();settingsApplied();menu();}},{text:'Оставить текущий',secondary:true,action:settings}]);
+ modal('Вернуть сохранение?',`<p>Открыт уровень ${result.data.unlocked}. Открыток: ${result.data.daily.cards.length}. Обе партии и коллекция на этом устройстве будут заменены.</p>`,[{text:'Загрузить',action:()=>{cancelMotion();data=result.data;persist();settingsApplied();menu();}},{text:'Оставить текущий',secondary:true,action:settings}]);
  }catch{modal('Не удалось прочитать файл','<p>Выберите файл сохранения «Бабушкиной кухни». Текущий прогресс не изменён.</p>',[{text:'Понятно',action:settings}]);}}
 function book(page=Math.floor((data.unlocked-1)/6)){
- cancelMotion();$('menu').hidden=true;$('game').hidden=true;$('book').hidden=false;
+ cancelMotion();hideScreens();$('book').hidden=false;
  renderBook($('book-content'),data,page,chooseLevel,(chapter,complete)=>{if(complete)recipePage(chapter);else modal('Ещё немного угощений', '<p>Пройдите все шесть уровней этой главы, чтобы открыть семейный рецепт.</p>',[{text:'Хорошо',action:()=>{}}]);},book);
 }
-function chooseLevel(level){if(level>data.unlocked)return;const begin=()=>{data.game=newGame(level);persist();openGame();};if(data.game?.status==='playing')modal('Открыть другой рецепт?','<p>Текущая партия будет заменена. Пройденные уровни и открытые рецепты останутся.</p>',[{text:'Открыть уровень',action:begin},{text:'Продолжить партию',secondary:true,action:openGame}]);else begin();}
+function chooseLevel(level){if(level>data.unlocked)return;const begin=()=>{data.game=newGame(level);persist();openGame('regular');};if(data.game?.status==='playing')modal('Открыть другой рецепт?','<p>Обычная партия будет заменена. Угощение дня, пройденные уровни и открытки останутся.</p>',[{text:'Открыть уровень',action:begin},{text:'Продолжить партию',secondary:true,action:()=>openGame('regular')}]);else begin();}
 function recipePage(chapter,page=0){modal(chapter.dish,`<p class="recipe-ingredients">${chapter.ingredients}</p><p>${chapter.steps[page]}</p><p class="page-count">${page+1} / ${chapter.steps.length}</p>`,[{text:page===chapter.steps.length-1?'В книгу':'Дальше',action:()=>{if(page<chapter.steps.length-1)recipePage(chapter,page+1);}}]);}
+$('open-daily').onclick=requestDaily;$('open-collection').onclick=()=>collection();$('collection-back').onclick=menu;
 $('open-book').onclick=()=>book();$('book-back').onclick=menu;
 $('rolling').onclick=()=>selectHelper('rolling');$('kettle').onclick=()=>selectHelper('kettle');$('helper-cancel').onclick=()=>{clearHelper();armHint();};
 async function install(){if(installPrompt){await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;return;}
@@ -218,16 +255,16 @@ async function install(){if(installPrompt){await installPrompt.prompt();await in
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
-$('start').onclick=requestStart;$('continue').onclick=openGame;$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
+$('start').onclick=requestStart;$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
 window.addEventListener('storage',e=>{if(e.key!==KEY)return;const latest=loadProgress(storage);data=latest.data;warning(latest.warning);$('dialog').close();settingsApplied();menu();});
 settingsApplied();menu();
-try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='game'&&data.game)openGame();else if(resume==='book')book();}catch{}
+try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();}catch{}
 let updater=null;
 function watchUpdates(registration){
  if(updater)return;
  updater=createUpdater({serviceWorker:navigator.serviceWorker,registration,isBusy:()=>busy,
-  save:()=>{if(!persist())return false;try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?'game':!$('book').hidden?'book':'menu');return true;}catch{return false;}},
+  save:()=>{if(!persist())return false;try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':'menu');return true;}catch{return false;}},
   reload:()=>location.reload(),
   show:state=>{
    $('update-notice').hidden=false;
@@ -251,3 +288,6 @@ async function prepareOffline(){
  }catch{$('offline').textContent='Не удалось сохранить игру офлайн. Проверьте сеть и откройте снова.';}
 }
 prepareOffline();window.addEventListener('online',prepareOffline);
+// Calendar refresh updates the menu only; it never replaces a running game.
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDailyMenu();});
+setInterval(()=>{if(!document.hidden&&!$('menu').hidden)refreshDailyMenu();},60000);
