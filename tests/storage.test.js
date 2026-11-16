@@ -21,6 +21,6 @@ test('an unsaved local snapshot and a newer remote save block update rather than
 });
 
 test('incomplete current saves are rejected instead of silently rebuilding missing progress',()=>{
- for(const field of ['completed','daily','relaxed','recipes','seenHelpers']){const p=defaultProgress(),s=memory();delete p[field];saveProgress(s,p);assert.ok(loadProgress(s).warning,field);}
+ for(const field of ['completed','daily','relaxed','garden','seenHelpers']){const p=defaultProgress(),s=memory();delete p[field];saveProgress(s,p);assert.ok(loadProgress(s).warning,field);}
  const p=defaultProgress(),s=memory();delete p.settings.music;saveProgress(s,p);assert.ok(loadProgress(s).warning);
 });

@@ -29,24 +29,6 @@ test('new foods replace at most one familiar dish per block and late goals are c
  for(let n=7;n<151;n+=12){const a=foodPool(n),b=foodPool(n+12);assert.ok(b.filter(t=>!a.includes(t)).length<=1);}
  for(const n of [43,78,138,10000]){const g=newGame(n,{seed:30});assert.ok(g.goals.every(x=>x.kind!=='food'||x.amount<=34));assert.equal(g.pool.length,5);assert.ok(g.board.every(x=>x===TEA||g.pool.includes(x)));}
 });
-test('recipe milestones are 6,18,30 and replay cannot duplicate awards',()=>{
- assert.equal(typeof progression.recordCampaignWin,'function');
- let p={...defaultProgress(),completed:completeTo(5),unlocked:6,game:{...newGame(6,{seed:1}),status:'won'}};
- p=progression.recordCampaignWin(p);assert.deepEqual(p.recipes.unlocked,['blini']);assert.deepEqual(p.recipes.milestones,[6]);
- assert.deepEqual(progression.recordCampaignWin(p),p);assert.equal(progression.nextRecipeReward(p).level,18);
- p={...p,completed:completeTo(17),unlocked:18,game:{...newGame(18,{seed:2}),status:'won'}};p=progression.recordCampaignWin(p);
- assert.deepEqual(p.recipes.unlocked,['blini','pelmeni']);assert.equal(progression.nextRecipeReward(p).level,30);
-});
-test('all twelve rewards are unique and the finished book stops promising new recipes',()=>{
- assert.equal(typeof progression.recordCampaignWin,'function');
- let p=defaultProgress();for(let i=0;i<12;i++){const level=6+i*12;p={...p,completed:completeTo(level-1),unlocked:level,game:{...newGame(level,{seed:1}),status:'won'}};p=progression.recordCampaignWin(p);}
- assert.equal(p.recipes.unlocked.length,12);assert.equal(new Set(p.recipes.unlocked).size,12);assert.equal(progression.nextRecipeReward(p),null);
-});
-test('missing earlier levels cannot be bypassed to claim a recipe',()=>{
- assert.equal(typeof progression.recordCampaignWin,'function');
- const p={...defaultProgress(),completed:[1,2,3,4],unlocked:6,game:{...newGame(6,{seed:9}),status:'won'}};
- assert.deepEqual(progression.recordCampaignWin(p).recipes.unlocked,[]);
-});
 test('daily year covers all four goals and never offers a one-helper win',()=>{
  const kinds=new Set();for(let i=0;i<40;i++){const date=new Date(Date.UTC(2026,0,1+i)).toISOString().slice(0,10),g=newDailyGame(date);kinds.add(g.goals.map(x=>x.kind).sort().join('+'));assert.equal(g.moves,16);assert.equal(openingHelperWin(g),false);}
  assert.deepEqual([...kinds].sort(),['food','food+food','food+plates','plates']);

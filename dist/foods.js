@@ -1,7 +1,7 @@
 export const FOODS=[
  {name:'Пирожок',plural:'Пирожки'},
  {name:'Блины',plural:'Блины'},
- {name:'Пельмени',plural:'Пельмени'},
+ {name:'Пельмени',plural:'Пельмени',image:'assets/foods/pelmeni.png'},
  {name:'Борщ',plural:'Борщ'},
  {name:'Сырники',plural:'Сырники'},
  {name:'Запеканка',plural:'Запеканка',image:'assets/foods/casserole.png'},

@@ -9,5 +9,5 @@
     "check:release": "node scripts/build-release.mjs --check",
     "release:patch": "npm version patch --no-git-tag-version && npm run build"
   },
-  "version": "1.0.6"
+  "version": "1.0.7"
 }

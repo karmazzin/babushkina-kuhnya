@@ -2,9 +2,9 @@ import {validDay} from './daily.js';
 import {matches,legalMoves,gameStatus} from './engine.js';
 import {FOODS} from './foods.js';
 import {TEA,teaCells,bottomTea} from './tea.js';
-import {recipeById,recipeMilestone,RECIPE_CARDS} from './recipe-cards.js';
+import {defaultGarden,validGarden} from './garden.js';
 export const KEY='babushkina-kuhnya:progress';
-export const defaultProgress=()=>({unlocked:1,best:0,game:null,daily:{game:null,cards:[],art:[]},relaxed:{game:null,completed:0},recipes:{unlocked:[],milestones:[]},seenHelpers:[],seenTea:false,completed:[],settings:{sound:true,music:true,reduced:false,soundVolume:.35}});
+export const defaultProgress=()=>({unlocked:1,best:0,game:null,daily:{game:null,cards:[],art:[]},relaxed:{game:null,completed:0},garden:defaultGarden(),seenHelpers:[],seenTea:false,completed:[],settings:{sound:true,music:true,reduced:false,soundVolume:.35}});
 const integer=(n,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 function validGame(g){
  if(g===null)return true;
@@ -22,7 +22,7 @@ function validGame(g){
  if(!Array.isArray(g.plates)||g.plates.length>56||!g.plates.every(n=>integer(n,0,55))||new Set(g.plates).size!==g.plates.length)return false;
  if(g.goals.some(x=>x.kind==='plates'&&g.plates.length>x.amount))return false;
  if(g.dailyDate!==undefined&&!validDay(g.dailyDate))return false;
- if(g.recipeReward!==undefined&&!recipeById(g.recipeReward))return false;
+ if(g.starReward!==undefined&&(typeof g.starReward!=='boolean'||g.status!=='won'))return false;
  if(!g.boosters||!integer(g.boosters.rolling,0,3)||!integer(g.boosters.kettle,0,3))return false;
  return g.status===gameStatus(g);
 }
@@ -37,8 +37,7 @@ function decode(raw){
  if(p.game?.dailyDate!==undefined||p.game?.mode!==undefined)throw Error('another mode in campaign');
  const relaxed=p.relaxed;
  if(!relaxed||!integer(relaxed.completed)||!validGame(relaxed.game)||(relaxed.game!==null&&(relaxed.game.mode!=='relaxed'||relaxed.game.dailyDate!==undefined)))throw Error('invalid relaxed mode');
- const recipes=p.recipes;
- if(!recipes||!Array.isArray(recipes.unlocked)||recipes.unlocked.length>12||!recipes.unlocked.every((id,i)=>id===RECIPE_CARDS[i].id)||!Array.isArray(recipes.milestones)||recipes.milestones.length!==recipes.unlocked.length||!recipes.milestones.every((n,i)=>n===recipeMilestone(i)))throw Error('invalid recipes');
+ if(!validGarden(p))throw Error('invalid garden');
  if(!Array.isArray(p.seenHelpers)||p.seenHelpers.length>2||new Set(p.seenHelpers).size!==p.seenHelpers.length||!p.seenHelpers.every(k=>['rolling','kettle'].includes(k)))throw Error('invalid helper guidance');
  if(typeof p.seenTea!=='boolean')throw Error('invalid tea guidance');
  return p;
