@@ -8,7 +8,7 @@ import * as book from '../dist/book.js';
 import * as recipes from '../dist/recipes.js';
 import * as daily from '../dist/daily.js';
 import * as progression from '../dist/progression.js';
-import * as recipeCards from '../dist/recipe-cards.js';
+import * as gardenEconomy from '../dist/garden.js';
 import * as relaxed from '../dist/relaxed.js';
 import * as pacing from '../dist/pacing.js';
 import * as tea from '../dist/tea.js';
@@ -28,7 +28,7 @@ function harness(native=false){
  const saved=new Map();const localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
  if(native)platform.storage={...localStorage,flush:async()=>true};
  const document={getElementById:get,createElement:()=>new Node(),addEventListener(){},body:new Node(),hidden:false};
- const context=vm.createContext({platform,Event,...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,...tea,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
+ const context=vm.createContext({platform,Event,crypto:globalThis.crypto,...engine,...storage,...book,...recipes,...daily,...progression,...gardenEconomy,...relaxed,...pacing,...tea,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderGarden(){},renderBook(){},gardenSprite(){return "";},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
  vm.runInContext(source,context);
  const run=s=>vm.runInContext(s,context);
  const buttons=()=>get('dialog-actions').children.map(b=>b.textContent);
@@ -39,19 +39,14 @@ for(const escape of [false,true]){
  for(let page=0;page<7;page++)test(`help page ${page+1}: ${suffix} resumes playable game`,()=>{const h=harness();h.start();h.run(`help(${page})`);exit(h,'Продолжить игру');h.playable();});
  test(`settings and nested reset: ${suffix} returns one step`,()=>{const h=harness();h.start();h.run('settings()');h.get('reset').onclick();exit(h,'Отмена');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');exit(h,'Продолжить игру');h.playable();});
  for(let page=0;page<2;page++)test(`credits ${page}: ${suffix} goes to settings`,()=>{const h=harness();h.start();h.run(`credits(${page})`);exit(h,'Назад к настройкам');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');exit(h,'Продолжить игру');h.playable();});
- for(let page=0;page<3;page++)test(`recipe ${page}: ${suffix} goes to book`,()=>{const h=harness();h.start();h.run(`book(0);recipePage(RECIPE_CARDS[0],${page})`);exit(h,'В книгу');assert.equal(h.get('book').hidden,false);assert.equal(h.get('dialog').open,false);h.run('openGame()');h.playable();});
- test(`new game: ${suffix} cancels without replacing save`,()=>{const h=harness();h.start();const before=h.run('JSON.stringify(data.game)');h.run('menu();requestStart()');exit(h,'Отмена');assert.equal(h.get('menu').hidden,false);assert.equal(h.run('JSON.stringify(data.game)'),before);h.run('openGame()');h.playable();});
- test(`level selection: ${suffix} cancels to book without replacing save`,()=>{const h=harness();h.start();const before=h.run('JSON.stringify(data.game)');h.run('book(0);chooseLevel(1)');exit(h,'Отмена');assert.equal(h.get('book').hidden,false);assert.equal(h.run('JSON.stringify(data.game)'),before);h.run('openGame()');h.playable();});
- for(const status of ['won','lost'])test(`result ${status}: ${suffix} has a usable destination`,()=>{const h=harness();h.start();h.run(`data.game.status='${status}';outcome()`);exit(h,status==='won'?'Книга рецептов':'В главное меню');assert.equal(h.get(status==='won'?'book':'menu').hidden,false);h.run('start()');h.playable();});
- test(`installation instructions: ${suffix} returns to menu`,async()=>{const h=harness();await h.run('install()');exit(h,'Назад');assert.equal(h.get('menu').hidden,false);assert.equal(h.get('dialog').open,false);h.start();h.playable();});
+ for(const status of ['won','lost'])test(`result ${status}: ${suffix} has a usable destination`,()=>{const h=harness();h.start();h.run(`data.game.status='${status}';outcome()`);exit(h,status==='won'?'В огород':'В главное меню');assert.equal(h.get(status==='won'?'garden':'menu').hidden,false);h.run('start()');h.playable();});
+ test(`installation instructions: ${suffix} returns to menu`,async()=>{const h=harness();h.run('menu()');await h.run('install()');exit(h,'Назад');assert.equal(h.get('menu').hidden,false);assert.equal(h.get('dialog').open,false);h.start();h.playable();});
 }
-test('positive new game and reset routes remain usable',async()=>{const h=harness();h.start();h.run('menu();requestStart()');h.click('Начать заново');h.playable();h.run('settings()');h.get('reset').onclick();h.click('Да, сбросить');assert.equal(h.get('menu').hidden,false);assert.equal(h.run('data.game'),null);h.start();h.playable();});
-test('help and recipe forward buttons reach a final return, without a hidden third exit',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<6;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();h.run('book(0);recipePage(RECIPE_CARDS[0])');for(let i=1;i<book.recipePages(recipeCards.RECIPE_CARDS[0]).length;i++)h.click('Дальше');assert.deepEqual(h.buttons(),['Предыдущая страница','В книгу']);h.click('В книгу');assert.equal(h.get('book').hidden,false);});
+test('reset route remains usable',async()=>{const h=harness();h.start();h.run('settings()');h.get('reset').onclick();h.click('Да, сбросить');assert.equal(h.get('menu').hidden,false);assert.equal(h.run('data.game'),null);h.start();h.playable();});
+test('help forward buttons reach the final return',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<6;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();});
 for(const status of ['won','lost'])test(`result ${status}: primary action opens a playable next/retry game`,()=>{const h=harness();h.start();h.run(`data.game.status='${status}';outcome()`);h.click(status==='won'?'Следующий уровень':'Попробовать ещё');assert.equal(h.run('data.game.level'),status==='won'?2:1);h.playable();});
-test('confirm level selection starts the selected level',()=>{const h=harness();h.start();h.run('data.unlocked=2;book(0);chooseLevel(2)');h.click('Открыть уровень');assert.equal(h.run('data.game.level'),2);h.playable();});
 test('credits source keeps a route back after opening the source',()=>{const h=harness();h.start();for(let page=0;page<2;page++){h.run(`credits(${page})`);h.click('Источник и лицензия ↗');h.click('Назад к настройкам');h.click('Продолжить игру');h.playable();}});
 
-for(const escape of [false,true])test(`locked recipe return: ${escape?'Escape':'button'}`,()=>{const h=harness();h.start();h.run('book(0)');h.get('book-content').onRecipe(recipeCards.RECIPE_CARDS[0],false);if(escape)h.escape();else h.click('Назад');assert.equal(h.get('book').hidden,false);assert.equal(h.get('dialog').open,false);h.run('openGame()');h.playable();});
 for(const escape of [false,true]){
  const exit=(h,text)=>escape?h.escape():h.click(text),name=escape?'Escape':'button';
  for(const status of ['won','lost'])test(`daily ${status}: ${name} exits without a dead board or lost campaign`,()=>{const h=harness();h.start();const regular=h.run('JSON.stringify(data.game)');h.run(`beginDaily();data.daily.game.status='${status}';dailyOutcome()`);exit(h,status==='won'?'В коллекцию':'В главное меню');assert.equal(h.get(status==='won'?'collection':'menu').hidden,false);assert.equal(h.run('JSON.stringify(data.game)'),regular);h.run("openGame('regular')");h.playable();});
@@ -94,29 +89,25 @@ for(const mode of ['regular','daily'])test(`${mode}: last-move helpers resume, b
  h.run('choose(0)');assert.equal(h.run('selected'),null);
  await h.run("data.settings.reduced=true;selectHelper('kettle');swap(24,null,'kettle')");
  assert.equal(h.run('activeGame().status'),mode==='daily'?'won':'playing');assert.equal(h.get('dialog').open,true);
- h.escape();assert.equal(h.get(mode==='daily'?'collection':'book').hidden,false);
+ h.escape();assert.equal(h.get(mode==='daily'?'collection':'garden').hidden,false);
 });
 for(const escape of [false,true])test(`finish attempt: ${escape?'Escape keeps helpers':'confirm ends attempt'} has a usable route`,()=>{
  const h=harness();h.start();h.run("data.game.moves=0;data.game.status='helpers';openGame();requestFinish()");
  if(escape){h.escape();assert.equal(h.run('data.game.status'),'helpers');assert.equal(h.get('dialog').open,false);}
  else{h.click('Завершить попытку');assert.equal(h.run('data.game.status'),'lost');h.click('Попробовать ещё');h.playable();}
 });
-test('relaxed victory advances its order without awarding campaign recipes or postcards',()=>{
+test('relaxed victory advances its order without awarding campaign stars or postcards',()=>{
  const h=harness();h.start();const regular=h.run('JSON.stringify(data.game)');h.run("requestRelaxed();data.relaxed.game.status='won';outcome()");h.click('Следующее угощение');h.playable();
- assert.equal(h.run('data.relaxed.game.order'),2);assert.equal(h.run('JSON.stringify(data.game)'),regular);assert.equal(h.run('data.daily.cards.length'),0);assert.equal(h.run('data.recipes.unlocked.length'),0);
+ assert.equal(h.run('data.relaxed.game.order'),2);assert.equal(h.run('JSON.stringify(data.game)'),regular);assert.equal(h.run('data.daily.cards.length'),0);assert.equal(h.run('starBalance(data)'),0);
  h.run("data.relaxed.game.status='won';outcome()");h.escape();assert.equal(h.get('menu').hidden,false);h.run('requestRelaxed()');h.click('Следующее угощение');h.playable();
 });
 test('first earned helper explains its rule once and returns to play',()=>{
  const h=harness();h.start();h.run("earnedHelperNotice({rolling:1,kettle:0},()=>{})");assert.equal(h.get('dialog').open,true);assert.match(h.get('dialog-content').innerHTML,/четыре|4/i);h.escape();h.playable();
  assert.equal(h.run("earnedHelperNotice({rolling:1,kettle:0},()=>{})"),false);assert.equal(h.get('dialog').open,false);
 });
-test('recipe milestone result records reward, opens its full recipe and returns safely',()=>{
- const h=harness();h.start();h.run("data.completed=[1,2,3,4,5];data.game=newGame(6);data.game.status='won';outcome()");assert.equal(h.run('data.recipes.unlocked[0]'),'blini');
- h.click('Посмотреть рецепт');assert.match(h.get('dialog-content').innerHTML,/4 порции/);h.escape();assert.equal(h.get('book').hidden,false);h.run('start()');h.playable();
-});
+
 test('settings label describes animation rather than a separate game mode',()=>{const h=harness();h.run('settings()');assert.match(h.get('dialog-content').innerHTML,/Меньше анимации/);assert.doesNotMatch(h.get('dialog-content').innerHTML,/Спокойный режим/);});
 
-test('recipe shelf back button names its real destination',()=>{const h=harness();h.run('recipeShelf()');assert.equal(h.get('book-back').getAttribute('aria-label'),'К уровням');h.get('book-back').onclick();assert.equal(h.get('book-back').getAttribute('aria-label'),'В главное меню');});
 
 test('daily defeat reports the actual remaining objective',()=>{const h=harness();h.run("beginDaily();data.daily.game.goals=[{kind:'food',type:1,amount:12}];data.daily.game.collected[1]=7;data.daily.game.status='lost';dailyOutcome()");assert.match(h.get('dialog-content').innerHTML,/Блины: собрано 7 из 12/);h.click('Попробовать ещё');h.playable();});
 
@@ -139,14 +130,14 @@ test('tea helper phase reloads, serves the cup and opens a playable next level',
  assert.equal(h.run('data.game.level'),11);
 });
 
-for(const level of [1,6])for(const route of ['next','recipes','escape','reload'])test(`campaign victory ${level}: ${route} saves and resumes the next playable level`,()=>{
+for(const level of [1,6])for(const route of ['next','garden','escape','reload'])test(`campaign victory ${level}: ${route} saves and resumes the next playable level`,()=>{
  const h=harness();h.start();
  h.run(`data.completed=Array.from({length:${level-1}},(_,i)=>i+1);data.unlocked=${level};data.game=newGame(${level});data.game.goals=[{kind:'food',type:0,amount:1}];data.game.collected[0]=1;data.game.status='won';outcome()`);
  assert.match(h.get('dialog-content').innerHTML,new RegExp(`Уровень ${level} пройден`));
  const saved=h.run('loadProgress(storage)');assert.equal(saved.warning,null);assert.equal(saved.data.game.level,level+1);assert.equal(saved.data.game.status,'playing');
  if(route==='next')h.click('Следующий уровень');
- if(route==='recipes'){h.click(level===6?'Посмотреть рецепт':'Книга рецептов');if(level===6)h.escape();}
- if(route==='escape'){h.escape();if(level===6)h.escape();}
+ if(route==='garden')h.click('В огород');
+ if(route==='escape')h.escape();
  if(route==='reload')h.run("$('dialog').close();data=loadProgress(storage).data");
  h.run('menu()');assert.equal(h.get('continue').textContent,'Продолжить готовить');h.get('continue').onclick();h.playable();
  assert.equal(h.run('data.game.level'),level+1);
@@ -159,10 +150,10 @@ for(const mode of ['regular','daily','relaxed'])test(`Android Back: ${mode} help
  const before=h.run('JSON.stringify(activeGame())');h.run('systemBack()');assert.equal(h.get('menu').hidden,false);
  h.run(`openGame('${mode}')`);h.playable();assert.equal(h.run('JSON.stringify(activeGame())'),before);
 });
-test('Android Back follows nested modal returns, recipe shelf and result destinations',()=>{
+test('Android Back follows nested modal returns, garden and result destinations',()=>{
  const h=harness(true);h.start();h.run('settings()');h.get('reset').onclick();h.run('systemBack()');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');h.run('systemBack()');h.playable();
- h.run('book(0);recipeShelf();systemBack()');assert.equal(h.get('book-title').textContent,'Бабушкина книга');h.run('systemBack()');assert.equal(h.get('menu').hidden,false);
- h.run("start();data.game.status='won';outcome();systemBack()");assert.equal(h.get('book').hidden,false);h.run('systemBack();start()');h.playable();
+ h.run('showGarden();systemBack()');assert.equal(h.get('menu').hidden,false);
+ h.run("start();data.game.status='won';outcome();systemBack()");assert.equal(h.get('garden').hidden,false);h.run('systemBack();start()');h.playable();
 });
 test('Android Back waits for save before minimizing and stays on a failed save',async()=>{
  const h=harness(true);h.run('var minimized=0; platform.app={minimizeApp:async()=>minimized++}; storage.flush=async()=>false');
@@ -171,4 +162,21 @@ test('Android Back waits for save before minimizing and stays on a failed save',
 });
 test('Android settings and menu do not expose browser install or service-worker updates',()=>{
  const h=harness(true);assert.equal(h.get('install').hidden,true);h.run('settings()');assert.equal(h.get('check-update').hidden,true);assert.equal(h.get('update-status').hidden,true);
+});
+test('menu is home, garden opens separately and retains an active game',()=>{const h=harness();assert.equal(h.get('menu').hidden,false);assert.equal(h.get('garden').hidden,true);h.start();const before=h.run('JSON.stringify(data.game)');h.run('showGarden();menu()');assert.equal(h.get('menu').hidden,false);h.get('menu-garden').onclick();assert.equal(h.get('garden').hidden,false);h.run('gardenPlay()');h.playable();assert.equal(h.run('JSON.stringify(data.game)'),before);});
+test('garden purchase saves atomically and double activation cannot spend twice',()=>{const h=harness();h.run('data.completed=[1,2,3];data.unlocked=4;persist();showGarden();confirmGardenItem(0,"vegetables",0)');h.click('Посадить · 1 ★');assert.equal(h.run('starBalance(data)'),2);assert.equal(h.run('loadProgress(storage).data.garden.plots.length'),1);h.run('confirmGardenItem(0,"vegetables",0)');assert.equal(h.run('starBalance(data)'),2);});
+test('failed purchase write rolls back garden and does not show success',()=>{const h=harness();h.run('data.completed=[1];data.unlocked=2;persist();showGarden();storage.setItem=()=>{throw Error("full")};confirmGardenItem(0,"vegetables",0)');h.click('Посадить · 1 ★');assert.equal(h.run('data.garden.plots.length'),0);assert.equal(h.run('starBalance(data)'),1);assert.equal(h.get('dialog-title').textContent,'Не удалось сохранить');h.escape();assert.equal(h.get('garden').hidden,false);});
+test('purchase cannot overwrite a newer tab before storage event arrives',()=>{const h=harness();h.run('data.completed=[1,2];data.unlocked=3;persist();showGarden();confirmGardenItem(0,"vegetables",0);storage.setItem(KEY,JSON.stringify(buyGardenItem(data,1,"berries",0).data))');h.click('Посадить · 1 ★');assert.equal(h.run('loadProgress(storage).data.garden.plots[0].slot'),1);assert.equal(h.run('data.garden.plots.length'),0);h.escape();assert.equal(h.run('data.garden.plots[0].slot'),1);});
+test('replayed campaign result explains that its star was already received',()=>{const h=harness();h.run('data.completed=[1];data.unlocked=2;data.game={...newGame(1),status:"won"};openGame()');assert.match(h.get('dialog-content').innerHTML,/уже получена/);h.click('В огород');assert.equal(h.run('starBalance(data)'),1);});
+test('unaffordable expansion plays a level for stars and preserves an active game',()=>{for(const resume of [false,true]){const h=harness();if(resume)h.start();const before=h.run('JSON.stringify(data.game)');h.run('showGarden();requestGardenExpansion()');h.click('Играть за звёздочку');h.playable();if(resume)assert.equal(h.run('JSON.stringify(data.game)'),before);}});
+
+ test('single campaign action starts the unlocked level without a saved game',()=>{const h=harness();h.run('data.unlocked=4;menu()');assert.equal(h.get('continue').hidden,false);assert.equal(h.get('continue').textContent,'Играть · уровень 4');h.get('continue').onclick();assert.equal(h.run('data.game.level'),4);h.playable();});
+ test('single campaign action preserves the entire active save',()=>{const h=harness();h.start();h.run('data.game.moves=7;menu()');const before=h.run('JSON.stringify(data.game)');h.get('continue').onclick();assert.equal(h.run('JSON.stringify(data.game)'),before);h.playable();});
+ test('menu has no level picker or competing start button',async()=>{const html=await fs.readFile(new URL('../dist/index.html',import.meta.url),'utf8');assert.doesNotMatch(html,/id="(?:open-book|book|start)"/);});
+
+test('native garden purchase cannot announce success before durable confirmation',async()=>{
+ const h=harness(true);h.run('data.completed=[1,2];data.unlocked=3;persist();showGarden();storage.flush=async()=>false');
+ await h.run('commitGarden(buyGardenItem(data,0,"vegetables",0),"Посажено")');
+ assert.equal(h.get('dialog-title').textContent,'Не удалось сохранить');
+ assert.notEqual(h.get('garden-message').textContent,'Посажено');
 });

@@ -1,23 +1,24 @@
 import {platform} from './platform.js';
+import {GARDEN_ITEMS,EXPANSIONS,gardenItem,starBalance,buyGardenItem,expandGarden,changeGardenVariant} from './garden.js';
+import {renderGarden,gardenSprite} from './garden-view.js';
 import {bindPostcardSharing} from './sharing.js';
 import {localDay,displayDay,newDailyGame,recordDailyWin,dailyOffer} from './daily.js';
 import {renderCollection,postcardMarkup} from './postcards.js';
 import {createDialogControls} from './dialog.js';
 import {swipeIntent} from './gestures.js';
 import {createUpdater,checkForUpdate} from './update.js';
-import {renderBook,renderRecipeShelf,recipePages,recipeIllustration,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
+import {goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {levelRecipe} from './recipes.js';
 import {FOODS} from './foods.js';
 import {TEA} from './tea.js';
-import {recipeById} from './recipe-cards.js';
-import {recordCampaignWin,nextRecipeReward} from './progression.js';
+import {recordCampaignWin} from './progression.js';
 import {newRelaxedGame} from './relaxed.js';
 import {createPacing,hintAction} from './pacing.js';
 import {gravityMap,TIMING,animate} from './animation.js';
 import {createAudio} from './audio.js';
 import {offlineRegistration} from './offline.js';
 import {newGame,play,adjacent,useBooster,boosterArea,isActiveGame,finishAttempt} from './engine.js';
-import {KEY,loadProgress,saveProgress,saveBeforeUpdate,defaultProgress} from './storage.js';
+import {KEY,loadProgress,saveProgress,saveBeforeUpdate,defaultProgress,resetProgress} from './storage.js';
 const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('ru-RU');
 // Identify this loaded page, never the waiting or newly activated worker.
 const installedVersion=document.querySelector?.('meta[name="kitchen-version"]')?.content??'неизвестна';
@@ -54,16 +55,56 @@ function armHint(){
 }
 function accelerate(){if(!busy||!pacing)return;pacing.fast();$('game-message').textContent='Готовим побыстрее…';}
 function cancelMotion(){resetPointer();clearHint();clearHelper();$('helper-effect').getAnimations().forEach(a=>a.cancel());$('helper-effect').replaceChildren();pacing?.cancel();pacing=null;epoch++;busy=false;selected=null;tiles.forEach(t=>{t.firstElementChild.getAnimations().forEach(a=>a.cancel());t.classList.remove('matching');});$('board').removeAttribute('aria-busy');syncOtherTab();}
-function hideScreens(){for(const id of ['menu','game','book','collection'])$(id).hidden=true;}
+function hideScreens(){for(const id of ['garden','menu','game','collection'])$(id).hidden=true;}
 function refreshDailyMenu(){
  const offer=dailyOffer(data.daily),pending=data.daily.game;
  $('daily-label').textContent=offer==='resume'||offer==='previous'?'Продолжить угощение':'Угощение дня';
  $('daily-caption').textContent=offer==='previous'?`Начато ${displayDay(pending.dailyDate)}`:offer==='completed'?'Открытка уже в коллекции':offer==='resume'?'Партия сохранена':'Короткая игра · открытка в подарок';
  $('collection-count').textContent=data.daily.cards.length;
 }
-function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=!data.game;$('continue').textContent=isActiveGame(data.game)?'Продолжить готовить':'Результат уровня';$('start').textContent=data.game?`Играть · уровень ${data.unlocked}`:'Начать готовить';$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
+function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=false;$('continue').textContent=data.game?(isActiveGame(data.game)?'Продолжить готовить':'Результат уровня'):`Играть · уровень ${data.unlocked}`;$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
+function showGarden(message=''){
+ cancelMotion();hideScreens();$('garden').hidden=false;
+ renderGarden($('garden'),data,{onBack:menu,onPlot:openGardenPlot,onExpand:requestGardenExpansion,onPlay:gardenPlay});
+ if(message)$('garden-message').textContent=message;
+}
+function gardenPlay(){if(isActiveGame(data.game))openGame('regular');else start();}
+function openGardenPlot(slot,page=0){
+ const plot=data.garden.plots.find(p=>p.slot===slot);
+ if(plot)return confirmGardenItem(slot,plot.item,plot.variant);
+ const current=Math.max(0,Math.min(1,page));
+ modal('Что здесь вырастет?',`<p>У вас ${starBalance(data)} ★ · место ${slot+1}</p><div class="garden-catalog">${GARDEN_ITEMS.slice(current*4,current*4+4).map(item=>`<button class="garden-choice" data-item="${item.id}">${gardenSprite(item.sprite)}<b>${item.name}</b><small>${item.cost} ★</small></button>`).join('')}</div><div class="garden-page-nav"><button id="garden-prev" class="round-button" aria-label="Предыдущие постройки" ${current===0?'disabled':''}>‹</button><span>${current+1} / 2</span><button id="garden-next" class="round-button" aria-label="Следующие постройки" ${current===1?'disabled':''}>›</button></div>`,[{text:'В огород',cancel:true,action:()=>showGarden()}]);
+ $('dialog-content').querySelectorAll('[data-item]').forEach(b=>b.onclick=()=>confirmGardenItem(slot,b.dataset.item,0,current));
+ $('garden-prev').onclick=()=>openGardenPlot(slot,current-1);$('garden-next').onclick=()=>openGardenPlot(slot,current+1);
+}
+async function commitGarden(result,message){
+ if(!result.ok){modal('Пока не получается',`<p>${result.error}</p>`,[{text:'В огород',cancel:true,action:()=>showGarden()}]);return;}
+ const previous=data,wasDirty=saveDirty;data=result.data;
+ if(!persist()){
+  data=previous;saveDirty=wasDirty;
+  modal('Не удалось сохранить','<p>Звёзды не потрачены. Покупка не завершена. Попробуйте снова после восстановления сохранения.</p>',[{text:'В огород',cancel:true,action:()=>showGarden()}]);return;
+ }
+ if(platform.native&&!await flushNativeSave()){
+  modal('Не удалось сохранить','<p>Изменение ещё не записано. Не закрывайте игру; попробуйте сохранить ещё раз.</p>',[{text:'Повторить сохранение',action:async()=>{if(await flushNativeSave()){showGarden(message);audio.effect('win');}else showGarden();}},{text:'В огород',secondary:true,cancel:true,action:()=>showGarden()}]);return;
+ }
+ showGarden(message);audio.effect('win');
+}
+function confirmGardenItem(slot,id,variant=0,page=0){
+ const item=gardenItem(id);if(!item)return;
+ const owned=data.garden.plots.find(p=>p.slot===slot);
+ if(owned&&owned.item!==id)return showGarden();
+ const affordable=starBalance(data)>=item.cost,plant=['vegetables','berries','tree','flowers'].includes(id);
+ modal(item.name,`<div class="garden-preview">${gardenSprite(item.sprite+variant)}</div><div class="garden-variants">${item.variants.map((name,i)=>`<button class="garden-variant" data-variant="${i}" aria-pressed="${variant===i}">${name}</button>`).join('')}</div><p>${owned?'Можно бесплатно сменить оформление':affordable?`Стоимость: ${item.cost} ★ · у вас ${starBalance(data)} ★`:`Нужно ещё ${item.cost-starBalance(data)} ★. За новый уровень — одна звезда.`}</p>`,[
+ ...(owned?[{text:owned.variant===variant?'Так и оставим':'Сменить бесплатно',action:()=>owned.variant===variant?showGarden():commitGarden(changeGardenVariant(data,slot,variant),'Новое оформление сохранено')}]:affordable?[{text:`${plant?'Посадить':'Построить'} · ${item.cost} ★`,action:()=>commitGarden(buyGardenItem(data,slot,id,variant),`${item.variants[variant]} — теперь в вашем огороде!`)}]:[{text:'Играть за звёздочку',action:gardenPlay}]),
+ {text:owned?'В огород':'К выбору',secondary:true,cancel:true,action:()=>owned?showGarden():openGardenPlot(slot,page)}]);
+ $('dialog-content').querySelectorAll('[data-variant]').forEach(b=>b.onclick=()=>confirmGardenItem(slot,id,Number(b.dataset.variant),page));
+}
+function requestGardenExpansion(){
+ const cost=EXPANSIONS[data.garden.expansion];if(cost===undefined)return;
+ const affordable=starBalance(data)>=cost;
+ modal('Больше места для огорода',`<p>Откроем ещё четыре места.<br>Вы сами решите, что посадить или построить.</p><p>${affordable?`Расширение: ${cost} ★ · у вас ${starBalance(data)} ★`:`Нужно ещё ${cost-starBalance(data)} ★`}</p>`,[{text:affordable?`Расширить · ${cost} ★`:'Играть за звёздочку',action:()=>affordable?commitGarden(expandGarden(data),'Участок стал больше! Открыто ещё четыре места.'):gardenPlay()},{text:'В огород',secondary:true,cancel:true,action:()=>showGarden()}]);
+}
 function start(){data.game=newGame(data.unlocked);persist();openGame('regular');navigator.storage?.persist?.().catch(()=>{});}
-function requestStart(){if(isActiveGame(data.game)){modal('Начать заново?','<p>Текущая обычная партия будет заменена. Угощение дня, уровни и открытки останутся.</p>',[{text:'Отмена',cancel:true,action:menu},{text:'Начать заново',action:start,secondary:true}]);}else start();}
 function openGame(mode='regular'){
  cancelMotion();gameMode=mode;
  if(!activeGame())return mode==='daily'?requestDaily():mode==='relaxed'?requestRelaxed():start();
@@ -168,21 +209,23 @@ async function helperVisual(kind,index){
 function paint(){paintBoard(activeGame().board);stats();settingsApplied();$('game-message').textContent='';}
 const sleep=ms=>pacing.wait(ms);
 function food(i){return tiles[i].firstElementChild;}
-async function swapVisual(a,b,back=false){
+async function swapVisual(a,b,back=false,origin={x:0,y:0}){
  const ra=tiles[a].getBoundingClientRect(),rb=tiles[b].getBoundingClientRect();
  const dx=rb.x-ra.x,dy=rb.y-ra.y;
- const aa=food(a).animate([{transform:'translate(0,0)'},{transform:`translate(${dx}px,${dy}px)`}],{duration:TIMING.swap,easing:'ease-in-out',fill:'forwards',direction:back?'alternate':'normal',iterations:back?2:1});
- const ab=food(b).animate([{transform:'translate(0,0)'},{transform:`translate(${-dx}px,${-dy}px)`}],{duration:TIMING.swap,easing:'ease-in-out',fill:'forwards',direction:back?'alternate':'normal',iterations:back?2:1});
+ const frames=(x,y,start)=>back?[{transform:start},{transform:`translate(${x}px,${y}px)`,offset:.5},{transform:'translate(0,0)'}]:[{transform:start},{transform:`translate(${x}px,${y}px)`}];
+ const options={duration:TIMING.swap*(back?2:1),easing:'ease-out',fill:'forwards'};
+ const aa=food(a).animate(frames(dx,dy,`translate(${origin.x}px,${origin.y}px)`),options);
+ const ab=food(b).animate(frames(-dx,-dy,'translate(0,0)'),options);
  pacing.track(aa);pacing.track(ab);
  await Promise.all([aa.finished.catch(()=>{}),ab.finished.catch(()=>{})]);return ()=>{aa.cancel();ab.cancel();};
 }
-async function swap(a,b,kind=null){
+async function swap(a,b,kind=null,origin={x:0,y:0}){
  if(busy||!isActiveGame(activeGame())||(!kind&&activeGame().status==='helpers'))return;
  clearHint();pacing=createPacing();
  const result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
  if(!result.valid){
   $('game-message').textContent='Нет совпадения. Ход сохранён.';
-  if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
+  if(!reduce()){const cleanup=await swapVisual(a,b,true,origin);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
  }
  // Persist settled state first, but reveal points as each cascade resolves.
  setActiveGame(result.game);if(gameMode==='daily')data.daily=recordDailyWin(data.daily);else if(gameMode==='regular'){data.best=Math.max(data.best,activeGame().score);data=recordCampaignWin(data);}else if(activeGame().status==='won')data.relaxed.completed=Math.max(data.relaxed.completed,activeGame().order);persist();
@@ -190,7 +233,7 @@ async function swap(a,b,kind=null){
  try{
   if(platform.native){await flushNativeSave();if(turn!==epoch)return;}
   if(!reduce()&&kind){await helperVisual(kind,a);if(turn!==epoch)return;}
-  if(!reduce()&&!kind){const cleanup=await swapVisual(a,b);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
+  if(!reduce()&&!kind){const cleanup=await swapVisual(a,b,false,origin);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
   for(const frame of result.frames){
    if(turn!==epoch)return;
    if(reduce())continue;
@@ -218,6 +261,7 @@ function choose(i){if(busy){accelerate();return;}if(!isActiveGame(activeGame()))
 let pointer=null,suppressClick=0;
 function resetPointer(){
  const p=pointer;pointer=null;
+ if(p?.committed)suppressClick=Date.now()+400;
  if(p&&$('board').hasPointerCapture(p.id))$('board').releasePointerCapture(p.id);
  tiles.forEach(t=>{t.classList.remove('drag-source','swipe-target');t.firstElementChild.style.transform='';});
 }
@@ -226,15 +270,21 @@ function cellAt(x,y){
  return tile?Number(tile.dataset.index):null;
 }
 function dragPreview(e){
- if(!pointer||pointer.id!==e.pointerId)return;
+ if(!pointer||pointer.id!==e.pointerId||pointer.committed)return;
  if(helper){previewHelper(cellAt(e.clientX,e.clientY));return;}
  const p=pointer,dx=e.clientX-p.x,dy=e.clientY-p.y;
  p.travel=Math.max(p.travel,Math.hypot(dx,dy));
  const intent=swipeIntent(p.i,dx,dy,p.size,p.axis);p.axis=intent.axis;p.target=intent.target;
  tiles.forEach(t=>t.classList.remove('swipe-target'));
- const offset=intent.target===null?intent.offset*.25:intent.offset;
- food(p.i).style.transform=p.axis=== 'x'?`translateX(${offset}px)`:p.axis==='y'?`translateY(${offset}px)`:'';
- if(intent.target!==null)tiles[intent.target].classList.add('swipe-target');
+ const offset=intent.offset;
+ const axis=intent.previewAxis;
+ food(p.i).style.transform=axis==='x'?`translateX(${offset}px)`:axis==='y'?`translateY(${offset}px)`:'';
+ const bounds=$('board').getBoundingClientRect();
+ if(intent.target!==null&&e.clientX>=bounds.left&&e.clientX<=bounds.right&&e.clientY>=bounds.top&&e.clientY<=bounds.bottom){
+  p.committed=true;suppressClick=Infinity;
+  tiles[p.i].classList.remove('drag-source');food(p.i).style.transform='';
+  swap(p.i,intent.target,null,{x:axis==='x'?offset:0,y:axis==='y'?offset:0});
+ }
 }
 $('board').addEventListener('pointerdown',e=>{
  if(e.isPrimary===false||e.button!==0||pointer)return;
@@ -248,8 +298,10 @@ $('board').addEventListener('pointerdown',e=>{
 $('board').addEventListener('pointermove',dragPreview);
 $('board').addEventListener('pointerup',e=>{
  if(!pointer||pointer.id!==e.pointerId)return;
- dragPreview(e);const p=pointer,hit=cellAt(e.clientX,e.clientY),target=p.target;
+ const p=pointer;dragPreview(e);if(pointer!==p)return;
+ const hit=cellAt(e.clientX,e.clientY),target=p.target;
  suppressClick=Date.now()+400;resetPointer();
+ if(p.committed)return;
  if(helper){if(hit!==null)applyHelper(hit);else previewHelper(null);return;}
  const bounds=$('board').getBoundingClientRect();
  if(e.clientX<bounds.left||e.clientX>bounds.right||e.clientY<bounds.top||e.clientY>bounds.bottom){armHint();return;}
@@ -270,12 +322,12 @@ document.addEventListener('keydown',armHint,{capture:true});
 document.addEventListener('visibilitychange',armHint);
 function outcome(){
  if(gameMode==='daily')return dailyOutcome();if(gameMode==='relaxed')return relaxedOutcome();
- data=recordCampaignWin(data);const g=activeGame(),won=g.status==='won',reward=recipeById(g.recipeReward),next=nextRecipeReward(data);
- // Commit the next board with the victory; result navigation must not own progression.
+ data=recordCampaignWin(data);const g=activeGame(),won=g.status==='won';
+ // Save the next board before any victory navigation, including the garden.
  if(won)data.game=newGame(g.level+1);
  persist();
- const rewardText=reward?`<p class="result-reward">Новый рецепт: <b>${reward.dish}</b></p>`:won&&next?`<p>До рецепта «${next.recipe.dish}»: ${next.remaining}</p>`:'';
- modal(won?'Угощение готово!':'Попробуем ещё?',`<p>${won?'Все цели выполнены. Уровень '+g.level+' пройден!':'Не все цели выполнены. Попробуем ещё раз?'}</p><div class="result-goals">${goalMarkup(g)}</div><p class="result-detail">${resultGoalText(g)}</p>${rewardText}<p class="result-points">Очки: ${fmt(g.score)}</p>`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{if(!won){data.game=newGame(g.level);persist();}openGame();}},{text:won?(reward?'Посмотреть рецепт':'Книга рецептов'):'В главное меню',action:()=>{if(!won)return menu();if(reward){recipeShelf();recipePage(reward);}else book(Math.floor((g.level-1)/6));},secondary:true,cancel:true}]);
+ const rewardText=won?`<p class="result-reward">${g.starReward?'+1 ★ для вашего огорода':'Звезда за этот уровень уже получена'}</p>`:'';
+ modal(won?'Угощение готово!':'Попробуем ещё?',`<p>${won?'Все цели выполнены. Уровень '+g.level+' пройден!':'Не все цели выполнены. Попробуем ещё раз?'}</p><div class="result-goals">${goalMarkup(g)}</div><p class="result-detail">${resultGoalText(g)}</p>${rewardText}<p class="result-points">Очки: ${fmt(g.score)}</p>`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{if(!won){data.game=newGame(g.level);persist();}openGame();}},{text:won?'В огород':'В главное меню',action:()=>won?showGarden():menu(),secondary:true,cancel:true}]);
 }
 function help(page=0){
  const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','В обычной игре соберите цели за отведённые ходы. Потом можно использовать оставшихся помощников. В режиме «Без спешки» ходы не ограничены.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Подайте чай к столу','Собирайте блюда под чашкой, чтобы она опускалась. Чашку можно менять местами с блюдом, если получается ряд. Нижний ряд — чай подан! Помощники чашку не убирают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
@@ -291,26 +343,11 @@ function settings(){
  $('installed-build').textContent='Сборка '+installedBuild;
  $('check-update').hidden=platform.native;$('update-status').hidden=platform.native;
  $('check-update').onclick=manualUpdateCheck;paintUpdateStatus();
- $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, рецепты, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
-}
-let bookReturnPage=0;
-function showRecipe(recipe,complete){if(complete)recipePage(recipe);else {const next=nextRecipeReward(data);modal('Ещё немного угощений',`<p>Следующий рецепт — «${next?.recipe.dish??recipe.dish}» — откроется после уровня ${next?.level??6}.</p><p>Уже полученные рецепты всегда доступны в книге.</p>`,[{text:'Назад',cancel:true,action:()=>{}}]);}}
-function book(page=Math.floor((data.unlocked-1)/6)){
- cancelMotion();hideScreens();$('book').hidden=false;bookReturnPage=page;$('book-title').textContent='Бабушкина книга';$('book-back').setAttribute('aria-label','В главное меню');$('book-back').onclick=menu;
- renderBook($('book-content'),data,page,chooseLevel,showRecipe,book,()=>recipeShelf());
-}
-function recipeShelf(page=0){
- cancelMotion();hideScreens();$('book').hidden=false;$('book-title').textContent='Мои рецепты';$('book-back').setAttribute('aria-label','К уровням');$('book-back').onclick=()=>book(bookReturnPage);
- renderRecipeShelf($('book-content'),data,page,showRecipe,recipeShelf);
-}
-function chooseLevel(level){if(level>data.unlocked)return;const begin=()=>{data.game=newGame(level);persist();openGame('regular');};if(isActiveGame(data.game))modal('Открыть другой уровень?','<p>Обычная партия будет заменена. Остальные партии, рецепты и открытки останутся.</p>',[{text:'Открыть уровень',action:begin},{text:'Отмена',cancel:true,secondary:true,action:()=>{}}]);else begin();}
-function recipePage(recipe,page=0){
- const pages=recipePages(recipe);
- modal(recipe.dish,`<div class="recipe-page">${pages[page]}</div><p class="page-count">${page+1} / ${pages.length}</p>`,[...(page<pages.length-1?[{text:'Дальше',action:()=>recipePage(recipe,page+1)}]:[]),...(page>0?[{text:'Предыдущая страница',secondary:true,action:()=>recipePage(recipe,page-1)}]:[]),{text:'В книгу',cancel:true,secondary:page<pages.length-1,action:()=>{}}]);
+ $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, огород, звёзды, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{const reset=resetProgress(storage);if(!reset.ok){warning('Не удалось сбросить прогресс. Попробуйте ещё раз.');return;}data=reset.data;savedRaw=JSON.stringify(data);saveDirty=false;pendingStorage=false;settingsApplied();menu();}}]);
 }
 $('open-relaxed').onclick=requestRelaxed;$('finish-attempt').onclick=requestFinish;
 $('open-daily').onclick=requestDaily;$('open-collection').onclick=()=>collection();$('collection-back').onclick=menu;
-$('open-book').onclick=()=>book();$('book-back').onclick=menu;
+$('menu-garden').onclick=()=>showGarden();
 $('rolling').onclick=()=>selectHelper('rolling');$('kettle').onclick=()=>selectHelper('kettle');$('helper-cancel').onclick=()=>{clearHelper();armHint();};
 async function install(){if(installPrompt){await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;return;}
  const apple=/iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -318,7 +355,7 @@ async function install(){if(installPrompt){await installPrompt.prompt();await in
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
-$('start').onclick=requestStart;$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
+$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
 function syncOtherTab(){
  if(!pendingStorage||busy||saveDirty)return;
@@ -328,7 +365,7 @@ function syncOtherTab(){
 }
 window.addEventListener('storage',e=>{if(e.key!==KEY)return;pendingStorage=true;syncOtherTab();});
 settingsApplied();menu();
-try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='relaxed'&&data.relaxed.game)openGame('relaxed');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();}catch{}
+try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='relaxed'&&data.relaxed.game)openGame('relaxed');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')menu();else if(resume==='collection')collection();else if(resume==='menu')menu();else if(resume==='garden')showGarden();}catch{}
 let updater=null,updateRegistration=null,updateAvailable=false,checking=null,preparing=null;
 let updateState='idle',downloadInfo=null,lastCheck=0;
 const updateMessages={idle:'',checking:'Проверяем обновление…',current:'У вас последняя версия игры.',available:'Новая версия готова. Партия сохранится.',downloading:'Загружаем новую версию…',waiting:'Обновим после этого хода…',activating:'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.','download-error':'Загрузка не завершена. Игра работает; попробуйте ещё раз.','check-error':'Не удалось проверить. Проверьте интернет и попробуйте ещё раз.'};
@@ -374,7 +411,7 @@ function watchUpdates(registration){
   save:()=>{
    const snapshot=saveBeforeUpdate(storage,data,savedRaw,saveDirty);if(!snapshot.ok)return false;
    data=snapshot.data;savedRaw=snapshot.raw;saveDirty=false;pendingStorage=false;
-   try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':gameMode==='relaxed'?'relaxed':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':'menu');return true;}catch{return false;}
+   try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':gameMode==='relaxed'?'relaxed':'game'):!$('collection').hidden?'collection':!$('garden').hidden?'garden':'menu');return true;}catch{return false;}
   },reload:()=>location.reload(),show:showUpdate});
  $('update-game').onclick=()=>updateAvailable?updater.request():checkUpdates(true);
 }
@@ -424,7 +461,7 @@ async function systemBack(){
  if(helper){clearHelper();armHint();return;}
  if(selected!==null){selected=null;selection();return;}
  if(!$('game').hidden){menu();return;}
- if(!$('book').hidden){$('book-back').onclick();return;}
+ if(!$('garden').hidden){menu();return;}
  if(!$('collection').hidden){menu();return;}
  if(minimizing)return;
  minimizing=true;

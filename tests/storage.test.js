@@ -20,7 +20,6 @@ test('an unsaved local snapshot and a newer remote save block update rather than
  assert.equal(saveBeforeUpdate(storage,{...old,best:100},baseline,true).ok,false);assert.equal(loadProgress(storage).data.best,200);
 });
 
-test('incomplete current saves are rejected instead of silently rebuilding missing progress',()=>{
- for(const field of ['completed','daily','relaxed','recipes','seenHelpers']){const p=defaultProgress(),s=memory();delete p[field];saveProgress(s,p);assert.ok(loadProgress(s).warning,field);}
- const p=defaultProgress(),s=memory();delete p.settings.music;saveProgress(s,p);assert.ok(loadProgress(s).warning);
+test('missing additive fields get defaults without losing achievements',()=>{
+ for(const field of ['completed','daily','relaxed','garden','seenHelpers']){const p={...defaultProgress(),unlocked:30,best:4200},s=memory();delete p[field];s.setItem(KEY,JSON.stringify(p));const r=loadProgress(s);assert.equal(r.warning,null,field);assert.equal(r.data.unlocked,30);assert.equal(r.data.best,4200);}
 });

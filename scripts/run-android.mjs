@@ -12,6 +12,6 @@ if(!env.JAVA_HOME&&existsSync(localTools)){
 if(!env.ANDROID_HOME&&existsSync(path.join(localTools,'sdk')))env.ANDROID_HOME=path.join(localTools,'sdk');
 env.GRADLE_USER_HOME??=path.join(localTools,'gradle');
 const task=process.argv[2]??'assembleDebug';
-if(!['assembleDebug','bundleRelease','lintDebug'].includes(task))throw Error('Unsupported Android task');
+if(!['assembleDebug','assembleRelease','bundleRelease','lintDebug'].includes(task))throw Error('Unsupported Android task');
 const result=spawnSync('./gradlew',[`:app:${task}`,'--console=plain','--no-daemon'],{cwd:path.join(root,'android'),env,stdio:'inherit'});
 if(result.error)throw result.error;process.exitCode=result.status??1;

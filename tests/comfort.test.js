@@ -32,7 +32,7 @@ test('plate objective can win with no food objective and on the final move',()=>
  const helper={...g,plates:[24],goals:[{kind:'plates',amount:1}]};assert.equal(useBooster(helper,'kettle',24).game.status,'won');
 });
 test('plate save roundtrips and corrupt or missing plate cells are rejected',()=>{
- const p={...defaultProgress(),game:newGame(4)};const read=x=>loadProgress({getItem:()=>JSON.stringify(x)});
+ const p={...defaultProgress(),game:newGame(4)};const read=x=>loadProgress({getItem:k=>k==='babushkina-kuhnya:progress'?JSON.stringify(x):null});
  assert.deepEqual(read(p).data,p);assert.equal(read(p).warning,null);
  for(const plates of [[-1],[56],[1,1],undefined])assert.ok(read({...p,game:{...p.game,plates}}).warning);
 });

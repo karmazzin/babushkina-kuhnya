@@ -5,15 +5,15 @@ import {Share} from '@capacitor/share';
 import {platform} from '../dist/platform.js';
 import {createNativeStorage} from '../dist/native-storage.js';
 import {createNativeSharing} from '../dist/native-sharing.js';
-import {KEY,loadProgress} from '../dist/storage.js';
+import {STORAGE_KEYS,loadProgress} from '../dist/storage.js';
 
 const appRoot=document.getElementById('app');appRoot.inert=true;
 async function start(){
  if(!Capacitor.isNativePlatform())throw Error('Android runtime unavailable');
  platform.native=true;
- platform.storage=await createNativeStorage(registerPlugin('KitchenSave'),KEY,state=>platform.onSaveState?.(state));
+ platform.storage=await createNativeStorage(registerPlugin('KitchenSave'),STORAGE_KEYS,state=>platform.onSaveState?.(state));
  // Do not open a default game over unreadable/corrupt native data.
- if(loadProgress(platform.storage).warning)throw Error('Save could not be read');
+ if(loadProgress(platform.storage).unrecoverable)throw Error('Save could not be read');
  platform.app=App;platform.sharing=createNativeSharing(Filesystem,Share);
  await SystemBars.setStyle({style:'LIGHT'});
  await import('../dist/app.js');appRoot.inert=false;

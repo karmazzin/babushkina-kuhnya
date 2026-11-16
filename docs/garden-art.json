@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-11-16",
+  "assets": [
+    {"path":"dist/assets/garden/yard.png","description":"High bird's-eye isometric 2:3 Russian dacha yard. Warm stylized dimensional game art, yellow cottage upper left, tidy fence and flowers around edges, open green grass with diagonal pale paths. No UI, text, people, decay or abandoned objects."},
+    {"path":"dist/assets/garden/objects.png","description":"Transparent uniform 4 by 4 isometric sprite atlas: carrots, cabbage, strawberries, raspberries; apple, pear, tomato greenhouse, cucumber greenhouse; green and red roof sheds, green and red roof wells; green gazebo, rose gazebo, daisies, sunflowers. Consistent high angle and warm stylized game art, no text."}
+  ]
+}

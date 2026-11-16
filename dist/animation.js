@@ -8,7 +8,7 @@ export function gravityMap(removed){
  }
  return result.sort((a,b)=>a.to-b.to);
 }
-export const TIMING={swap:220,highlight:260,fade:360,fall:480,settle:220};
+export const TIMING={swap:180,highlight:180,fade:300,fall:420,settle:100};
 export async function animate(elements,keyframes,options,track=()=>{}){
  const animations=elements.map(el=>el.animate(keyframes,options));
  animations.forEach(track);

@@ -7,8 +7,8 @@ import {defaultProgress,KEY} from '../dist/storage.js';
 import {newGame} from '../dist/engine.js';
 import {newDailyGame,localDay} from '../dist/daily.js';
 import {newRelaxedGame} from '../dist/relaxed.js';
+import {buyGardenItem,expandGarden} from '../dist/garden.js';
 import {recordCampaignWin} from '../dist/progression.js';
-import {RECIPE_CARDS,recipeMilestone} from '../dist/recipe-cards.js';
 import {TEA} from '../dist/tea.js';
 const root=fileURLToPath(new URL('../dist',import.meta.url)),mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.m4a':'audio/mp4','.mp3':'audio/mpeg','.txt':'text/plain'};
 function fixture(scene){
@@ -16,13 +16,14 @@ function fixture(scene){
  p.game=newGame(4,{seed:123});p.unlocked=4;
  if(scene==='helpers'||scene==='helper-win'){p.game.moves=0;p.game.status='helpers';if(scene==='helper-win')p.game.plates=[24];}
  if(scene==='loss'){p.game.moves=0;p.game.boosters={rolling:0,kettle:0};p.game.status='lost';}
- if(scene==='recipe'){p.completed=[1,2,3,4,5];p.game=newGame(6,{seed:111});p.game.plates=[];p.game.goals.filter(g=>g.kind==='food').forEach(g=>p.game.collected[g.type]=g.amount);p.game.status='won';p=recordCampaignWin(p);}
- if(scene==='foods'){p.unlocked=67;p.completed=Array.from({length:66},(_,i)=>i+1);p.game=newGame(67,{seed:239});p.recipes={unlocked:RECIPE_CARDS.slice(0,6).map(r=>r.id),milestones:Array.from({length:6},(_,i)=>recipeMilestone(i))};}
+ if(scene==='victory'){p.completed=[1,2,3,4,5];p.game=newGame(6,{seed:111});p.game.plates=[];p.game.goals.filter(g=>g.kind==='food').forEach(g=>p.game.collected[g.type]=g.amount);p.game.status='won';p=recordCampaignWin(p);}
+ if(scene==='foods'){p.unlocked=67;p.completed=Array.from({length:66},(_,i)=>i+1);p.game=newGame(67,{seed:239});}
+ if(scene==='garden'){p.completed=Array.from({length:50},(_,i)=>i+1);p.unlocked=51;p.game=null;screen='garden';}
+ if(scene==='garden-built'){p.completed=Array.from({length:30},(_,i)=>i+1);p.unlocked=31;p.game=null;p=expandGarden(p).data;for(const [slot,id,variant] of [[0,'vegetables',0],[1,'tree',0],[2,'vegetables',1],[3,'berries',0],[4,'greenhouse',0],[5,'well',0],[6,'flowers',1],[7,'gazebo',1]])p=buyGardenItem(p,slot,id,variant).data;screen='garden';}
  if(scene==='relaxed'){p.relaxed.game=newRelaxedGame(4,{seed:209});screen='relaxed';}
  if(scene?.startsWith('tea')){
   const level=scene==='tea-double'?16:scene==='tea-plates'?34:scene==='tea-food'?22:10;
   p.unlocked=level;p.completed=Array.from({length:level-1},(_,i)=>i+1);p.game=newGame(level,{seed:2});p.seenTea=scene!=='tea-intro';p.settings.reduced=false;
-  const rewards=RECIPE_CARDS.filter((_,i)=>recipeMilestone(i)<level);p.recipes={unlocked:rewards.map(r=>r.id),milestones:rewards.map((_,i)=>recipeMilestone(i))};
   if(['tea-finish','tea-swap','tea-helpers','tea-food'].includes(scene)){
    const b=Array.from({length:56},(_,i)=>p.game.pool[(Math.floor(i/7)*2+i%7)%5]);b[42]=TEA;
    if(scene==='tea-swap'){b[49]=b[28]=b[35]=1;b[21]=3;}
@@ -41,7 +42,7 @@ http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/_qa'){
   const scene=url.searchParams.get('scene');
-  if(!scene){res.writeHead(200,{'Content-Type':mime['.html']}).end('<h1>Local balance QA</h1>'+['tea-intro','tea','tea-double','tea-plates','tea-finish','tea-swap','tea-helpers','tea-food','helpers','helper-win','loss','recipe','foods','relaxed','postcard'].map(s=>`<p><a href="/_qa?scene=${s}">${s}</a></p>`).join(''));return;}
+  if(!scene){res.writeHead(200,{'Content-Type':mime['.html']}).end('<h1>Local balance QA</h1>'+['tea-intro','tea','tea-double','tea-plates','tea-finish','tea-swap','tea-helpers','tea-food','helpers','helper-win','loss','victory','garden','garden-built','foods','relaxed','postcard'].map(s=>`<p><a href="/_qa?scene=${s}">${s}</a></p>`).join(''));return;}
   const {p,screen}=fixture(scene),json=JSON.stringify(JSON.stringify(p)).replaceAll('<','\\u003c');
   res.writeHead(200,{'Content-Type':mime['.html'],'Cache-Control':'no-store'}).end(`<script>localStorage.setItem(${JSON.stringify(KEY)},${json});sessionStorage.setItem('kitchen-update-screen',${JSON.stringify(screen)});location.replace('/game/');</script>`);return;
  }

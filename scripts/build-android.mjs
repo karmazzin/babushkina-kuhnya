@@ -11,7 +11,7 @@ let html=await readFile(new URL('index.html',out),'utf8');
 html=html.replace('src="./app.js"','src="./android-entry.js"').replace(/<link[^>]+rel="manifest"[^>]*>\n?/,'');
 await writeFile(new URL('index.html',out),html);
 // Capacitor supplies CSS insets on WebViews that do not implement env() correctly.
-for(const file of ['style.css','gameplay.css']){
+for(const file of ['style.css','gameplay.css','garden.css']){
  const url=new URL(file,out),css=await readFile(url,'utf8');
  await writeFile(url,css.replace(/env\((safe-area-inset-(?:top|right|bottom|left))\)/g,'var(--$1, env($1))'));
 }

@@ -28,7 +28,7 @@ test('four in a row earns rolling pin; intersection earns kettle; rewards capped
  [8,9,10,2,16].forEach(i=>b[i]=3);assert.equal(earnedBoosters(b,[8,9,10,2,16]).kettle,1);
 });
 test('current games and completed recipes roundtrip',()=>{
- const fresh={...defaultProgress(),game:newGame(4),completed:[1,2,3],unlocked:4};let raw;saveProgress({setItem:(k,v)=>raw=v},fresh);assert.deepEqual(loadProgress({getItem:()=>raw}).data,fresh);
+ const fresh={...defaultProgress(),game:newGame(4),completed:[1,2,3],unlocked:4};const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v)};assert.equal(saveProgress(storage,fresh),true);assert.deepEqual(loadProgress(storage).data,fresh);
 });
 test('rejects corrupt helper inventory, goals and recipe counters',()=>{
  for(const change of [{boosters:{rolling:-1,kettle:1}},{collected:[0,0,0,0,-1]},{goals:[{kind:'food',type:9,amount:5}]}]){

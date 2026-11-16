@@ -16,12 +16,15 @@ try{
   const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:true,deviceScaleFactor:1});
   await context.addInitScript(()=>{
    window.androidBridge={};window.nativeEvents={};window.nativeShares=[];window.nativeWrites=[];window.nativeMinimized=0;
-   window.Capacitor={PluginHeaders:[['KitchenSave',['get','set']],['SystemBars',['setStyle']],['Filesystem',['writeFile']],['Share',['share']],['App',['minimizeApp']]].map(([name,methods])=>({name,methods:[...methods.map(name=>({name,rtype:'promise'})),{name:'addListener',rtype:'callback'},{name:'removeListener',rtype:'promise'}]})),
+   window.Capacitor={PluginHeaders:[['KitchenSave',['get','set','setMany']],['SystemBars',['setStyle']],['Filesystem',['writeFile']],['Share',['share']],['App',['minimizeApp']]].map(([name,methods])=>({name,methods:[...methods.map(name=>({name,rtype:'promise'})),{name:'addListener',rtype:'callback'},{name:'removeListener',rtype:'promise'}]})),
     nativeCallback:(_plugin,_method,options,callback)=>{window.nativeEvents[options.eventName]=callback;return options.eventName;},
     nativePromise:async(plugin,method,options)=>{
      if(plugin==='KitchenSave'){
-      if(method==='get'){if(sessionStorage.failRead)throw Error('read failure');return {value:localStorage.getItem('qa-save')};}
-      if(sessionStorage.failWrite)throw Error('write failure');localStorage.setItem('qa-save',options.value);window.nativeWrites.push(options.value);return;
+      const slot=key=>key==='babushkina-kuhnya:progress'?'qa-save':'qa-save:'+key;
+      if(method==='get'){if(sessionStorage.failRead)throw Error('read failure');return {value:localStorage.getItem(slot(options.key))};}
+      if(sessionStorage.failWrite)throw Error('write failure');
+      for(const [key,value] of Object.entries(options.values)){if(value===null)localStorage.removeItem(slot(key));else localStorage.setItem(slot(key),value);}
+      window.nativeWrites.push(options.values);return;
      }
      if(plugin==='Filesystem')return {uri:'file:///cache/'+options.path};
      if(plugin==='Share'){window.nativeShares.push(options);return {};}
@@ -33,7 +36,7 @@ try{
   await page.waitForLoadState('networkidle');await page.screenshot({path:resolve(shots,name+'-menu.png')});
   const menuBounds=await page.locator('#menu button:visible').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {id:n.id,x:r.x,y:r.y,right:r.right,bottom:r.bottom};}));
   for(const b of menuBounds)assert.ok(b.x>=0&&b.y>=0&&b.right<=width+1&&b.bottom<=height+1,JSON.stringify({name,b}));
-  await page.locator('#start').tap();await page.waitForFunction(()=>localStorage.getItem('qa-save'));
+  await page.locator('#continue').tap();await page.waitForFunction(()=>localStorage.getItem('qa-save'));
   const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('qa-save')).game);
   const move=await page.evaluate(async()=>{const {legalMoves}=await import('./engine.js');return legalMoves(JSON.parse(localStorage.getItem('qa-save')).game.board)[0];});
   await page.locator('#board .tile').nth(move[0]).tap();await page.locator('#board .tile').nth(move[1]).tap();
@@ -47,6 +50,23 @@ try{
   for(const b of boxes)assert.ok(b.x>=0&&b.y>=0&&b.right<=width+1&&b.bottom<=height+1,JSON.stringify({name,b}));
   await page.waitForLoadState('networkidle');await page.screenshot({path:resolve(shots,name+'-game.png')});
   await page.locator('#sound').tap();await page.locator('#reset').tap();await page.evaluate(()=>window.nativeEvents.backButton({}));assert.equal(await page.locator('#dialog-title').textContent(),'Звуки и уют');await page.evaluate(()=>window.nativeEvents.backButton({}));await page.locator('#rolling').tap();await page.evaluate(()=>window.nativeEvents.backButton({}));assert.equal(await page.locator('#helper-cancel').isVisible(),false);
+  // Exercise the new garden through the native multi-record storage and Android Back.
+  await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('qa-save'));d.completed=[1,2];d.unlocked=3;localStorage.setItem('qa-save',JSON.stringify(d));});
+  await page.reload();await page.waitForFunction(()=>!document.getElementById('app').inert);await page.locator('#menu-garden').tap();
+  await page.locator('[data-plot="0"]').tap();await page.locator('[data-item="vegetables"]').tap();
+  await page.evaluate(()=>sessionStorage.failWrite='1');await page.getByRole('button',{name:'Посадить · 1 ★',exact:true}).tap();
+  await page.getByRole('heading',{name:'Не удалось сохранить',exact:true}).waitFor();
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('qa-save')).garden.plots.length),0);
+  await page.evaluate(()=>sessionStorage.removeItem('failWrite'));await page.getByRole('button',{name:'Повторить сохранение',exact:true}).tap();
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('qa-save')).garden.plots.length===1&&document.getElementById('storage-warning').hidden);
+  const gardenSave=await page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('qa-save')).garden));
+  await page.screenshot({path:resolve(shots,name+'-garden.png')});
+  await page.evaluate(()=>window.nativeEvents.backButton({}));await page.locator('#continue').tap();
+  const nextPair=await page.evaluate(async()=>{const {legalMoves}=await import('./engine.js');return legalMoves(JSON.parse(localStorage.getItem('qa-save')).game.board)[0];});
+  const actionBefore=await page.evaluate(()=>JSON.parse(localStorage.getItem('qa-save')).game.actions);
+  for(const cell of nextPair)await page.locator('#board .tile').nth(cell).tap();
+  await page.waitForFunction(n=>JSON.parse(localStorage.getItem('qa-save')).game.actions>n,actionBefore);
+  await page.reload();await page.waitForFunction(()=>!document.getElementById('app').inert);assert.equal(await page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('qa-save')).garden)),gardenSave);
   // Seed an earned card only to exercise real collection/share UI.
   await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('qa-save'));d.daily.cards=['2026-11-16'];d.daily.art=[0];localStorage.setItem('qa-save',JSON.stringify(d));});
   await page.reload();await page.waitForFunction(()=>!document.getElementById('app').inert);await page.locator('#open-collection').tap();await page.locator('[data-card]').first().tap();await page.locator('[data-share-card]').tap();await page.waitForFunction(()=>window.nativeShares.length===1);assert.deepEqual(await page.evaluate(()=>window.nativeShares[0]),{files:['file:///cache/postcards/card-01.jpg'],dialogTitle:'Поделиться открыткой'});
@@ -56,5 +76,5 @@ try{
   const saved=await page.evaluate(()=>localStorage.getItem('qa-save'));await page.evaluate(()=>sessionStorage.failRead='1');await page.reload();await page.getByRole('button',{name:'Попробовать ещё раз'}).waitFor();assert.equal(await page.evaluate(()=>localStorage.getItem('qa-save')),saved);await page.evaluate(()=>sessionStorage.removeItem('failRead'));await page.getByRole('button',{name:'Попробовать ещё раз'}).tap();await page.locator('#continue').tap();
   assert.deepEqual(errors,[]);console.log(`${name}: play, interrupt, resume, Back, share, startup failure, layout PASS`);await context.close();
  }
- const context=await browser.newContext({viewport:{width:393,height:851},hasTouch:true,isMobile:true});const page=await context.newPage();await page.goto(origin+'/pwa/');await page.locator('#start').tap();await page.waitForFunction(()=>document.getElementById('offline').textContent==='Готово к игре без интернета');await page.reload();await context.setOffline(true);await page.reload();await page.locator('#continue').tap();await page.locator('#board .tile').first().tap();assert.equal(await page.locator('#board .tile').first().getAttribute('aria-pressed'),'true');console.log('PWA: nested path, worker install, offline reload and next useful action PASS');await context.close();
+ const context=await browser.newContext({viewport:{width:393,height:851},hasTouch:true,isMobile:true});const page=await context.newPage();await page.goto(origin+'/pwa/');await page.locator('#continue').tap();await page.waitForFunction(()=>document.getElementById('offline').textContent==='Готово к игре без интернета');await page.reload();await context.setOffline(true);await page.reload();await page.locator('#continue').tap();await page.locator('#board .tile').first().tap();assert.equal(await page.locator('#board .tile').first().getAttribute('aria-pressed'),'true');console.log('PWA: nested path, worker install, offline reload and next useful action PASS');await context.close();
 }finally{await browser.close();await new Promise(r=>server.close(r));}

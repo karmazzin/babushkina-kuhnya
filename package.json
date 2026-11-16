@@ -12,9 +12,10 @@
     "android:sync": "npm run android:prepare && cap sync android",
     "android:apk": "npm run android:sync && node scripts/run-android.mjs assembleDebug",
     "android:bundle": "npm run android:sync && node scripts/run-android.mjs bundleRelease",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "android:release": "npm run android:sync && node scripts/run-android.mjs assembleRelease && python3 scripts/sign-android-apk.py"
   },
-  "version": "1.0.7",
+  "version": "1.0.13",
   "dependencies": {
     "@capacitor/android": "8.6.2",
     "@capacitor/app": "8.1.2",
