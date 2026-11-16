@@ -6,7 +6,7 @@ import {renderCollection,postcardMarkup} from './postcards.js';
 import {createDialogControls} from './dialog.js';
 import {swipeIntent} from './gestures.js';
 import {createUpdater,checkForUpdate} from './update.js';
-import {renderBook,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
+import {goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {levelRecipe} from './recipes.js';
 import {FOODS} from './foods.js';
 import {TEA} from './tea.js';
@@ -53,14 +53,14 @@ function armHint(){
 }
 function accelerate(){if(!busy||!pacing)return;pacing.fast();$('game-message').textContent='Готовим побыстрее…';}
 function cancelMotion(){resetPointer();clearHint();clearHelper();$('helper-effect').getAnimations().forEach(a=>a.cancel());$('helper-effect').replaceChildren();pacing?.cancel();pacing=null;epoch++;busy=false;selected=null;tiles.forEach(t=>{t.firstElementChild.getAnimations().forEach(a=>a.cancel());t.classList.remove('matching');});$('board').removeAttribute('aria-busy');syncOtherTab();}
-function hideScreens(){for(const id of ['garden','menu','game','book','collection'])$(id).hidden=true;}
+function hideScreens(){for(const id of ['garden','menu','game','collection'])$(id).hidden=true;}
 function refreshDailyMenu(){
  const offer=dailyOffer(data.daily),pending=data.daily.game;
  $('daily-label').textContent=offer==='resume'||offer==='previous'?'Продолжить угощение':'Угощение дня';
  $('daily-caption').textContent=offer==='previous'?`Начато ${displayDay(pending.dailyDate)}`:offer==='completed'?'Открытка уже в коллекции':offer==='resume'?'Партия сохранена':'Короткая игра · открытка в подарок';
  $('collection-count').textContent=data.daily.cards.length;
 }
-function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=!data.game;$('continue').textContent=isActiveGame(data.game)?'Продолжить готовить':'Результат уровня';$('start').textContent=data.game?`Играть · уровень ${data.unlocked}`:'Начать готовить';$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
+function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=false;$('continue').textContent=data.game?(isActiveGame(data.game)?'Продолжить готовить':'Результат уровня'):`Играть · уровень ${data.unlocked}`;$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
 function showGarden(message=''){
  cancelMotion();hideScreens();$('garden').hidden=false;
  renderGarden($('garden'),data,{onHouse:menu,onPlot:openGardenPlot,onExpand:requestGardenExpansion,onPlay:gardenPlay});
@@ -100,7 +100,6 @@ function requestGardenExpansion(){
  modal('Больше места для огорода',`<p>Откроем ещё четыре места.<br>Вы сами решите, что посадить или построить.</p><p>${affordable?`Расширение: ${cost} ★ · у вас ${starBalance(data)} ★`:`Нужно ещё ${cost-starBalance(data)} ★`}</p>`,[{text:affordable?`Расширить · ${cost} ★`:'Играть за звёздочку',action:()=>affordable?commitGarden(expandGarden(data),'Участок стал больше! Открыто ещё четыре места.'):gardenPlay()},{text:'В огород',secondary:true,cancel:true,action:()=>showGarden()}]);
 }
 function start(){data.game=newGame(data.unlocked);persist();openGame('regular');navigator.storage?.persist?.().catch(()=>{});}
-function requestStart(){if(isActiveGame(data.game)){modal('Начать заново?','<p>Текущая обычная партия будет заменена. Угощение дня, уровни и открытки останутся.</p>',[{text:'Отмена',cancel:true,action:menu},{text:'Начать заново',action:start,secondary:true}]);}else start();}
 function openGame(mode='regular'){
  cancelMotion();gameMode=mode;
  if(!activeGame())return mode==='daily'?requestDaily():mode==='relaxed'?requestRelaxed():start();
@@ -339,15 +338,9 @@ function settings(){
  $('check-update').onclick=manualUpdateCheck;paintUpdateStatus();
  $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, огород, звёзды, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{const reset=resetProgress(storage);if(!reset.ok){warning('Не удалось сбросить прогресс. Попробуйте ещё раз.');return;}data=reset.data;savedRaw=JSON.stringify(data);saveDirty=false;pendingStorage=false;settingsApplied();menu();}}]);
 }
-function book(page=Math.floor((data.unlocked-1)/6)){
- cancelMotion();hideScreens();$('book').hidden=false;$('book-title').textContent='Выберите уровень';$('book-back').setAttribute('aria-label','В главное меню');$('book-back').onclick=menu;
- renderBook($('book-content'),data,page,chooseLevel,book);
-}
-function chooseLevel(level){if(level>data.unlocked)return;const begin=()=>{data.game=newGame(level);persist();openGame('regular');};if(isActiveGame(data.game))modal('Открыть другой уровень?','<p>Обычная партия будет заменена. Остальные партии, огород и открытки останутся.</p>',[{text:'Открыть уровень',action:begin},{text:'Отмена',cancel:true,secondary:true,action:()=>{}}]);else begin();}
 $('open-relaxed').onclick=requestRelaxed;$('finish-attempt').onclick=requestFinish;
 $('open-daily').onclick=requestDaily;$('open-collection').onclick=()=>collection();$('collection-back').onclick=menu;
 $('menu-garden').onclick=()=>showGarden();
-$('open-book').onclick=()=>book();$('book-back').onclick=menu;
 $('rolling').onclick=()=>selectHelper('rolling');$('kettle').onclick=()=>selectHelper('kettle');$('helper-cancel').onclick=()=>{clearHelper();armHint();};
 async function install(){if(installPrompt){await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;return;}
  const apple=/iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -355,7 +348,7 @@ async function install(){if(installPrompt){await installPrompt.prompt();await in
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
 window.addEventListener('appinstalled',()=>{installPrompt=null;$('install').textContent='Об установке';});
-$('start').onclick=requestStart;$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
+$('continue').onclick=()=>openGame('regular');$('back').onclick=menu;$('how').onclick=()=>help();$('game-help').onclick=()=>help();$('settings').onclick=settings;$('install').onclick=install;
 $('sound').onclick=settings;
 function syncOtherTab(){
  if(!pendingStorage||busy||saveDirty)return;
@@ -365,7 +358,7 @@ function syncOtherTab(){
 }
 window.addEventListener('storage',e=>{if(e.key!==KEY)return;pendingStorage=true;syncOtherTab();});
 settingsApplied();menu();
-try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='relaxed'&&data.relaxed.game)openGame('relaxed');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')book();else if(resume==='collection')collection();else if(resume==='menu')menu();else if(resume==='garden')showGarden();}catch{}
+try{const resume=sessionStorage.getItem('kitchen-update-screen');sessionStorage.removeItem('kitchen-update-screen');if(resume==='daily'&&data.daily.game)openGame('daily');else if(resume==='relaxed'&&data.relaxed.game)openGame('relaxed');else if(resume==='game'&&data.game)openGame('regular');else if(resume==='book')menu();else if(resume==='collection')collection();else if(resume==='menu')menu();else if(resume==='garden')showGarden();}catch{}
 let updater=null,updateRegistration=null,updateAvailable=false,checking=null,preparing=null;
 let updateState='idle',downloadInfo=null,lastCheck=0;
 const updateMessages={idle:'',checking:'Проверяем обновление…',current:'У вас последняя версия игры.',available:'Новая версия готова. Партия сохранится.',downloading:'Загружаем новую версию…',waiting:'Обновим после этого хода…',activating:'Открываем обновлённую игру…','save-error':'Не удалось сохранить партию. Обновление отложено.','retry':'Обновление пока не применилось. Попробуйте ещё раз.','download-error':'Загрузка не завершена. Игра работает; попробуйте ещё раз.','check-error':'Не удалось проверить. Проверьте интернет и попробуйте ещё раз.'};
@@ -410,7 +403,7 @@ function watchUpdates(registration){
   save:()=>{
    const snapshot=saveBeforeUpdate(storage,data,savedRaw,saveDirty);if(!snapshot.ok)return false;
    data=snapshot.data;savedRaw=snapshot.raw;saveDirty=false;pendingStorage=false;
-   try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':gameMode==='relaxed'?'relaxed':'game'):!$('book').hidden?'book':!$('collection').hidden?'collection':!$('garden').hidden?'garden':'menu');return true;}catch{return false;}
+   try{sessionStorage.setItem('kitchen-update-screen',!$('game').hidden?(gameMode==='daily'?'daily':gameMode==='relaxed'?'relaxed':'game'):!$('collection').hidden?'collection':!$('garden').hidden?'garden':'menu');return true;}catch{return false;}
   },reload:()=>location.reload(),show:showUpdate});
  $('update-game').onclick=()=>updateAvailable?updater.request():checkUpdates(true);
 }

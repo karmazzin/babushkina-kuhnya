@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="kitchen-build" content="86f14cf3">
-<meta name="kitchen-version" content="1.0.10">
+<meta name="kitchen-build" content="d053c314">
+<meta name="kitchen-version" content="1.0.11">
 <meta name="theme-color" content="#536b40">
 <meta name="description" content="Бабушкина кухня — уютная игра три в ряд с развитием огорода и кухонными помощниками. Без таймера, с сохранением прогресса и работой без интернета.">
 <meta name="application-name" content="Бабушкина кухня">
@@ -39,20 +39,17 @@
 <section id="garden" hidden class="screen garden-screen" aria-label="Наш огород"></section>
 <section id="menu" class="screen menu-screen" aria-labelledby="menu-title">
 
-<button id="menu-garden" class="button secondary">Мой огород</button>
 <header class="brand"><h1 id="menu-title">Бабушкина<br>кухня</h1><p>Три в ряд с любовью</p></header>
 <div class="hero-food" aria-hidden="true"><span class="food f0"></span><span class="food f1"></span><span class="food f2"></span></div>
 <div class="menu-card">
 <p class="welcome">Заходите на огонёк</p>
 <button id="continue" class="button primary">Продолжить</button>
-<button id="start" class="button secondary">Начать готовить</button>
-<button id="open-daily" class="button daily-button"><span id="daily-label">Угощение дня</span><small id="daily-caption">Короткая игра · открытка в подарок</small></button><button id="open-relaxed" class="button secondary">Без спешки <small>Ходы не ограничены</small></button><div class="menu-action-row"><button id="open-book" class="button secondary">Уровни</button><button id="open-collection" class="button secondary">Открытки · <span id="collection-count">0</span></button></div>
+<button id="open-daily" class="button daily-button"><span id="daily-label">Угощение дня</span><small id="daily-caption">Короткая игра · открытка в подарок</small></button><button id="open-relaxed" class="button secondary">Без спешки <small>Ходы не ограничены</small></button><div class="menu-action-row"><button id="menu-garden" class="button secondary">Мой огород</button><button id="open-collection" class="button secondary">Открытки · <span id="collection-count">0</span></button></div>
 <div class="menu-stats"><span>Открыт уровень <b id="unlocked">1</b></span><span>Рекорд <b id="best">0</b></span></div>
 </div>
 <nav class="menu-links" aria-label="Дополнительно"><button id="how">Как играть</button><button id="settings">Настройки</button><button id="install">Установить</button></nav>
 <p id="offline" class="offline" role="status">Готовим игру для работы без интернета…</p>
 </section>
-<section id="book" class="screen book-screen" hidden aria-labelledby="book-title"><header class="book-top"><button id="book-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="book-title">Выберите уровень</h1></header><div id="book-content"></div></section>
 <section id="collection" class="screen collection-screen" hidden aria-labelledby="collection-title"><header class="book-top"><button id="collection-back" class="round-button" aria-label="В главное меню">‹</button><h1 id="collection-title">Мои открытки</h1></header><div id="collection-content"></div></section>
 <section id="game" class="screen game-screen" hidden aria-labelledby="game-title">
 <header class="game-header"><button id="back" class="round-button" aria-label="Главное меню">‹</button><h1 id="game-title" class="level-label"><span id="game-mode">Уровень</span> <b id="level">1</b></h1><button id="sound" class="round-button sound-control" aria-label="Музыка и звуки">♫</button><button id="game-help" class="round-button" aria-label="Как играть">?</button></header>
