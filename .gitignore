@@ -5,3 +5,10 @@ node_modules/
 *.log
 .openai/
 *.tar.gz
+
+# Native build outputs, local SDK/JDK, signing material
+build/
+.android-tools/
+*.jks
+*.keystore
+.superpowers/

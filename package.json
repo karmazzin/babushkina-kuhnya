@@ -7,7 +7,27 @@
     "start": "node server.mjs",
     "build": "node scripts/build-release.mjs",
     "check:release": "node scripts/build-release.mjs --check",
-    "release:patch": "npm version patch --no-git-tag-version && npm run build"
+    "release:patch": "npm version patch --no-git-tag-version && npm run build",
+    "android:prepare": "npm run build && npm run check:release && node scripts/build-android.mjs",
+    "android:sync": "npm run android:prepare && cap sync android",
+    "android:apk": "npm run android:sync && node scripts/run-android.mjs assembleDebug",
+    "android:bundle": "npm run android:sync && node scripts/run-android.mjs bundleRelease",
+    "android:open": "cap open android"
   },
-  "version": "1.0.6"
+  "version": "1.0.7",
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2",
+    "esbuild": "0.28.2",
+    "playwright": "1.65.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }

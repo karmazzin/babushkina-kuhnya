@@ -1,3 +1,4 @@
+import {platform} from './platform.js';
 import {bindPostcardSharing} from './sharing.js';
 import {localDay,displayDay,newDailyGame,recordDailyWin,dailyOffer} from './daily.js';
 import {renderCollection,postcardMarkup} from './postcards.js';
@@ -22,7 +23,7 @@ const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('ru-RU');
 const installedVersion=document.querySelector?.('meta[name="kitchen-version"]')?.content??'неизвестна';
 const installedBuild=document.querySelector?.('meta[name="kitchen-build"]')?.content??'—';
 const names=FOODS.map(f=>f.name);
-let storage;try{storage=window.localStorage;}catch{storage=null;}
+let storage=platform.storage;if(!platform.native)try{storage=window.localStorage;}catch{storage=null;}
 let loaded=loadProgress(storage), data=loaded.data, selected=null, busy=false, epoch=0, installPrompt=null;
 let gameMode='regular',pendingStorage=false,saveDirty=!!loaded.warning;
 let savedRaw;try{savedRaw=storage?.getItem(KEY)??null;}catch{savedRaw=null;}
@@ -35,9 +36,10 @@ document.addEventListener('visibilitychange',()=>audio.visibility(!document.hidd
 const reduce=()=>data.settings.reduced||matchMedia('(prefers-reduced-motion: reduce)').matches;
 function warning(text){$('storage-warning').textContent=text;$('storage-warning').hidden=!text;}
 warning(loaded.warning);
+platform.onSaveState=state=>{saveDirty=state!=='saved';warning(state==='saved'?'':state==='saving'?'Сохраняем партию…':'Не удалось сохранить партию. Не закрывайте игру; попробуйте ещё раз.');};
 function persist(){
  try{if(storage.getItem(KEY)!==savedRaw){saveDirty=true;pendingStorage=true;warning('В другой вкладке есть более новое сохранение. Эта партия пока не сохранена — не закрывайте её.');return false;}}catch{}
- const ok=saveProgress(storage,data);saveDirty=!ok;if(ok)savedRaw=JSON.stringify(data);warning(ok?'':'Хранилище недоступно. Не закрывайте игру: прогресс сейчас не сохраняется.');return ok;}
+ const ok=saveProgress(storage,data);saveDirty=!ok||platform.native;if(ok)savedRaw=JSON.stringify(data);warning(ok?(platform.native?'Сохраняем партию…':''):'Хранилище недоступно. Не закрывайте игру: прогресс сейчас не сохраняется.');return ok;}
 function settingsApplied(){document.body.classList.toggle('reduced',data.settings.reduced);audio.configure(data.settings);}
 let pacing=null,hintTimer=null,helper=null,helperTarget=null;
 function clearHint(){clearTimeout(hintTimer);tiles.forEach(t=>t.classList.remove('hint','hint-area'));for(const k of ['rolling','kettle'])$(k).classList.remove('hint');if(!helper)$('helper-prompt').textContent=goalHint(activeGame());}
@@ -186,6 +188,7 @@ async function swap(a,b,kind=null){
  setActiveGame(result.game);if(gameMode==='daily')data.daily=recordDailyWin(data.daily);else if(gameMode==='regular'){data.best=Math.max(data.best,activeGame().score);data=recordCampaignWin(data);}else if(activeGame().status==='won')data.relaxed.completed=Math.max(data.relaxed.completed,activeGame().order);persist();
  $('moves').textContent=activeGame().moves??'∞';$('board').setAttribute('aria-busy','true');
  try{
+  if(platform.native){await flushNativeSave();if(turn!==epoch)return;}
   if(!reduce()&&kind){await helperVisual(kind,a);if(turn!==epoch)return;}
   if(!reduce()&&!kind){const cleanup=await swapVisual(a,b);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
   for(const frame of result.frames){
@@ -286,6 +289,7 @@ function settings(){
  $('setting-volume').onchange=()=>audio.effect('match');
  $('installed-version').textContent='Версия '+installedVersion;
  $('installed-build').textContent='Сборка '+installedBuild;
+ $('check-update').hidden=platform.native;$('update-status').hidden=platform.native;
  $('check-update').onclick=manualUpdateCheck;paintUpdateStatus();
  $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, рецепты, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
 }
@@ -348,6 +352,7 @@ async function manualUpdateCheck(){
  await checkUpdates(true);
 }
 function checkUpdates(force=false){
+ if(platform.native)return Promise.resolve();
  if(checking)return checking;
  if(!force&&(document.hidden||Date.now()-lastCheck<30000))return Promise.resolve();
  lastCheck=Date.now();showUpdate('checking');
@@ -374,6 +379,7 @@ function watchUpdates(registration){
  $('update-game').onclick=()=>updateAvailable?updater.request():checkUpdates(true);
 }
 function prepareOffline(){
+ if(platform.native)return Promise.resolve();
  if(preparing)return preparing;
  if(!('serviceWorker' in navigator)||!window.isSecureContext){$('offline').textContent='Для автономной установки откройте игру по HTTPS.';return Promise.resolve();}
  preparing=(async()=>{
@@ -394,9 +400,33 @@ function prepareOffline(){
  })();return preparing;
 }
 function resumeUpdates(){if(!document.hidden){syncOtherTab();prepareOffline();checkUpdates();}}
-prepareOffline();window.addEventListener('online',resumeUpdates);window.addEventListener('pageshow',resumeUpdates);
-document.addEventListener('visibilitychange',resumeUpdates);
-setInterval(resumeUpdates,60000);
+if(platform.native){
+ $('install').hidden=true;$('offline').textContent='Можно играть без интернета';
+ platform.app?.addListener('backButton',()=>systemBack()).catch(()=>warning('Системная кнопка назад недоступна. Используйте кнопки игры.'));
+ platform.app?.addListener('appStateChange',({isActive})=>{audio.visibility(isActive);if(!isActive){cancelPointer();clearHint();flushNativeSave();}else{armHint();refreshDailyMenu();if(saveDirty)flushNativeSave();}}).catch(()=>{});
+}else{
+ prepareOffline();window.addEventListener('online',resumeUpdates);window.addEventListener('pageshow',resumeUpdates);
+ document.addEventListener('visibilitychange',resumeUpdates);setInterval(resumeUpdates,60000);
+}
 // Calendar refresh updates the menu only; it never replaces a running game.
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDailyMenu();});
 setInterval(()=>{if(!document.hidden&&!$('menu').hidden)refreshDailyMenu();},60000);
+
+async function flushNativeSave(){
+ if(!platform.native)return true;
+ const ok=await storage.flush();
+ if(!ok)warning('Не удалось сохранить партию. Не закрывайте игру; попробуйте ещё раз.');
+ return ok;
+}
+let minimizing=false;
+async function systemBack(){
+ if($('dialog').open){$('dialog').dispatchEvent(new Event('cancel',{cancelable:true}));return;}
+ if(helper){clearHelper();armHint();return;}
+ if(selected!==null){selected=null;selection();return;}
+ if(!$('game').hidden){menu();return;}
+ if(!$('book').hidden){$('book-back').onclick();return;}
+ if(!$('collection').hidden){menu();return;}
+ if(minimizing)return;
+ minimizing=true;
+ try{if(await flushNativeSave())await platform.app?.minimizeApp();}catch{warning('Не удалось свернуть игру. Партия остаётся открытой.');}finally{minimizing=false;}
+}

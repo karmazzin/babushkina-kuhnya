@@ -1,0 +1,16 @@
+{
+  "appId": "io.github.karmazzin.babushkinakuhnya",
+  "appName": "Бабушкина кухня",
+  "webDir": "build/android-web",
+  "android": {
+    "backgroundColor": "#f5e8cb",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "LIGHT"
+    }
+  }
+}

@@ -12,6 +12,7 @@ import * as recipeCards from '../dist/recipe-cards.js';
 import * as relaxed from '../dist/relaxed.js';
 import * as pacing from '../dist/pacing.js';
 import * as tea from '../dist/tea.js';
+import {platform as webPlatform} from '../dist/platform.js';
 import {FOODS} from '../dist/foods.js';
 import {postcardMarkup} from '../dist/postcards.js';
 import {createDialogControls} from '../dist/dialog.js';
@@ -21,11 +22,13 @@ class Node extends EventTarget{
  get firstElementChild(){return this.child??=new Node();}
  append(n){this.children.push(n);}replaceChildren(...n){this.children=n;}getAnimations(){return [];}setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}getAttribute(k){return this.attrs[k];}hasPointerCapture(){return false;}close(){this.open=false;}showModal(){this.open=true;}focus(){}querySelectorAll(){return [];}querySelector(){return new Node();}
 }
-function harness(){
+function harness(native=false){
+ const platform={...webPlatform,native};
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
  const saved=new Map();const localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
+ if(native)platform.storage={...localStorage,flush:async()=>true};
  const document={getElementById:get,createElement:()=>new Node(),addEventListener(){},body:new Node(),hidden:false};
- const context=vm.createContext({...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,...tea,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
+ const context=vm.createContext({platform,Event,...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,...tea,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
  vm.runInContext(source,context);
  const run=s=>vm.runInContext(s,context);
  const buttons=()=>get('dialog-actions').children.map(b=>b.textContent);
@@ -148,4 +151,24 @@ for(const level of [1,6])for(const route of ['next','recipes','escape','reload']
  h.run('menu()');assert.equal(h.get('continue').textContent,'Продолжить готовить');h.get('continue').onclick();h.playable();
  assert.equal(h.run('data.game.level'),level+1);
  h.run('persist();data=loadProgress(storage).data;openGame()');h.playable();assert.equal(h.run('data.game.level'),level+1);
+});
+
+for(const mode of ['regular','daily','relaxed'])test(`Android Back: ${mode} helper cancellation and return preserve a playable save`,()=>{
+ const h=harness(true);h.start();if(mode==='daily')h.run('beginDaily()');if(mode==='relaxed')h.run('requestRelaxed()');
+ h.run("selectHelper('rolling');systemBack()");assert.equal(h.run('helper'),null);h.playable();
+ const before=h.run('JSON.stringify(activeGame())');h.run('systemBack()');assert.equal(h.get('menu').hidden,false);
+ h.run(`openGame('${mode}')`);h.playable();assert.equal(h.run('JSON.stringify(activeGame())'),before);
+});
+test('Android Back follows nested modal returns, recipe shelf and result destinations',()=>{
+ const h=harness(true);h.start();h.run('settings()');h.get('reset').onclick();h.run('systemBack()');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');h.run('systemBack()');h.playable();
+ h.run('book(0);recipeShelf();systemBack()');assert.equal(h.get('book-title').textContent,'Бабушкина книга');h.run('systemBack()');assert.equal(h.get('menu').hidden,false);
+ h.run("start();data.game.status='won';outcome();systemBack()");assert.equal(h.get('book').hidden,false);h.run('systemBack();start()');h.playable();
+});
+test('Android Back waits for save before minimizing and stays on a failed save',async()=>{
+ const h=harness(true);h.run('var minimized=0; platform.app={minimizeApp:async()=>minimized++}; storage.flush=async()=>false');
+ await h.run('systemBack()');assert.equal(h.run('minimized'),0);
+ h.run('storage.flush=async()=>true');await h.run('systemBack()');assert.equal(h.run('minimized'),1);
+});
+test('Android settings and menu do not expose browser install or service-worker updates',()=>{
+ const h=harness(true);assert.equal(h.get('install').hidden,true);h.run('settings()');assert.equal(h.get('check-update').hidden,true);assert.equal(h.get('update-status').hidden,true);
 });
