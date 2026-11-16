@@ -379,6 +379,8 @@ function prepareOffline(){
    const registration=updateRegistration??await offlineRegistration(navigator.serviceWorker);
    watchUpdates(registration);checkUpdates();
    if(!registration.active){
+    // Download progress extends the installation deadline; activation remains bounded.
+    await checkForUpdate(registration);
     await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('timeout')),120000);})]);clearTimeout(timer);
    }
    const channel=new MessageChannel();port=channel.port1;

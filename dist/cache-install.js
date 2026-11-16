@@ -2,7 +2,7 @@
 self.installRelease=async function({name,root,hashes,progress=()=>{}}){
  const target=await caches.open(name),names=(await caches.keys()).filter(n=>n.startsWith('babushkina-kuhnya-')&&n!==name).reverse();
  const sources=[target,...await Promise.all(names.map(n=>caches.open(n)))];
- const entries=Object.entries(hashes);let next=0,done=0;
+ const entries=Object.entries(hashes);let next=0,done=0,lastProgress=0;
  async function valid(response,hash){
   if(!response?.ok)return false;
   const bytes=await response.clone().arrayBuffer();
@@ -12,12 +12,30 @@ self.installRelease=async function({name,root,hashes,progress=()=>{}}){
  async function download(url,hash){
   let error;
   for(let attempt=0;attempt<3;attempt++){
-   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),25000);
+   const abort=new AbortController();let timer,reader;
+   // A slow, progressing transfer is healthy. Only abandon a silent connection.
+   const touch=()=>{clearTimeout(timer);timer=setTimeout(()=>abort.abort(),60000);};
+   touch();
    try{
     const response=await fetch(new Request(url,{cache:'reload',signal:abort.signal}));
-    if(!await valid(response,hash))throw Error('Release integrity check failed');
-    return response;
-   }catch(e){error=e;}finally{clearTimeout(timer);}
+    if(!response.ok)throw Error('Download failed: '+response.status);
+    touch();reader=response.body.getReader();
+    const chunks=[];let size=0;
+    while(true){
+     const {done:ended,value}=await reader.read();if(ended)break;
+     if(!value.byteLength)continue;
+     touch();chunks.push(value);size+=value.byteLength;
+     // Keep first-install and update observers alive while a large file is arriving.
+     if(Date.now()-lastProgress>=10000){lastProgress=Date.now();await progress(done,entries.length);}
+    }
+    clearTimeout(timer);
+    const bytes=new Uint8Array(size);let offset=0;
+    for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+    const complete=new Response(bytes,{status:response.status,statusText:response.statusText,headers:response.headers});
+    if(!await valid(complete,hash))throw Error('Release integrity check failed');
+    return complete;
+   }catch(e){error=e;}finally{clearTimeout(timer);reader?.releaseLock();}
+
   }
   throw error;
  }

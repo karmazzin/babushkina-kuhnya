@@ -37,18 +37,24 @@ export function createUpdater({serviceWorker,registration,isBusy,save,reload,sho
 }
 
 // Observe before checking: slow network requests must not hide an already installed worker.
-export function checkForUpdate(registration,timeoutMs=120000){
+export function checkForUpdate(registration,timeoutMs=120000,serviceWorker=globalThis.navigator?.serviceWorker){
  return new Promise((resolve,reject)=>{
-  let settled=false;const cleanups=[],seen=new WeakSet();
+  let settled=false,timer;const cleanups=[],seen=new WeakSet();
   const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);cleanups.forEach(fn=>fn());error?reject(error):resolve(value);};
-  const timer=setTimeout(()=>finish(Error('Update check timeout')),timeoutMs);
-  const listen=(target,event,fn)=>{target.addEventListener?.(event,fn);cleanups.push(()=>target.removeEventListener?.(event,fn));};
+  const touch=()=>{clearTimeout(timer);timer=setTimeout(()=>finish(Error('Update check timeout')),timeoutMs);};
+  touch();
+  const listen=(target,event,fn)=>{target?.addEventListener?.(event,fn);cleanups.push(()=>target?.removeEventListener?.(event,fn));};
   function watch(){
    if(registration.waiting){finish(null,'available');return;}
    const worker=registration.installing;if(!worker||seen.has(worker))return;seen.add(worker);
    const inspect=()=>{if(worker.state==='installed')finish(null,'available');else if(worker.state==='activated')finish(null,'current');else if(worker.state==='redundant')finish(Error('Update installation failed'));};
    listen(worker,'statechange',inspect);inspect();
   }
+  listen(serviceWorker,'message',event=>{
+   if(event.source!==registration.installing||!registration.installing||event.data?.type!=='UPDATE_DOWNLOAD')return;
+   if(event.data.state==='downloading')touch();
+   else if(event.data.state==='download-error')finish(Error('Update installation failed'));
+  });
   listen(registration,'updatefound',watch);watch();
   if(settled||registration.installing)return;
   Promise.resolve().then(()=>registration.update()).then(()=>{if(settled)return;watch();if(!registration.installing&&!registration.waiting)finish(null,'current');},error=>finish(error));

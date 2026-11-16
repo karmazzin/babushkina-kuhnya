@@ -56,3 +56,20 @@ test('first claim is quiet, but the same tab can apply a later release',()=>{
   u.request();sw.dispatchEvent(new Event('controllerchange'));assert.equal(reloads,1);assert.equal(saves,1);
  }finally{u.dispose();}
 });
+
+test('download progress from the installing worker extends the update deadline',async t=>{
+ const {checkForUpdate}=await import('../dist/update.js');const sw=new EventTarget(),reg=new EventTarget(),worker=new EventTarget();worker.state='installing';reg.installing=worker;
+ t.mock.timers.enable({apis:['setTimeout']});
+ let error;const pending=checkForUpdate(reg,60,sw).catch(e=>{error=e;});
+ for(let i=0;i<4;i++){t.mock.timers.tick(50);sw.dispatchEvent(Object.assign(new Event('message'),{source:worker,data:{type:'UPDATE_DOWNLOAD',state:'downloading'}}));}
+ worker.state='installed';reg.waiting=worker;worker.dispatchEvent(new Event('statechange'));
+ assert.equal(await pending,'available');assert.equal(error,undefined);
+});
+
+test('unrelated worker messages do not keep a stalled installation pending',async t=>{
+ const {checkForUpdate}=await import('../dist/update.js');const sw=new EventTarget(),worker=new EventTarget();worker.state='installing';
+ t.mock.timers.enable({apis:['setTimeout']});
+ const pending=checkForUpdate({installing:worker},60,sw);const rejected=assert.rejects(pending,/timeout/);
+ t.mock.timers.tick(50);sw.dispatchEvent(Object.assign(new Event('message'),{source:new EventTarget(),data:{type:'UPDATE_DOWNLOAD',state:'downloading'}}));
+ t.mock.timers.tick(11);await rejected;
+});
