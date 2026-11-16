@@ -1,9 +1,10 @@
 import {validDay} from './daily.js';
 import {matches,legalMoves,gameStatus} from './engine.js';
 import {FOODS} from './foods.js';
+import {TEA,teaCells,bottomTea} from './tea.js';
 import {recipeById,recipeMilestone,RECIPE_CARDS} from './recipe-cards.js';
 export const KEY='babushkina-kuhnya:progress';
-export const defaultProgress=()=>({unlocked:1,best:0,game:null,daily:{game:null,cards:[],art:[]},relaxed:{game:null,completed:0},recipes:{unlocked:[],milestones:[]},seenHelpers:[],completed:[],settings:{sound:true,music:true,reduced:false,soundVolume:.35}});
+export const defaultProgress=()=>({unlocked:1,best:0,game:null,daily:{game:null,cards:[],art:[]},relaxed:{game:null,completed:0},recipes:{unlocked:[],milestones:[]},seenHelpers:[],seenTea:false,completed:[],settings:{sound:true,music:true,reduced:false,soundVolume:.35}});
 const integer=(n,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 function validGame(g){
  if(g===null)return true;
@@ -13,8 +14,10 @@ function validGame(g){
  if(!Array.isArray(pool)||pool.length!==5||new Set(pool).size!==5||!pool.every(t=>integer(t,0,FOODS.length-1)))return false;
  if(!integer(g.rng,0,4294967295)||!integer(g.actions)||!integer(g.stalled))return false;
  if(g.gaveUp!==undefined&&(g.gaveUp!==true||g.moves!==0))return false;
- if(!Array.isArray(g.board)||g.board.length!==56||!g.board.every(t=>pool.includes(t))||matches(g.board).length||!legalMoves(g.board).length)return false;
- if(!Array.isArray(g.goals)||g.goals.length<1||g.goals.length>2||!g.goals.every(x=>x&&((x.kind==='plates'&&integer(x.amount,1,56))||(x.kind==='food'&&pool.includes(x.type)&&integer(x.amount,1,1000)))))return false;
+ if(!Array.isArray(g.board)||g.board.length!==56||!g.board.every(t=>t===TEA||pool.includes(t))||matches(g.board).length||!legalMoves(g.board).length)return false;
+ if(!Array.isArray(g.goals)||g.goals.length<1||g.goals.length>2||!g.goals.every(x=>x&&((x.kind==='tea'&&integer(x.amount,1,2))||(x.kind==='plates'&&integer(x.amount,1,56))||(x.kind==='food'&&pool.includes(x.type)&&integer(x.amount,1,1000)))))return false;
+ const teaGoals=g.goals.filter(x=>x.kind==='tea');
+ if(!integer(g.servedTea,0,2)||teaGoals.length>1||g.servedTea+teaCells(g.board).length!==(teaGoals[0]?.amount??0)||bottomTea(g.board).length)return false;
  if(!Array.isArray(g.collected)||g.collected.length!==FOODS.length||!g.collected.every(x=>integer(x)))return false;
  if(!Array.isArray(g.plates)||g.plates.length>56||!g.plates.every(n=>integer(n,0,55))||new Set(g.plates).size!==g.plates.length)return false;
  if(g.goals.some(x=>x.kind==='plates'&&g.plates.length>x.amount))return false;
@@ -37,6 +40,7 @@ function decode(raw){
  const recipes=p.recipes;
  if(!recipes||!Array.isArray(recipes.unlocked)||recipes.unlocked.length>12||!recipes.unlocked.every((id,i)=>id===RECIPE_CARDS[i].id)||!Array.isArray(recipes.milestones)||recipes.milestones.length!==recipes.unlocked.length||!recipes.milestones.every((n,i)=>n===recipeMilestone(i)))throw Error('invalid recipes');
  if(!Array.isArray(p.seenHelpers)||p.seenHelpers.length>2||new Set(p.seenHelpers).size!==p.seenHelpers.length||!p.seenHelpers.every(k=>['rolling','kettle'].includes(k)))throw Error('invalid helper guidance');
+ if(typeof p.seenTea!=='boolean')throw Error('invalid tea guidance');
  return p;
 }
 export function loadProgress(storage){

@@ -4,6 +4,7 @@ import {levelRecipe,FIRST_LEVELS} from '../dist/recipes.js';
 import {newGame,play,legalMoves,useBooster,boosterArea,openingHelperWin} from '../dist/engine.js';
 import {newDailyGame,dailyOffer,recordDailyWin} from '../dist/daily.js';
 import {foodPool} from '../dist/foods.js';
+import {TEA} from '../dist/tea.js';
 import {defaultProgress,loadProgress,saveProgress,KEY} from '../dist/storage.js';
 const progression=await import('../dist/progression.js').catch(()=>({}));
 const relaxed=await import('../dist/relaxed.js').catch(()=>({}));
@@ -26,7 +27,7 @@ test('42 authored levels keep food goals in the pool and plates outside a single
 test('new foods replace at most one familiar dish per block and late goals are capped',()=>{
  assert.deepEqual(foodPool(18),[0,1,2,3,4]);assert.deepEqual(foodPool(19),[5,1,2,3,4]);assert.deepEqual(foodPool(31),[5,6,2,3,4]);
  for(let n=7;n<151;n+=12){const a=foodPool(n),b=foodPool(n+12);assert.ok(b.filter(t=>!a.includes(t)).length<=1);}
- for(const n of [43,78,138,10000]){const g=newGame(n,{seed:30});assert.ok(g.goals.every(x=>x.kind!=='food'||x.amount<=34));assert.equal(g.pool.length,5);assert.ok(g.board.every(x=>g.pool.includes(x)));}
+ for(const n of [43,78,138,10000]){const g=newGame(n,{seed:30});assert.ok(g.goals.every(x=>x.kind!=='food'||x.amount<=34));assert.equal(g.pool.length,5);assert.ok(g.board.every(x=>x===TEA||g.pool.includes(x)));}
 });
 test('recipe milestones are 6,18,30 and replay cannot duplicate awards',()=>{
  assert.equal(typeof progression.recordCampaignWin,'function');
