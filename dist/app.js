@@ -205,28 +205,30 @@ async function helperVisual(kind,index){
 function paint(){paintBoard(activeGame().board);stats();settingsApplied();$('game-message').textContent='';}
 const sleep=ms=>pacing.wait(ms);
 function food(i){return tiles[i].firstElementChild;}
-async function swapVisual(a,b,back=false){
+async function swapVisual(a,b,back=false,origin={x:0,y:0}){
  const ra=tiles[a].getBoundingClientRect(),rb=tiles[b].getBoundingClientRect();
  const dx=rb.x-ra.x,dy=rb.y-ra.y;
- const aa=food(a).animate([{transform:'translate(0,0)'},{transform:`translate(${dx}px,${dy}px)`}],{duration:TIMING.swap,easing:'ease-in-out',fill:'forwards',direction:back?'alternate':'normal',iterations:back?2:1});
- const ab=food(b).animate([{transform:'translate(0,0)'},{transform:`translate(${-dx}px,${-dy}px)`}],{duration:TIMING.swap,easing:'ease-in-out',fill:'forwards',direction:back?'alternate':'normal',iterations:back?2:1});
+ const frames=(x,y,start)=>back?[{transform:start},{transform:`translate(${x}px,${y}px)`,offset:.5},{transform:'translate(0,0)'}]:[{transform:start},{transform:`translate(${x}px,${y}px)`}];
+ const options={duration:TIMING.swap*(back?2:1),easing:'ease-out',fill:'forwards'};
+ const aa=food(a).animate(frames(dx,dy,`translate(${origin.x}px,${origin.y}px)`),options);
+ const ab=food(b).animate(frames(-dx,-dy,'translate(0,0)'),options);
  pacing.track(aa);pacing.track(ab);
  await Promise.all([aa.finished.catch(()=>{}),ab.finished.catch(()=>{})]);return ()=>{aa.cancel();ab.cancel();};
 }
-async function swap(a,b,kind=null){
+async function swap(a,b,kind=null,origin={x:0,y:0}){
  if(busy||!isActiveGame(activeGame())||(!kind&&activeGame().status==='helpers'))return;
  clearHint();pacing=createPacing();
  const result=kind?useBooster(activeGame(),kind,a):play(activeGame(),a,b);selected=null;selection();busy=true;const turn=++epoch;
  if(!result.valid){
   $('game-message').textContent='Нет совпадения. Ход сохранён.';
-  if(!reduce()){const cleanup=await swapVisual(a,b,true);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
+  if(!reduce()){const cleanup=await swapVisual(a,b,true,origin);cleanup();}if(turn===epoch){busy=false;syncOtherTab();armHint();}return;
  }
  // Persist settled state first, but reveal points as each cascade resolves.
  setActiveGame(result.game);if(gameMode==='daily')data.daily=recordDailyWin(data.daily);else if(gameMode==='regular'){data.best=Math.max(data.best,activeGame().score);data=recordCampaignWin(data);}else if(activeGame().status==='won')data.relaxed.completed=Math.max(data.relaxed.completed,activeGame().order);persist();
  $('moves').textContent=activeGame().moves??'∞';$('board').setAttribute('aria-busy','true');
  try{
   if(!reduce()&&kind){await helperVisual(kind,a);if(turn!==epoch)return;}
-  if(!reduce()&&!kind){const cleanup=await swapVisual(a,b);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
+  if(!reduce()&&!kind){const cleanup=await swapVisual(a,b,false,origin);if(turn!==epoch){cleanup();return;}paintBoard(result.frames[0].before,[],result.frames[0].platesBefore);cleanup();}
   for(const frame of result.frames){
    if(turn!==epoch)return;
    if(reduce())continue;
@@ -254,6 +256,7 @@ function choose(i){if(busy){accelerate();return;}if(!isActiveGame(activeGame()))
 let pointer=null,suppressClick=0;
 function resetPointer(){
  const p=pointer;pointer=null;
+ if(p?.committed)suppressClick=Date.now()+400;
  if(p&&$('board').hasPointerCapture(p.id))$('board').releasePointerCapture(p.id);
  tiles.forEach(t=>{t.classList.remove('drag-source','swipe-target');t.firstElementChild.style.transform='';});
 }
@@ -262,15 +265,21 @@ function cellAt(x,y){
  return tile?Number(tile.dataset.index):null;
 }
 function dragPreview(e){
- if(!pointer||pointer.id!==e.pointerId)return;
+ if(!pointer||pointer.id!==e.pointerId||pointer.committed)return;
  if(helper){previewHelper(cellAt(e.clientX,e.clientY));return;}
  const p=pointer,dx=e.clientX-p.x,dy=e.clientY-p.y;
  p.travel=Math.max(p.travel,Math.hypot(dx,dy));
  const intent=swipeIntent(p.i,dx,dy,p.size,p.axis);p.axis=intent.axis;p.target=intent.target;
  tiles.forEach(t=>t.classList.remove('swipe-target'));
- const offset=intent.target===null?intent.offset*.25:intent.offset;
- food(p.i).style.transform=p.axis=== 'x'?`translateX(${offset}px)`:p.axis==='y'?`translateY(${offset}px)`:'';
- if(intent.target!==null)tiles[intent.target].classList.add('swipe-target');
+ const offset=intent.offset;
+ const axis=intent.previewAxis;
+ food(p.i).style.transform=axis==='x'?`translateX(${offset}px)`:axis==='y'?`translateY(${offset}px)`:'';
+ const bounds=$('board').getBoundingClientRect();
+ if(intent.target!==null&&e.clientX>=bounds.left&&e.clientX<=bounds.right&&e.clientY>=bounds.top&&e.clientY<=bounds.bottom){
+  p.committed=true;suppressClick=Infinity;
+  tiles[p.i].classList.remove('drag-source');food(p.i).style.transform='';
+  swap(p.i,intent.target,null,{x:axis==='x'?offset:0,y:axis==='y'?offset:0});
+ }
 }
 $('board').addEventListener('pointerdown',e=>{
  if(e.isPrimary===false||e.button!==0||pointer)return;
@@ -284,8 +293,10 @@ $('board').addEventListener('pointerdown',e=>{
 $('board').addEventListener('pointermove',dragPreview);
 $('board').addEventListener('pointerup',e=>{
  if(!pointer||pointer.id!==e.pointerId)return;
- dragPreview(e);const p=pointer,hit=cellAt(e.clientX,e.clientY),target=p.target;
+ const p=pointer;dragPreview(e);if(pointer!==p)return;
+ const hit=cellAt(e.clientX,e.clientY),target=p.target;
  suppressClick=Date.now()+400;resetPointer();
+ if(p.committed)return;
  if(helper){if(hit!==null)applyHelper(hit);else previewHelper(null);return;}
  const bounds=$('board').getBoundingClientRect();
  if(e.clientX<bounds.left||e.clientX>bounds.right||e.clientY<bounds.top||e.clientY>bounds.bottom){armHint();return;}
