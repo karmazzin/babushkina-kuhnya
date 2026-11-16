@@ -1,0 +1,8 @@
+{
+  "asset": "dist/assets/foods/tea.png",
+  "source": "exec-f20e05c4-2132-4d3f-a380-2113a933a721.png",
+  "tool": "image_gen",
+  "transparent_background": true,
+  "packaging": "Generated PNG downscaled to 512×512; original alpha preserved.",
+  "prompt": "Create one finished game sprite for a cozy Russian grandmother's kitchen match-3 game. A single rounded ivory porcelain teacup filled with clear amber tea, seen from a slightly elevated three-quarter front view, large unmistakable handle on the right, a simple bold red flower and two green leaves painted on the front, subtle warm golden rim, one small graceful curl of steam. Charming polished hand-painted 3D illustration, soft warm lighting and gentle volume, simple readable silhouette at 40 pixels. Center the whole cup including handle within a square with 8 percent transparent margins. The cup should occupy most of the image. No saucer, no plate, no spoon, no teapot, no background, no surface, no cast shadow outside the object, no letters or numbers. True transparent alpha background. This is an individual usable gameplay token, not a mockup or sprite sheet."
+}

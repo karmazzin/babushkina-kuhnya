@@ -11,6 +11,7 @@ import * as progression from '../dist/progression.js';
 import * as recipeCards from '../dist/recipe-cards.js';
 import * as relaxed from '../dist/relaxed.js';
 import * as pacing from '../dist/pacing.js';
+import * as tea from '../dist/tea.js';
 import {FOODS} from '../dist/foods.js';
 import {postcardMarkup} from '../dist/postcards.js';
 import {createDialogControls} from '../dist/dialog.js';
@@ -24,7 +25,7 @@ function harness(){
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
  const saved=new Map();const localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
  const document={getElementById:get,createElement:()=>new Node(),addEventListener(){},body:new Node(),hidden:false};
- const context=vm.createContext({...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
+ const context=vm.createContext({...engine,...storage,...book,...recipes,...daily,...progression,...recipeCards,...relaxed,...pacing,...tea,FOODS,postcardMarkup,bindPostcardSharing(){},renderCollection(root,data,page,onOpen){root.onOpen=onOpen;},createDialogControls,renderBook(root,data,page,onSelect,onRecipe){root.onRecipe=onRecipe;},createAudio:()=>({configure(){},unlock(){},visibility(){},effect(){}}),document,window:{localStorage,addEventListener(){},isSecureContext:false,open(){}},navigator:{},matchMedia:()=>({matches:false}),sessionStorage:{getItem:()=>null,removeItem(){}},setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,console});
  vm.runInContext(source,context);
  const run=s=>vm.runInContext(s,context);
  const buttons=()=>get('dialog-actions').children.map(b=>b.textContent);
@@ -32,7 +33,7 @@ function harness(){
 }
 for(const escape of [false,true]){
  const exit=(h,text)=>escape?h.escape():h.click(text),suffix=escape?'Escape':'button';
- for(let page=0;page<6;page++)test(`help page ${page+1}: ${suffix} resumes playable game`,()=>{const h=harness();h.start();h.run(`help(${page})`);exit(h,'Продолжить игру');h.playable();});
+ for(let page=0;page<7;page++)test(`help page ${page+1}: ${suffix} resumes playable game`,()=>{const h=harness();h.start();h.run(`help(${page})`);exit(h,'Продолжить игру');h.playable();});
  test(`settings and nested reset: ${suffix} returns one step`,()=>{const h=harness();h.start();h.run('settings()');h.get('reset').onclick();exit(h,'Отмена');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');exit(h,'Продолжить игру');h.playable();});
  for(let page=0;page<2;page++)test(`credits ${page}: ${suffix} goes to settings`,()=>{const h=harness();h.start();h.run(`credits(${page})`);exit(h,'Назад к настройкам');assert.equal(h.get('dialog-title').textContent,'Звуки и уют');exit(h,'Продолжить игру');h.playable();});
  for(let page=0;page<3;page++)test(`recipe ${page}: ${suffix} goes to book`,()=>{const h=harness();h.start();h.run(`book(0);recipePage(RECIPE_CARDS[0],${page})`);exit(h,'В книгу');assert.equal(h.get('book').hidden,false);assert.equal(h.get('dialog').open,false);h.run('openGame()');h.playable();});
@@ -42,7 +43,7 @@ for(const escape of [false,true]){
  test(`installation instructions: ${suffix} returns to menu`,async()=>{const h=harness();await h.run('install()');exit(h,'Назад');assert.equal(h.get('menu').hidden,false);assert.equal(h.get('dialog').open,false);h.start();h.playable();});
 }
 test('positive new game and reset routes remain usable',async()=>{const h=harness();h.start();h.run('menu();requestStart()');h.click('Начать заново');h.playable();h.run('settings()');h.get('reset').onclick();h.click('Да, сбросить');assert.equal(h.get('menu').hidden,false);assert.equal(h.run('data.game'),null);h.start();h.playable();});
-test('help and recipe forward buttons reach a final return, without a hidden third exit',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<5;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();h.run('book(0);recipePage(RECIPE_CARDS[0])');for(let i=1;i<book.recipePages(recipeCards.RECIPE_CARDS[0]).length;i++)h.click('Дальше');assert.deepEqual(h.buttons(),['Предыдущая страница','В книгу']);h.click('В книгу');assert.equal(h.get('book').hidden,false);});
+test('help and recipe forward buttons reach a final return, without a hidden third exit',()=>{const h=harness();h.start();h.run('help()');for(let i=0;i<6;i++)h.click('Дальше →');assert.deepEqual(h.buttons(),['Продолжить игру']);h.click('Продолжить игру');h.playable();h.run('book(0);recipePage(RECIPE_CARDS[0])');for(let i=1;i<book.recipePages(recipeCards.RECIPE_CARDS[0]).length;i++)h.click('Дальше');assert.deepEqual(h.buttons(),['Предыдущая страница','В книгу']);h.click('В книгу');assert.equal(h.get('book').hidden,false);});
 for(const status of ['won','lost'])test(`result ${status}: primary action opens a playable next/retry game`,()=>{const h=harness();h.start();h.run(`data.game.status='${status}';outcome()`);h.click(status==='won'?'Следующий уровень':'Попробовать ещё');assert.equal(h.run('data.game.level'),status==='won'?2:1);h.playable();});
 test('confirm level selection starts the selected level',()=>{const h=harness();h.start();h.run('data.unlocked=2;book(0);chooseLevel(2)');h.click('Открыть уровень');assert.equal(h.run('data.game.level'),2);h.playable();});
 test('credits source keeps a route back after opening the source',()=>{const h=harness();h.start();for(let page=0;page<2;page++){h.run(`credits(${page})`);h.click('Источник и лицензия ↗');h.click('Назад к настройкам');h.click('Продолжить игру');h.playable();}});
@@ -115,3 +116,22 @@ test('settings label describes animation rather than a separate game mode',()=>{
 test('recipe shelf back button names its real destination',()=>{const h=harness();h.run('recipeShelf()');assert.equal(h.get('book-back').getAttribute('aria-label'),'К уровням');h.get('book-back').onclick();assert.equal(h.get('book-back').getAttribute('aria-label'),'В главное меню');});
 
 test('daily defeat reports the actual remaining objective',()=>{const h=harness();h.run("beginDaily();data.daily.game.goals=[{kind:'food',type:1,amount:12}];data.daily.game.collected[1]=7;data.daily.game.status='lost';dailyOutcome()");assert.match(h.get('dialog-content').innerHTML,/Блины: собрано 7 из 12/);h.click('Попробовать ещё');h.playable();});
+
+for(const escape of [false,true])test(`first tea level explains delivery once; ${escape?'Escape':'button'} returns to the intact board`,()=>{
+ const h=harness();h.run('data.unlocked=10;start()');const before=h.run('JSON.stringify(data.game)');
+ assert.equal(h.get('dialog').open,true);assert.match(h.get('dialog-title').textContent,/чай/i);
+ assert.deepEqual(h.buttons(),['К полю']);if(escape)h.escape();else h.click('К полю');h.playable();
+ assert.equal(h.run('JSON.stringify(data.game)'),before);assert.equal(h.run('data.seenTea'),true);
+ assert.match(h.get('board').children[10].getAttribute('aria-label'),/Чашка чая/);
+ h.run('menu();data=loadProgress(storage).data;openGame()');h.playable();
+});
+test('tea helper phase reloads, serves the cup and opens a playable next level',async()=>{
+ const h=harness();h.run(`data.unlocked=10;data.game=newGame(10,{seed:73});data.seenTea=true;
+ const b=Array.from({length:56},(_,i)=>(Math.floor(i/7)*2+i%7)%5);b[42]=TEA;b[49]=b[50]=b[44]=1;b[51]=2;
+ data.game.board=b;data.game.moves=0;data.game.status='helpers';persist();menu();data=loadProgress(storage).data;openGame()`);
+ assert.equal(h.get('dialog').open,false);assert.equal(h.get('finish-attempt').hidden,false);
+ await h.run("data.settings.reduced=true;selectHelper('rolling');swap(49,null,'rolling')");
+ assert.equal(h.run('data.game.servedTea'),1);assert.equal(h.run('data.game.status'),'won');
+ assert.match(h.get('dialog-content').innerHTML,/Чай: подано 1 из 1/);h.click('Следующий уровень');h.playable();
+ assert.equal(h.run('data.game.level'),11);
+});

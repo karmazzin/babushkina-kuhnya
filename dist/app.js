@@ -7,6 +7,7 @@ import {createUpdater,checkForUpdate} from './update.js';
 import {renderBook,renderRecipeShelf,recipePages,recipeIllustration,goalText,resultGoalText,goalMarkup,goalHint} from './book.js';
 import {levelRecipe} from './recipes.js';
 import {FOODS} from './foods.js';
+import {TEA} from './tea.js';
 import {recipeById} from './recipe-cards.js';
 import {recordCampaignWin,nextRecipeReward} from './progression.js';
 import {newRelaxedGame} from './relaxed.js';
@@ -65,7 +66,12 @@ function openGame(mode='regular'){
  cancelMotion();gameMode=mode;
  if(!activeGame())return mode==='daily'?requestDaily():mode==='relaxed'?requestRelaxed():start();
  hideScreens();$('game').hidden=false;paint();
- if(!isActiveGame(activeGame()))outcome();else armHint();
+ if(!isActiveGame(activeGame()))outcome();else if(!teaNotice())armHint();
+}
+function teaNotice(){
+ if(data.seenTea||!activeGame().goals.some(g=>g.kind==='tea'))return false;
+ data.seenTea=true;persist();
+ modal('Подайте чай к столу','<span class="food tea tea-example" aria-hidden="true"></span><p>Собирайте блюда под чашкой, чтобы она опускалась.</p><p>Чашку можно менять местами с блюдом, если получается ряд.</p><p><b>Достигла нижнего ряда — чай подан!</b></p>',[{text:'К полю',cancel:true,action:()=>{}}]);return true;
 }
 function beginDaily(day=localDay()){cancelMotion();data.daily.game=newDailyGame(day);persist();openGame('daily');}
 function requestDaily(){
@@ -117,8 +123,9 @@ for(let i=0;i<56;i++){
  $('board').append(tile);tiles.push(tile);
 }
 function paintBoard(board,removed=[],plates=activeGame()?.plates??[]){
- const set=new Set(removed);
- board.forEach((t,i)=>{const tile=tiles[i];tile.dataset.type=t;tile.classList.toggle('has-plate',plates.includes(i));tile.firstElementChild.className=`food f${t}`;tile.setAttribute('aria-label',`${names[t]}${plates.includes(i)?', на тарелке':''}, строка ${Math.floor(i/7)+1}, столбец ${i%7+1}`);tile.classList.toggle('matched',set.has(i));tile.classList.remove('falling','invalid','matching');});selection();
+ const set=new Set(removed),teaGoal=activeGame().goals.some(g=>g.kind==='tea');
+ $('board').setAttribute('aria-label',`Игровое поле: 7 столбцов, 8 строк${teaGoal?'. Нижний ряд — подача чая':''}`);
+ board.forEach((t,i)=>{const tile=tiles[i];tile.dataset.type=t;tile.classList.toggle('has-plate',plates.includes(i));tile.classList.toggle('serving-row',teaGoal&&i>=49);tile.firstElementChild.className=t===TEA?'food tea':`food f${t}`;tile.setAttribute('aria-label',`${t===TEA?'Чашка чая':names[t]}${plates.includes(i)?', на тарелке':''}, строка ${Math.floor(i/7)+1}, столбец ${i%7+1}`);tile.classList.toggle('matched',set.has(i));tile.classList.remove('falling','invalid','matching');});selection();
 }
 function selection(){tiles.forEach((tile,i)=>{tile.classList.toggle('selected',i===selected);tile.setAttribute('aria-pressed',String(i===selected));});}
 function stats(g=activeGame()){
@@ -185,13 +192,15 @@ async function swap(a,b,kind=null){
    if(turn!==epoch)return;
    if(reduce())continue;
    paintBoard(frame.before,[],frame.platesBefore);frame.removed.forEach(i=>tiles[i].classList.add('matching'));
-   $('game-message').textContent=frame.multiplier>1?`Каскад ×${frame.multiplier} · собрано: ${frame.removed.length}`:`Собрано блюд: ${frame.removed.length}`;
-   await sleep(TIMING.highlight);if(turn!==epoch)return;audio.effect('match');
-   const clearFade=await animate(frame.removed.map(food),[{opacity:1,transform:'scale(1)'},{opacity:.7,transform:'scale(1.08)',offset:.35},{opacity:0,transform:'scale(.75)'}],{duration:TIMING.fade,easing:'ease-in',fill:'forwards'},a=>pacing.track(a));
+   const serving=frame.kind==='tea';
+   $('game-message').textContent=serving?'Чай подан!':frame.multiplier>1?`Каскад ×${frame.multiplier} · собрано: ${frame.removed.length}`:`Собрано блюд: ${frame.removed.length}`;
+   await sleep(TIMING.highlight);if(turn!==epoch)return;audio.effect(serving?'land':'match');
+   const clearFade=await animate(frame.removed.map(food),serving?[{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(65%) scale(.85)'}]:[{opacity:1,transform:'scale(1)'},{opacity:.7,transform:'scale(1.08)',offset:.35},{opacity:0,transform:'scale(.75)'}],{duration:TIMING.fade,easing:'ease-in',fill:'forwards'},a=>pacing.track(a));
    if(turn!==epoch){clearFade();return;}
-   $('score-pop').textContent=`+${frame.removed.length*10*frame.multiplier}`;$('score-pop').classList.remove('show');void $('score-pop').offsetWidth;$('score-pop').classList.add('show');
+   $('score-pop').classList.remove('show');if(!serving){$('score-pop').textContent=`+${frame.removed.length*10*frame.multiplier}`;void $('score-pop').offsetWidth;$('score-pop').classList.add('show');}
    const step=tiles[7].getBoundingClientRect().y-tiles[0].getBoundingClientRect().y;
-   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup({...activeGame(),plates:frame.platesAfter,collected:frame.collected});$('helper-prompt').textContent=goalHint({...activeGame(),plates:frame.platesAfter,collected:frame.collected});clearFade();
+   const progress={...activeGame(),plates:frame.platesAfter,collected:frame.collected,servedTea:frame.servedTea};
+   paintBoard(frame.after,[],frame.platesAfter);$('recipe-goals').innerHTML=goalMarkup(progress);$('helper-prompt').textContent=goalHint(progress);clearFade();
    const falling=gravityMap(frame.removed).filter(m=>m.from!==m.to).map(m=>food(m.to).animate([{transform:`translateY(${(m.from-m.to)/7*step}px)`,opacity:m.from<0?0:1},{transform:'translateY(0)',opacity:1}],{duration:TIMING.fall,easing:'cubic-bezier(.22,.68,.3,1)',fill:'both'}));
    falling.forEach(a=>pacing.track(a));
    await Promise.all(falling.map(a=>a.finished.catch(()=>{})));falling.forEach(a=>a.cancel());if(turn!==epoch)return;
@@ -260,11 +269,11 @@ function outcome(){
  if(gameMode==='daily')return dailyOutcome();if(gameMode==='relaxed')return relaxedOutcome();
  data=recordCampaignWin(data);persist();const g=activeGame(),won=g.status==='won',reward=recipeById(g.recipeReward),next=nextRecipeReward(data);
  const rewardText=reward?`<p class="result-reward">Новый рецепт: <b>${reward.dish}</b></p>`:won&&next?`<p>До рецепта «${next.recipe.dish}»: ${next.remaining}</p>`:'';
- modal(won?'Угощение готово!':'Попробуем ещё?',`<p>${won?'Все цели выполнены. Уровень '+g.level+' пройден!':'Не все блюда успели собраться. Попробуем ещё раз?'}</p><div class="result-goals">${goalMarkup(g)}</div><p class="result-detail">${resultGoalText(g)}</p>${rewardText}<p class="result-points">Очки: ${fmt(g.score)}</p>`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?(reward?'Посмотреть рецепт':'Книга рецептов'):'В главное меню',action:()=>{if(!won)return menu();if(reward){recipeShelf();recipePage(reward);}else book(Math.floor((g.level-1)/6));},secondary:true,cancel:true}]);
+ modal(won?'Угощение готово!':'Попробуем ещё?',`<p>${won?'Все цели выполнены. Уровень '+g.level+' пройден!':'Не все цели выполнены. Попробуем ещё раз?'}</p><div class="result-goals">${goalMarkup(g)}</div><p class="result-detail">${resultGoalText(g)}</p>${rewardText}<p class="result-points">Очки: ${fmt(g.score)}</p>`,[{text:won?'Следующий уровень':'Попробовать ещё',action:()=>{data.game=newGame(won?g.level+1:g.level);persist();openGame();}},{text:won?(reward?'Посмотреть рецепт':'Книга рецептов'):'В главное меню',action:()=>{if(!won)return menu();if(reward){recipeShelf();recipePage(reward);}else book(Math.floor((g.level-1)/6));},secondary:true,cancel:true}]);
 }
 function help(page=0){
- const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','В обычной игре соберите цели за отведённые ходы. Потом можно использовать оставшихся помощников. В режиме «Без спешки» ходы не ограничены.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
- modal(pages[page][0],`<div class="legend">${(activeGame()?.pool??[0,1,2,3,4]).map(i=>`<span class="food f${i}"></span>`).join('')}</div><p>${pages[page][1]}</p><p class="page-count">${page+1} / ${pages.length}</p>`,[...(page<pages.length-1?[{text:'Дальше →',action:()=>help(page+1)}]:[]),{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,secondary:page<pages.length-1,action:()=>{}}]);
+ const pages=[['Выберите два блюда','Нажмите на блюдо, затем на соседнее. Или проведите по нему пальцем.'],['Соберите три в ряд','Три и больше одинаковых блюда по горизонтали или вертикали исчезнут. Новые опустятся сверху.'],['Готовьте без спешки','В обычной игре соберите цели за отведённые ходы. Потом можно использовать оставшихся помощников. В режиме «Без спешки» ходы не ограничены.'],['Блюда на тарелках','Голубые тарелки остаются на месте. Соберите на них три блюда в ряд — тарелки уберутся. Скалка и чайник тоже помогают.'],['Подайте чай к столу','Собирайте блюда под чашкой, чтобы она опускалась. Чашку можно менять местами с блюдом, если получается ряд. Нижний ряд — чай подан! Помощники чашку не убирают.'],['Помощники на кухне','Нажмите скалку или чайник, затем коснитесь места на поле. Скалка собирает ряд, чайник — область 3 × 3. Ход не тратится. Нажмите помощника ещё раз, чтобы отменить выбор.'],['Каскады вкуснее','Нажмите на поле во время каскада, чтобы ускорить его. Подсказка появится после паузы. Клавиатура: стрелки, Enter для выбора, Esc для отмены.']];
+ modal(pages[page][0],`<div class="legend">${page===4?'<span class="food tea"></span>':(activeGame()?.pool??[0,1,2,3,4]).map(i=>`<span class="food f${i}"></span>`).join('')}</div><p>${pages[page][1]}</p><p class="page-count">${page+1} / ${pages.length}</p>`,[...(page<pages.length-1?[{text:'Дальше →',action:()=>help(page+1)}]:[]),{text:$('game').hidden?'В меню':'Продолжить игру',cancel:true,secondary:page<pages.length-1,action:()=>{}}]);
 }
 function credits(page=0){const music=page===0;modal(music?'Музыка на кухне':'Звуки на кухне',music?'<p><b>Porch Swing Days — slower<br>Easy Lemon · Summer Day · Carefree</b></p><p>Kevin MacLeod · incompetech.com<br>Creative Commons Attribution 4.0.</p><p>Полные композиции, AAC; громкость выровнена.</p>':'<p><b>Interface Sounds</b><br>Kenney · kenney.nl</p><p>Creative Commons Zero (CC0).<br>Готовые записи, перекодированы в MP3.</p>',[...(music?[{text:'Звуковые эффекты →',action:()=>credits(1)}]:[]),{text:'Назад к настройкам',cancel:true,action:settings},{text:'Источник и лицензия ↗',secondary:true,action:()=>{window.open(music?'https://incompetech.com/music/royalty-free/licenses/':'https://kenney.nl/assets/interface-sounds','_blank','noopener');credits(page);}}]);}
 function settings(){

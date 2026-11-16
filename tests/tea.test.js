@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {newGame,play,useBooster,matches,legalMoves,freshBoard,openingHelperWin} from '../dist/engine.js';
 import {seededRandom} from '../dist/random.js';
 import {KEY,defaultProgress,loadProgress,saveProgress} from '../dist/storage.js';
+import {hintAction} from '../dist/hints.js';
+import {goalMarkup,goalText,goalHint,resultGoalText} from '../dist/book.js';
 
 const TEA=-1;
 const cups=b=>b.flatMap((t,i)=>t===TEA?[i]:[]);
@@ -87,4 +89,22 @@ test('current save rejects missing cups, extra delivered tea and unserved bottom
   const p=defaultProgress();p.game=newGame(10,{seed:103});p.unlocked=10;corrupt(p.game);
   assert.ok(loadProgress({getItem:k=>k===KEY?JSON.stringify(p):null}).warning);
  }
+});
+
+test('hint clears three cells below the cup instead of making an unrelated match',()=>{
+ const g=game([1,2,0,3,3,0,1,2,2,3,-1,3,0,2,3,1,2,0,1,4,2,4,3,3,1,1,0,0,0,0,2,2,0,1,2,3,2,1,4,3,4,3,4,3,4,1,0,4,4,4,1,2,4,0,0,3]);
+ Object.defineProperty(g,'rng',{get(){throw Error('Hint read future draws');}});
+ assert.deepEqual(hintAction(g),{kind:'swap',move:[44,45]});
+ g.goals.push({kind:'food',type:0,amount:1});g.collected[0]=1;
+ assert.deepEqual(hintAction(g),{kind:'swap',move:[44,45]});
+});
+test('tea helper hint finishes a visible path at zero moves without erasing cups',()=>{
+ const g={...landing(),moves:0,status:'helpers'};const action=hintAction(g);
+ assert.equal(action.kind,'helper');const next=useBooster(g,action.helper,action.index).game;
+ assert.equal(next.servedTea,1);assert.equal(next.status,'won');
+});
+test('goal copy and counters distinguish served tea from collected dishes',()=>{
+ const g=landing();assert.match(goalText(g),/Чай: 1/);assert.match(goalMarkup(g),/Чай: 0 из 1/);
+ assert.match(goalHint(g),/чашк.*нижн/i);assert.match(resultGoalText(g),/Чай: подано 0 из 1/);
+ const won=play(g,44,51).game;assert.match(goalMarkup(won),/Чай: 1 из 1/);assert.match(resultGoalText(won),/Чай: подано 1 из 1/);
 });

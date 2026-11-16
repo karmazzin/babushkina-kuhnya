@@ -1,11 +1,18 @@
 import {legalMoves,matches,earnedBoosters,boosterArea,isActiveGame} from './engine.js';
+import {TEA,bottomTea,teaProgress,fallBoard} from './tea.js';
 
 function merit(game,board,cells){
+ cells=cells.filter(i=>board[i]!==TEA);
  const counts=new Map();for(const i of cells)counts.set(board[i],(counts.get(board[i])??0)+1);
  let progress=0,complete=true;
  for(const goal of game.goals){
   if(goal.kind==='plates'){const remaining=game.plates??[],hit=remaining.filter(i=>cells.includes(i)).length;progress+=hit*4;if(hit<remaining.length)complete=false;}
   else if(goal.kind==='food'){const remaining=Math.max(0,goal.amount-(game.collected?.[goal.type]??0)),hit=Math.min(remaining,counts.get(goal.type)??0);progress+=hit;if(hit<remaining)complete=false;}
+  else if(goal.kind==='tea'){
+   const projected={board:fallBoard(board,cells),servedTea:game.servedTea};let served=bottomTea(projected.board);
+   while(served.length){projected.servedTea+=served.length;projected.board=fallBoard(projected.board,served);served=bottomTea(projected.board);}
+   progress+=(teaProgress(projected)-teaProgress(game))*3;if(projected.servedTea<goal.amount)complete=false;
+  }
  }
  return {progress,complete};
 }
@@ -23,7 +30,7 @@ export function hintAction(game){
  if(game.status==='helpers'||(game.stalled??0)>=3){
   let helper=null;
   for(const kind of ['rolling','kettle'])if(game.boosters?.[kind])for(let index=0;index<56;index+=kind==='rolling'?7:1){
-   const cells=boosterArea(kind,index),m=merit(game,game.board,cells);
+   const cells=boosterArea(kind,index).filter(i=>game.board[i]!==TEA),m=merit(game,game.board,cells);
    const action={kind:'helper',helper:kind,index,rank:[Number(m.complete),Number(m.progress>0),m.progress,0,cells.length,index]};
    if(!helper||compare(action,helper)>0)helper=action;
   }

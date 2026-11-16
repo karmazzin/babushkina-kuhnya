@@ -104,6 +104,16 @@
 
 /* Five active foods at a time; new art keeps each silhouette readable. */
 .food:is(.f5,.f6,.f7,.f8,.f9){background-size:contain;background-position:center}
+.food.tea{background:url('./assets/foods/tea.png') center/contain no-repeat}
+.tile.serving-row{border-bottom:3px solid #81904e}
+.tile.serving-row::after{content:'▾';position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);color:#576c35;font:13px/1 Georgia,serif;pointer-events:none}
+.tea-example{display:block;width:76px;height:76px;margin:0 auto}
+@media(orientation:landscape) and (max-height:620px){
+ dialog:has(.tea-example){width:min(650px,calc(100vw - 24px));padding:10px 16px}
+ dialog:has(.tea-example) h2{font-size:22px;margin:3px 0 8px}
+ dialog:has(.tea-example) p{font-size:15px;line-height:1.35;margin:8px 0}
+ .tea-example{float:left;width:72px;height:72px;margin:5px 16px 6px 0}
+}
 .f5{background-image:url('./assets/foods/casserole.png')}.f6{background-image:url('./assets/foods/fritters.png')}.f7{background-image:url('./assets/foods/cherry-dumplings.png')}.f8{background-image:url('./assets/foods/potato-pancakes.png')}.f9{background-image:url('./assets/foods/buckwheat.png')}
 .tile.hint-area{background:#e0e9bd;box-shadow:inset 0 0 0 2px #688344}.helper-button.hint{outline:3px solid #688344;outline-offset:0;background:#fff4d8}
 #open-relaxed small{display:block;font:12px/1.3 Georgia,serif;margin-top:2px}
