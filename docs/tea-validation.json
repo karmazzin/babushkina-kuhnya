@@ -1,0 +1,500 @@
+{
+  "samples": 50,
+  "starts": 1100,
+  "games": 3300,
+  "helperAreasChecked": 70400,
+  "actions": 58034,
+  "served": 3304,
+  "maxActions": 26,
+  "generationMs": {
+    "median": 3.345832999999402,
+    "p95": 6.551375000000007,
+    "max": 42.31041699999969
+  },
+  "results": [
+    {
+      "level": 1,
+      "samples": 50,
+      "random": {
+        "winRate": 1,
+        "meanActions": 10.06,
+        "meanHelpers": 0,
+        "meanMovesLeft": 13.94
+      },
+      "goals": {
+        "winRate": 1,
+        "meanActions": 6.04,
+        "meanHelpers": 0,
+        "meanMovesLeft": 17.96
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 5.76,
+        "meanHelpers": 0.34,
+        "meanMovesLeft": 18.58
+      }
+    },
+    {
+      "level": 4,
+      "samples": 50,
+      "random": {
+        "winRate": 0.84,
+        "meanActions": 14.84,
+        "meanHelpers": 0,
+        "meanMovesLeft": 9.16
+      },
+      "goals": {
+        "winRate": 1,
+        "meanActions": 4.32,
+        "meanHelpers": 0,
+        "meanMovesLeft": 19.68
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 4,
+        "meanHelpers": 0.16,
+        "meanMovesLeft": 20.16
+      }
+    },
+    {
+      "level": 6,
+      "samples": 50,
+      "random": {
+        "winRate": 0.68,
+        "meanActions": 18.92,
+        "meanHelpers": 0,
+        "meanMovesLeft": 5.08
+      },
+      "goals": {
+        "winRate": 1,
+        "meanActions": 9.44,
+        "meanHelpers": 0,
+        "meanMovesLeft": 14.56
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 8.98,
+        "meanHelpers": 0.22,
+        "meanMovesLeft": 15.24
+      }
+    },
+    {
+      "level": 10,
+      "samples": 50,
+      "random": {
+        "winRate": 0.3,
+        "meanActions": 21.28,
+        "meanHelpers": 0,
+        "meanMovesLeft": 2.72
+      },
+      "goals": {
+        "winRate": 0.86,
+        "meanActions": 12.6,
+        "meanHelpers": 0,
+        "meanMovesLeft": 11.4
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 5.74,
+        "meanHelpers": 0.6,
+        "meanMovesLeft": 18.86
+      }
+    },
+    {
+      "level": 16,
+      "samples": 50,
+      "random": {
+        "winRate": 0.06,
+        "meanActions": 23.4,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.6
+      },
+      "goals": {
+        "winRate": 0.52,
+        "meanActions": 18.3,
+        "meanHelpers": 0,
+        "meanMovesLeft": 5.7
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 10.48,
+        "meanHelpers": 1.22,
+        "meanMovesLeft": 14.74
+      }
+    },
+    {
+      "level": 22,
+      "samples": 50,
+      "random": {
+        "winRate": 0.34,
+        "meanActions": 21.74,
+        "meanHelpers": 0,
+        "meanMovesLeft": 2.26
+      },
+      "goals": {
+        "winRate": 0.86,
+        "meanActions": 14.76,
+        "meanHelpers": 0,
+        "meanMovesLeft": 9.24
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 11.1,
+        "meanHelpers": 0.68,
+        "meanMovesLeft": 13.58
+      }
+    },
+    {
+      "level": 28,
+      "samples": 50,
+      "random": {
+        "winRate": 0.06,
+        "meanActions": 23.5,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.5
+      },
+      "goals": {
+        "winRate": 0.58,
+        "meanActions": 19.78,
+        "meanHelpers": 0,
+        "meanMovesLeft": 4.22
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 14.3,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 10.76
+      }
+    },
+    {
+      "level": 34,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 40,
+      "samples": 50,
+      "random": {
+        "winRate": 0.06,
+        "meanActions": 23.68,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.32
+      },
+      "goals": {
+        "winRate": 0.5,
+        "meanActions": 20.1,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.9
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 15.24,
+        "meanHelpers": 1.16,
+        "meanMovesLeft": 9.92
+      }
+    },
+    {
+      "level": 46,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 52,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.76,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.24
+      },
+      "goals": {
+        "winRate": 0.48,
+        "meanActions": 20.3,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.7
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 16.08,
+        "meanHelpers": 1.12,
+        "meanMovesLeft": 9.04
+      }
+    },
+    {
+      "level": 58,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 64,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.76,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.24
+      },
+      "goals": {
+        "winRate": 0.48,
+        "meanActions": 20.3,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.7
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 16.08,
+        "meanHelpers": 1.12,
+        "meanMovesLeft": 9.04
+      }
+    },
+    {
+      "level": 70,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 82,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 94,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 106,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 118,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 130,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 142,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.72,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.28
+      },
+      "goals": {
+        "winRate": 0.42,
+        "meanActions": 20.22,
+        "meanHelpers": 0,
+        "meanMovesLeft": 3.78
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 13.4,
+        "meanHelpers": 1.06,
+        "meanMovesLeft": 11.66
+      }
+    },
+    {
+      "level": 1000,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.84,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.16
+      },
+      "goals": {
+        "winRate": 0.3,
+        "meanActions": 21.88,
+        "meanHelpers": 0,
+        "meanMovesLeft": 2.12
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 18.6,
+        "meanHelpers": 1.12,
+        "meanMovesLeft": 6.52
+      }
+    },
+    {
+      "level": 10000,
+      "samples": 50,
+      "random": {
+        "winRate": 0.04,
+        "meanActions": 23.84,
+        "meanHelpers": 0,
+        "meanMovesLeft": 0.16
+      },
+      "goals": {
+        "winRate": 0.3,
+        "meanActions": 21.88,
+        "meanHelpers": 0,
+        "meanMovesLeft": 2.12
+      },
+      "assisted": {
+        "winRate": 1,
+        "meanActions": 18.6,
+        "meanHelpers": 1.12,
+        "meanMovesLeft": 6.52
+      }
+    }
+  ]
+}
