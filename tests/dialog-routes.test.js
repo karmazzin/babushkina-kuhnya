@@ -90,7 +90,7 @@ for(const mode of ['regular','daily'])test(`${mode}: last-move helpers resume, b
  h.run(`data=loadProgress(storage).data;openGame('${mode}')`);assert.equal(h.get('dialog').open,false);assert.equal(h.get('kettle').disabled,false);assert.equal(h.get('finish-attempt').hidden,false);
  h.run('choose(0)');assert.equal(h.run('selected'),null);
  await h.run("data.settings.reduced=true;selectHelper('kettle');swap(24,null,'kettle')");
- assert.equal(h.run('activeGame().status'),'won');assert.equal(h.get('dialog').open,true);
+ assert.equal(h.run('activeGame().status'),mode==='daily'?'won':'playing');assert.equal(h.get('dialog').open,true);
  h.escape();assert.equal(h.get(mode==='daily'?'collection':'book').hidden,false);
 });
 for(const escape of [false,true])test(`finish attempt: ${escape?'Escape keeps helpers':'confirm ends attempt'} has a usable route`,()=>{
@@ -131,7 +131,21 @@ test('tea helper phase reloads, serves the cup and opens a playable next level',
  data.game.board=b;data.game.moves=0;data.game.status='helpers';persist();menu();data=loadProgress(storage).data;openGame()`);
  assert.equal(h.get('dialog').open,false);assert.equal(h.get('finish-attempt').hidden,false);
  await h.run("data.settings.reduced=true;selectHelper('rolling');swap(49,null,'rolling')");
- assert.equal(h.run('data.game.servedTea'),1);assert.equal(h.run('data.game.status'),'won');
+ assert.equal(h.run('data.game.level'),11);assert.equal(h.run('data.game.status'),'playing');
  assert.match(h.get('dialog-content').innerHTML,/Чай: подано 1 из 1/);h.click('Следующий уровень');h.playable();
  assert.equal(h.run('data.game.level'),11);
+});
+
+for(const level of [1,6])for(const route of ['next','recipes','escape','reload'])test(`campaign victory ${level}: ${route} saves and resumes the next playable level`,()=>{
+ const h=harness();h.start();
+ h.run(`data.completed=Array.from({length:${level-1}},(_,i)=>i+1);data.unlocked=${level};data.game=newGame(${level});data.game.goals=[{kind:'food',type:0,amount:1}];data.game.collected[0]=1;data.game.status='won';outcome()`);
+ assert.match(h.get('dialog-content').innerHTML,new RegExp(`Уровень ${level} пройден`));
+ const saved=h.run('loadProgress(storage)');assert.equal(saved.warning,null);assert.equal(saved.data.game.level,level+1);assert.equal(saved.data.game.status,'playing');
+ if(route==='next')h.click('Следующий уровень');
+ if(route==='recipes'){h.click(level===6?'Посмотреть рецепт':'Книга рецептов');if(level===6)h.escape();}
+ if(route==='escape'){h.escape();if(level===6)h.escape();}
+ if(route==='reload')h.run("$('dialog').close();data=loadProgress(storage).data");
+ h.run('menu()');assert.equal(h.get('continue').textContent,'Продолжить готовить');h.get('continue').onclick();h.playable();
+ assert.equal(h.run('data.game.level'),level+1);
+ h.run('persist();data=loadProgress(storage).data;openGame()');h.playable();assert.equal(h.run('data.game.level'),level+1);
 });
