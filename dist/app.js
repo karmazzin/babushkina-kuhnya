@@ -63,7 +63,7 @@ function refreshDailyMenu(){
 function menu(){cancelMotion();hideScreens();$('menu').hidden=false;$('continue').hidden=false;$('continue').textContent=data.game?(isActiveGame(data.game)?'Продолжить готовить':'Результат уровня'):`Играть · уровень ${data.unlocked}`;$('unlocked').textContent=data.unlocked;$('best').textContent=fmt(data.best);refreshDailyMenu();}
 function showGarden(message=''){
  cancelMotion();hideScreens();$('garden').hidden=false;
- renderGarden($('garden'),data,{onHouse:menu,onPlot:openGardenPlot,onExpand:requestGardenExpansion,onPlay:gardenPlay});
+ renderGarden($('garden'),data,{onBack:menu,onPlot:openGardenPlot,onExpand:requestGardenExpansion,onPlay:gardenPlay});
  if(message)$('garden-message').textContent=message;
 }
 function gardenPlay(){if(isActiveGame(data.game))openGame('regular');else start();}

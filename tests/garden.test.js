@@ -48,3 +48,10 @@ test('save validation rejects impossible plots, overspend and bad variants',()=>
  for(const g of bad)assert.ok(loadProgress({getItem:k=>k===KEY?JSON.stringify({...funded(),garden:g}):null}).warning);
  assert.ok(loadProgress({getItem:k=>k===KEY?JSON.stringify({...defaultProgress(),garden:{expansion:0,plots:[{slot:0,item:'vegetables',variant:0}]}}):null}).warning);
 });
+
+test('garden has the same explicit back control as gameplay and no house overlay',async()=>{
+ const {renderGarden}=await import('../dist/garden-view.js');const nodes=new Map();const root={innerHTML:'',querySelector:s=>{if(!nodes.has(s))nodes.set(s,{});return nodes.get(s);},querySelectorAll:()=>[]};let returned=0;
+ renderGarden(root,defaultProgress(),{onBack:()=>returned++,onPlot(){},onExpand(){},onPlay(){}});
+ assert.match(root.innerHTML,/id="garden-back" class="round-button"/);assert.doesNotMatch(root.innerHTML,/garden-house|Наш огород|БАБУШКИНА КУХНЯ|В дом/);
+ nodes.get('#garden-back').onclick();assert.equal(returned,1);
+});
