@@ -13,9 +13,9 @@ export function createAudio(factory=src=>new Audio(src),now=()=>Date.now(),rando
  const clips=Object.fromEntries(Object.entries(FILES).map(([name,file])=>[name,factory(new URL(`./assets/audio/${file}`,import.meta.url).href)]));
  const priming={};
  let unlocked=false,visible=true,lastEffect=-Infinity,settings={music:true,sound:true,soundVolume:.35};
- clips.music.loop=false;clips.music.volume=.19;clips.music.preload='auto';
+ clips.music.loop=false;clips.music.volume=.19;clips.music.preload='none';
  const gain=()=>.16*Math.max(0,Math.min(1,settings.soundVolume??.35));
- for(const [name,clip] of Object.entries(clips))if(name!=='music'){clip.volume=gain();clip.preload='auto';}
+ for(const [name,clip] of Object.entries(clips))if(name!=='music'){clip.volume=gain();clip.preload='none';}
  const safelyPlay=clip=>Promise.resolve(clip.play()).catch(()=>{});
  function hush(){for(const [name,c] of Object.entries(clips))if(name!=='music')c.pause();}
  function sync(){

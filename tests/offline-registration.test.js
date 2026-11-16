@@ -19,3 +19,11 @@ test('simultaneous startup and manual check share one registration attempt',asyn
  const a=offlineRegistration(sw),b=offlineRegistration(sw);await Promise.resolve();await Promise.resolve();
  finish.forEach(fn=>fn());assert.equal(await a,registration);assert.equal(await b,registration);assert.equal(calls,1);
 });
+test('first registration waits for page resources so precaching cannot compete with the first screen',async()=>{
+ const page={readyState:'loading',defaultView:new EventTarget()};let calls=0;
+ const registration={installing:{}};
+ const pending=offlineRegistration({register:async()=>{calls++;return registration;}},100,page);
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls,0);
+ page.readyState='complete';page.defaultView.dispatchEvent(new Event('load'));
+ assert.equal(await pending,registration);assert.equal(calls,1);
+});

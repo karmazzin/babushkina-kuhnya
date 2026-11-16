@@ -1,8 +1,12 @@
 const pendingRegistrations=new WeakMap();
-export function offlineRegistration(serviceWorker,timeoutMs=45000){
+export function offlineRegistration(serviceWorker,timeoutMs=45000,page=globalThis.document){
  if(!serviceWorker)return Promise.reject(Error('Service workers unavailable'));
  if(pendingRegistrations.has(serviceWorker))return pendingRegistrations.get(serviceWorker);
- const pending=discoverRegistration(serviceWorker,timeoutMs).finally(()=>pendingRegistrations.delete(serviceWorker));
+ // Wait for visible page resources before starting the complete offline download.
+ const ready=page&&page.readyState!=='complete'
+  ?new Promise(resolve=>page.defaultView.addEventListener('load',resolve,{once:true})).then(()=>discoverRegistration(serviceWorker,timeoutMs))
+  :discoverRegistration(serviceWorker,timeoutMs);
+ const pending=ready.finally(()=>pendingRegistrations.delete(serviceWorker));
  pendingRegistrations.set(serviceWorker,pending);return pending;
 }
 async function discoverRegistration(serviceWorker,timeoutMs){

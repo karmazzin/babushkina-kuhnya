@@ -25,3 +25,7 @@ test('unavailable music is skipped with bounded retries',async()=>{
  for(let i=0;i<4;i++){attempted.add(music.src);music.onerror();}
  assert.equal(attempted.size,4);assert.equal(music.paused,true);audio.visibility(true);assert.equal(music.paused,true);
 });
+test('audio does not preload media before the player interacts',()=>{
+ const {clips}=setup();
+ for(const clip of clips)assert.equal(clip.preload,'none');
+});

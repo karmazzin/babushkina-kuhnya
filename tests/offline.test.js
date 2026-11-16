@@ -29,13 +29,13 @@ test('installation caches every shipped runtime file, including icons and start 
 test('offline navigation and assets work without any network call',async()=>{
  const h=await harness();await h.fire('install');
  const page=await h.fire('fetch',{request:{url:h.scope+'?installed=1',method:'GET',mode:'navigate'}});assert.equal(await page.text(),h.scope+'index.html');
- const image=await h.fire('fetch',{request:{url:h.scope+'assets/foods.png',method:'GET',mode:'cors'}});assert.equal(await image.text(),h.scope+'assets/foods.png');assert.equal(h.network(),0);
+ const image=await h.fire('fetch',{request:{url:h.scope+'assets/foods.webp',method:'GET',mode:'cors'}});assert.equal(await image.text(),h.scope+'assets/foods.webp');assert.equal(h.network(),0);
 });
 test('failed resource download rejects installation',async()=>{const h=await harness({fail:true});await assert.rejects(h.fire('install'),/download failed/);});
 test('readiness requires all cached files and activation preserves other apps caches',async()=>{
  const h=await harness();let reply;await h.fire('install');h.stores.set('unrelated',new Map());h.stores.set('babushkina-kuhnya-v0',new Map());await h.fire('activate');assert.ok(h.stores.has('unrelated'));assert.equal(h.stores.has('babushkina-kuhnya-v0'),true);
  await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,true);
- [...h.stores.values()][0].delete(h.scope+'assets/foods.png');await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,false);
+ [...h.stores.values()][0].delete(h.scope+'assets/foods.webp');await h.fire('message',{data:{type:'CHECK_OFFLINE'},ports:[{postMessage:v=>reply=v}]});assert.equal(reply.ready,false);
 });
 for(const track of ['porch-swing','easy-lemon','summer-day','carefree'])test(`cached ${track} supports byte ranges required by mobile media players`,async()=>{
  const h=await harness();await h.fire('install');const url=h.scope+`assets/audio/${track}.m4a`;
