@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultProgress,loadProgress} from '../dist/storage.js';
+import {defaultProgress,loadProgress,KEY} from '../dist/storage.js';
 import {newGame} from '../dist/engine.js';
 import {recordCampaignWin} from '../dist/progression.js';
 const garden=await import('../dist/garden.js').catch(()=>({}));
@@ -40,11 +40,11 @@ test('changing purchased variant is free, keeps its type and survives save reloa
  let p=garden.buyGardenItem(funded(2),0,'vegetables',0).data;
  p=garden.changeGardenVariant(p,0,1).data;assert.equal(garden.starBalance(p),1);assert.equal(p.garden.plots[0].variant,1);
  assert.equal(garden.changeGardenVariant(p,1,1).ok,false);
- const saved=loadProgress({getItem:()=>JSON.stringify(p)});assert.equal(saved.warning,null);assert.deepEqual(saved.data,p);
+ const saved=loadProgress({getItem:k=>k===KEY?JSON.stringify(p):null});assert.equal(saved.warning,null);assert.deepEqual(saved.data,p);
 });
 test('save validation rejects impossible plots, overspend and bad variants',()=>{
  assert.ok(defaultProgress().garden);
  const bad=[{expansion:3,plots:[]},{expansion:0,plots:[{slot:4,item:'vegetables',variant:0}]},{expansion:0,plots:[{slot:0,item:'vegetables',variant:2}]},{expansion:0,plots:[{slot:0,item:'bad',variant:0}]},{expansion:0,plots:[{slot:0,item:'vegetables',variant:0},{slot:0,item:'vegetables',variant:0}]}];
- for(const g of bad)assert.ok(loadProgress({getItem:()=>JSON.stringify({...funded(),garden:g})}).warning);
- assert.ok(loadProgress({getItem:()=>JSON.stringify({...defaultProgress(),garden:{expansion:0,plots:[{slot:0,item:'vegetables',variant:0}]}})}).warning);
+ for(const g of bad)assert.ok(loadProgress({getItem:k=>k===KEY?JSON.stringify({...funded(),garden:g}):null}).warning);
+ assert.ok(loadProgress({getItem:k=>k===KEY?JSON.stringify({...defaultProgress(),garden:{expansion:0,plots:[{slot:0,item:'vegetables',variant:0}]}}):null}).warning);
 });

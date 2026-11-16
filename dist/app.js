@@ -17,7 +17,7 @@ import {gravityMap,TIMING,animate} from './animation.js';
 import {createAudio} from './audio.js';
 import {offlineRegistration} from './offline.js';
 import {newGame,play,adjacent,useBooster,boosterArea,isActiveGame,finishAttempt} from './engine.js';
-import {KEY,loadProgress,saveProgress,saveBeforeUpdate,defaultProgress} from './storage.js';
+import {KEY,loadProgress,saveProgress,saveBeforeUpdate,defaultProgress,resetProgress} from './storage.js';
 const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('ru-RU');
 // Identify this loaded page, never the waiting or newly activated worker.
 const installedVersion=document.querySelector?.('meta[name="kitchen-version"]')?.content??'неизвестна';
@@ -337,7 +337,7 @@ function settings(){
  $('installed-version').textContent='Версия '+installedVersion;
  $('installed-build').textContent='Сборка '+installedBuild;
  $('check-update').onclick=manualUpdateCheck;paintUpdateStatus();
- $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, огород, звёзды, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{data=defaultProgress();persist();settingsApplied();menu();}}]);
+ $('credits').onclick=()=>credits();$('reset').onclick=()=>modal('Сбросить всё?','<p>Все три партии, огород, звёзды, открытки, открытые уровни и рекорд будут удалены. Это нельзя отменить.</p>',[{text:'Отмена',cancel:true,action:settings},{text:'Да, сбросить',secondary:true,action:()=>{const reset=resetProgress(storage);if(!reset.ok){warning('Не удалось сбросить прогресс. Попробуйте ещё раз.');return;}data=reset.data;savedRaw=JSON.stringify(data);saveDirty=false;pendingStorage=false;settingsApplied();menu();}}]);
 }
 function book(page=Math.floor((data.unlocked-1)/6)){
  cancelMotion();hideScreens();$('book').hidden=false;$('book-title').textContent='Выберите уровень';$('book-back').setAttribute('aria-label','В главное меню');$('book-back').onclick=menu;
