@@ -87,12 +87,10 @@
  .dish-goal:only-child{flex-direction:column;gap:0;font-size:24px}.dish-goal:only-child .food{width:46px;height:46px}.dish-goal:only-child .plate-icon{width:38px;height:38px;margin:4px}.dish-goal:only-child small{font-size:22px}
 }
 
-/* Keep desktop illustrations inside the cell, even when rows are shallow. */
-@media(min-width:600px) and (hover:hover) and (pointer:fine){
- .tile{container-type:size}
- .tile .food{inset:0;margin:auto;width:min(92cqw,92cqh,72px);height:min(92cqw,92cqh,72px)}
- .tile.has-plate .food{inset:0;width:min(82cqw,82cqh,64px);height:min(82cqw,82cqh,64px)}
-}
+/* Use the shorter cell side for both sprite sheets and individual artwork on every device. */
+.tile{container-type:size}
+.tile .food{inset:0;margin:auto;width:min(92cqw,92cqh,72px);height:min(92cqw,92cqh,72px)}
+.tile.has-plate .food{inset:0;width:min(82cqw,82cqh,64px);height:min(82cqw,82cqh,64px)}
 
 /* Preserve the upper kitchen scene as wide screens crop the portrait artwork. */
 @media(min-width:600px){body{background-position:center top}}
